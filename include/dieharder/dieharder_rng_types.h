@@ -47,22 +47,22 @@
  GSL_VAR const gsl_rng_type *gsl_rng_r_knuth_taocp2;	/* edd May 2007 */
 
  GSL_VAR const gsl_rng_type *gsl_rng_ca;
- GSL_VAR const gsl_rng_type *gsl_rng_uvag;	        /* rgb Jun 2007 */
- GSL_VAR const gsl_rng_type *gsl_rng_aes;	        /* bauer Oct 2009 */
- GSL_VAR const gsl_rng_type *gsl_rng_threefish;	        /* bauer Oct 2009 */
- GSL_VAR const gsl_rng_type *gsl_rng_kiss;	        /* rgb Jan 2011 */
- GSL_VAR const gsl_rng_type *gsl_rng_superkiss;	        /* rgb Jan 2011 */
- GSL_VAR const gsl_rng_type *gsl_rng_XOR;	        /* rgb Jan 2011 */
+ GSL_VAR const gsl_rng_type *gsl_rng_uvag;			/* rgb Jun 2007 */
+ GSL_VAR const gsl_rng_type *gsl_rng_aes;			/* bauer Oct 2009 */
+ GSL_VAR const gsl_rng_type *gsl_rng_threefish;			/* bauer Oct 2009 */
+ GSL_VAR const gsl_rng_type *gsl_rng_kiss;			/* rgb Jan 2011 */
+ GSL_VAR const gsl_rng_type *gsl_rng_superkiss;			/* rgb Jan 2011 */
+ GSL_VAR const gsl_rng_type *gsl_rng_XOR;			/* rgb Jan 2011 */
 
  /*
   * rng global vectors and variables for setup and tests.
   */
 #define MAXRNGS 1000
 
- void dieharder_rng_types();
+extern void dieharder_rng_types();
 
- const gsl_rng_type *dh_rng_types[MAXRNGS];
- const gsl_rng_type **gsl_types;    /* where all the rng types go */
+extern const gsl_rng_type *dh_rng_types[MAXRNGS];
+extern const gsl_rng_type **gsl_types;    /* where all the rng types go */
 
 #define ADD(t) {if (i==MAXRNGS) abort(); dh_rng_types[i] = (t); i++; };
 
@@ -70,13 +70,12 @@
   * Global shared counters for the new types of rngs in the organization
   * defined above.
   */
- unsigned int dh_num_rngs;           /* dh rngs available in dieharder */
- unsigned int dh_num_gsl_rngs;       /* GSL rngs available in dieharder */
- unsigned int dh_num_dieharder_rngs; /* dh rngs available in libdieharder */
- unsigned int dh_num_R_rngs;         /* R-derived rngs available in libdieharder */
- unsigned int dh_num_hardware_rngs;  /* hardware rngs supported in libdieharder */
- unsigned int dh_num_user_rngs;      /* user-added rngs */
- unsigned int dh_num_reserved_rngs;  /* ngs added in reserved space by new UI */
+extern unsigned int dh_num_rngs;           /* dh rngs available in dieharder */
+extern unsigned int dh_num_gsl_rngs;       /* GSL rngs available in dieharder */
+extern unsigned int dh_num_dieharder_rngs; /* dh rngs available in libdieharder */
+extern unsigned int dh_num_R_rngs;         /* R-derived rngs available in libdieharder */
+extern unsigned int dh_num_hardware_rngs;  /* hardware rngs supported in libdieharder */
+extern unsigned int dh_num_user_rngs;      /* user-added rngs */
+extern unsigned int dh_num_reserved_rngs;  /* ngs added in reserved space by new UI */
 
- gsl_rng *rng;                  /* global gsl random number generator */
-
+extern gsl_rng *rng;                  /* global gsl random number generator */

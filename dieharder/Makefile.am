@@ -7,15 +7,13 @@
 # make clean    deletes the application and all object files
 # make install  installs application and a man page
 # make printout prints out all source and include files
-#
-# These two commands execute in the toplevel project directory only.
-# make svn      does a svn commit and creates the timestamp $(SVN)
-# make sync     does a svn commit and rsyncs to list of hosts
 #========================================================================
 
 # This is automagically set in the toplevel build.  Do not edit by
 # hand.
 VERSION=@VERSION@
+
+EXTRA_DIST=dieharder.1
 
 #========================================================================
 # Define all sources.  Note that this little trick will get ALL
@@ -45,15 +43,19 @@ dieharder_SOURCES = \
 	set_globals.c \
 	testbits.c \
 	time_rng.c \
-	user_template.c
+	user_template.c \
+	copyright.h \
+	dieharder.h \
+	output.h \
+	user_template.h
 
 #	rng_empty_random.c \
 #	run_rgb_bitdist.c
 #	run_rgb_lagged_sums.c
 #	run_rgb_minimum_distance.c
 #	run_rgb_permutations.c
-# 	run_rgb_persist.c
-# 	run_rgb_timing.c
+#	run_rgb_persist.c
+#	run_rgb_timing.c
 
 DEFINES = -DVERSION=$(VERSION)
 
@@ -71,15 +73,3 @@ AM_CFLAGS = -O3
 # To build a completely static dieharder, uncomment the following line.
 # AM_LDFLAGS = -all-static
 AM_LDFLAGS =
-
-#========================================================================
-# The only safe place to do svn commits is in the toplevel directory
-#========================================================================
-SVNTREE = $(HOME)/Src/svn-tree
-SVNPATH = $(SVNTREE)/dieharder
-SVNTIME = dieharder.svn.time)
-svn:
-	(cd ..;make svn)
-
-sync:
-	(cd ..;make sync)

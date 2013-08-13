@@ -1,15 +1,9 @@
 ## Process this file with automake to produce Makefile.in
 
 # These are made, in order presented, from the toplevel make
-SUBDIRS = libdieharder dieharder include
+SUBDIRS = libdieharder dieharder include manual
 
-# These are automagically included in the make dist rule.  I
-# do believe that I'm going to have to eliminate my own version
-# of this below.  Sigh.  Time to actually learn to use the GBT
-# properly, I suppose.
-# EXTRA_DIST = autogen.sh dieharder-config.in configure.ac \
-#  THANKS BUGS SUPPORT dieharder.spec.in dieharder.m4 test_dieharder.sh
-EXTRA_DIST = autogen.sh set_ld_library_path Copyright
+EXTRA_DIST = autogen.sh Copyright dieharder.abs
 
 #========================================================================
 # This is the toplevel Makefile for the dieharder project.  It has
@@ -21,14 +15,6 @@ EXTRA_DIST = autogen.sh set_ld_library_path Copyright
 #
 # make tgz      makes $(TGZ) of entire tree for standalone or rpm build
 # make rpm      makes $(RPM) packages built by dieharder.spec
-#
-#========================================================================
-# These are targets just for me to facilitate project management.
-#========================================================================
-# make svn      does a svn commit and creates the timestamp $(SVNTIME)
-# make sync     does a svn commit and syncs to list of svn-tree hosts
-# make installweb  installs to project website for download
-# make installrepo installs to yum repo
 #
 #========================================================================
 PROJECT = dieharder
@@ -153,7 +139,7 @@ tgz: Makefile COPYING Copyright NOTES README $(SPEC) $(ABS) $(PHP)
 	cp README $(PROJECTDIR); \
 	cp NOTES $(PROJECTDIR); \
 	tar -cvpf $(TAR) \
-	    --exclude=.svn \
+	    --exclude=.git \
 	    --exclude=Cruft \
 	    --exclude=Exclude \
 	    --exclude=*.tar \
@@ -203,61 +189,6 @@ rpm:	Makefile $(TGZ)
 	cp $(RPM_TOPDIR)/SRPMS/$(SSRPM) $(SRPM)
 	cp $(RPM_TOPDIR)/RPMS/$(ARCH)/$(LRPM) .
 	cp $(RPM_TOPDIR)/RPMS/$(ARCH)/$(PRPM) .
-
-# I can leave this target in here, but I have to run it BY HAND right
-# before a release build.  Otherwise a src rpm rebuild can fail for
-# people without the svn repo in odd ways.
-ChangeLog: $(SVNTIME)
-	svn2cl dieharder.svn.time
-
-#========================================================================
-# Make targets for checking in to svn, syncing svn repo from a local
-# (e.g. laptop) to one or more network/primary repos.
-#========================================================================
-SVNTREE = $(HOME)/Src/svn-tree
-SVNPATH = $(SVNTREE)/$(PROJECT)
-SVNTIME = $(PROJECT:=.svn.time)
-
-svn:
-	echo "New Checkin `date`" >> $(SVNTIME)	# Will force a commit and increment revision
-	svn commit .
-	cat $(SVNTIME) | \
-	sed -e '/^New Checkin/d' >> $(SVNTIME).tmp
-	mv $(SVNTIME).tmp $(SVNTIME)
-
-sync:
-	echo "New Checkin `date`" >> $(SVNTIME)	# Will force a commit and increment revision
-	svn commit .		# Do the commit
-	rsync -avz --delete $(SVNPATH) ganesh.phy.duke.edu:/home/einstein/prof/rgb/Src/svn-tree
-	rsync -avz --delete $(SVNPATH) 209.42.212.5:$(SVNTREE)
-	cat $(SVNTIME) | \
-	sed -e '/^New Checkin/d' >> $(SVNTIME).tmp
-	mv $(SVNTIME).tmp $(SVNTIME)
-
-installweb : $(TGZ) $(RPM) $(SRPM) $(LRPM) $(PRPM) $(MRPM) $(ABS) $(PHP)
-	(ssh $(WLOGIN) mkdir -p public_html/$(WDIR)/$(PROJECT);\
-	rsync -avz $(TGZ) $(WLOGIN):public_html/$(WDIR)/$(PROJECT)/; \
-	rsync -avz $(SRPM) $(WLOGIN):public_html/$(WDIR)/$(PROJECT)/; \
-	rsync -avz $(LRPM) $(WLOGIN):public_html/$(WDIR)/$(PROJECT)/; \
-	rsync -avz $(PRPM) $(WLOGIN):public_html/$(WDIR)/$(PROJECT)/; \
-	rsync -avz $(MRPM) $(WLOGIN):public_html/$(WDIR)/$(PROJECT)/; \
-	rsync -avz $(ABS) $(WLOGIN):public_html/$(WDIR)/$(PROJECT)/; \
-	ssh $(WLOGIN) "cd public_html/$(WDIR)/$(PROJECT);ln -sf $(TGZ) $(PROJECT).tgz"; \
-	ssh $(WLOGIN) "cd public_html/$(WDIR)/$(PROJECT);ln -sf $(SRPM) $(PROJECT).src.rpm"; \
-	ssh $(WLOGIN) "cd public_html/$(WDIR)/$(PROJECT);rm Current*;touch Current_Is_$(VERSION)"; \
-	rsync -avz $(PHP) $(WLOGIN):public_html/$(WDIR)/)
-
-REPOSERVER = uriel
-REPOPATH = /var/www/html/fc/6/local/
-installrepo : $(TGZ) $(RPM) $(SRPM) $(LRPM) $(PRPM) $(MRPM) $(ABS) $(PHP)
-	(ssh $(REPOSERVER) mkdir -p $(REPOPATH);\
-	rsync -avz $(TGZ) root@$(REPOSERVER):$(REPOPATH);\
-	rsync -avz $(SRPM) root@$(REPOSERVER):$(REPOPATH)/SRPM;\
-	ssh $(REPOSERVER) mkdir -p $(REPOPATH)/$(ARCH);\
-	rsync -avz $(LRPM) root@$(REPOSERVER):$(REPOPATH)/$(ARCH);\
-	rsync -avz $(PRPM) root@$(REPOSERVER):$(REPOPATH)/$(ARCH);\
-	rsync -avz $(MRPM) root@$(REPOSERVER):$(REPOPATH)/$(ARCH);\
-	ssh root@$(REPOSERVER) "cd $(REPOPATH)/$(ARCH);createrepo .")
 
 #========================================================================
 # This target takes the dieharder sources and "magically" transforms

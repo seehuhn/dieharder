@@ -2,6 +2,8 @@ SOURCE = dieharder.tex
 VERSION = 0.1
 RELEASE = 1
 
+EXTRA_DIST = dieharder.tex html.sty
+
 # The list of includes are things required for the build to work.  Examples
 # might be included .tex or .sty files, embedded .eps files, and so forth.
 # FIGS = $(shell ls *.fig 2>&1 | grep -v "No such file or directory" | sed -e "/\/bin\/ls:/d")
@@ -31,11 +33,8 @@ tar:	$(TAR)
 tgz:	$(TGZ)
 
 # Clean up all the junk build files and output formats to save space.
-clean:
+clean-local:
 	rm -f $(DVI) $(AUX) $(LOGS) $(TOC) $(ERR) $(PS) $(PDF)
-
-install: $(PDF)
-	cp $(PDF) ..
 
 #
 #                RULES FOR BUILDING STANDARD TARGETS

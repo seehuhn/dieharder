@@ -6,7 +6,7 @@
  * ========================================================================
  */
 
-/* 
+/*
  * ========================================================================
  * This program initializes a permanent internal vector of pointers to all
  * the tests known to dieharder that generate a pvalue or vector of
@@ -34,9 +34,9 @@
 
 
 
- void dieharder_test_types();
+extern void dieharder_test_types();
 
- Dtest *dh_test_types[MAXTESTS];
+extern Dtest *dh_test_types[MAXTESTS];
 
 #define ADD_TEST(t) {if (i==MAXTESTS) abort(); dh_test_types[i] = (t); i++; };
 
@@ -44,12 +44,11 @@
   * Global shared counters for the new types of rngs in the organization
   * defined above.
   */
- unsigned int dh_num_diehard_tests;  /* diehard tests available in dieharder */
- unsigned int dh_num_sts_tests;      /* STS tests available in dieharder */
- unsigned int dh_num_other_tests;    /* other tests available in dieharder */
- unsigned int dh_num_user_tests;     /* user tests added in ui segment */
- unsigned int dh_num_tests;          /* total tests available in dieharder */
+extern unsigned int dh_num_diehard_tests;  /* diehard tests available in dieharder */
+extern unsigned int dh_num_sts_tests;      /* STS tests available in dieharder */
+extern unsigned int dh_num_other_tests;    /* other tests available in dieharder */
+extern unsigned int dh_num_user_tests;     /* user tests added in ui segment */
+extern unsigned int dh_num_tests;          /* total tests available in dieharder */
 
 
- Dtest *dh_test;             /* global pointer to the current test */
-
+extern Dtest *dh_test;             /* global pointer to the current test */

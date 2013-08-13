@@ -115,7 +115,7 @@ int rgb_lmn()
  if(psamples == 0){
    psamples = dtest->psamples_std;
  }
- 
+
  /*
   * Allocate memory for THIS test's ks_pvalues, etc.  Make sure that
   * any missed prior allocations are freed.
@@ -181,7 +181,7 @@ void rgb_lmn_test()
  /*
   * sample only every lag returns from the rng, discard the rest.
   * We have to get the (float) value from the user input and set
-  * a uint 
+  * a uint
   */
  if(x_user){
    lag = x_user;
@@ -196,8 +196,8 @@ void rgb_lmn_test()
  for(t=0;t<tsamples;t++){
 
    /*
-    * A VERY SIMPLE test (probably not too sensitive)
-    */
+	* A VERY SIMPLE test (probably not too sensitive)
+	*/
 
    /* Throw away lag-1 per sample */
    for(i=0;i<(lag-1);i++) gsl_rng_uniform(rng);

@@ -12,7 +12,9 @@
 #include <string.h>
 #include <dieharder/parse.h>
 
- int verbose;
+char splitbuf[PK][PBUF];
+
+int verbose;
 
 /*
  * split() is a reusable routine to break up a string into char[PBUF]
@@ -23,7 +25,7 @@
  * choose your delimiters.
  */
 int split(char *inbuffer)
-{ 
+{
 
  char delim[7],*nextval;
 
@@ -31,8 +33,8 @@ int split(char *inbuffer)
    printf("split(%s)\n",inbuffer);
  }
 
-  
- /* 
+
+ /*
   * Permit blank, tab, or comma separators anywhere we need to parse
   * a line.
   */
@@ -44,7 +46,7 @@ int split(char *inbuffer)
  delim[5] = ':';		/* : needed to parse /proc/net/dev or passwd */
  delim[6] = (char) 0;           /* terminator */
 
- 
+
  nextval = strtok(inbuffer,delim);
  if(nextval == (char *)NULL) return 0;
  int i = 0;
@@ -59,7 +61,7 @@ int split(char *inbuffer)
    if(nextval == (char *)NULL) break;
    strncpy(splitbuf[i], nextval,PBUF);
    if(verbose){
-     printf("split(): split field[%d] = %s.\n",i,splitbuf[i]);
+	 printf("split(): split field[%d] = %s.\n",i,splitbuf[i]);
    }
    i++;
  }
@@ -92,7 +94,7 @@ int parse(char *inbuffer,char **outfields,int maxfields,int maxfieldlength)
 
 
 
-/* 
+/*
  * Permit blank, tab, or comma separators anywhere we need to parse
  * a line.
  */
@@ -104,7 +106,7 @@ int parse(char *inbuffer,char **outfields,int maxfields,int maxfieldlength)
  delim[5] = ':';		/* : needed to parse /proc/net/dev or passwd */
  delim[6] = (char) 0;           /* terminator */
 
- 
+
  nextval = strtok(inbuffer,delim);
  if(nextval == (char *)NULL) return 0;
  strncpy(outfields[i++],nextval,maxfieldlength);
@@ -117,7 +119,7 @@ int parse(char *inbuffer,char **outfields,int maxfields,int maxfieldlength)
    if(nextval == (char *)NULL) break;
    strncpy(outfields[i++], nextval,maxfieldlength);
    if(verbose){
-     printf("parse(): Parsed field[%d] = %s.\n",i-1,outfields[i-1]);
+	 printf("parse(): Parsed field[%d] = %s.\n",i-1,outfields[i-1]);
    }
  }
 
@@ -140,4 +142,3 @@ void chop(char *buf)
  /* Reterminate one character earlier */
  *buf = 0;
 }
- 

@@ -15,7 +15,7 @@ int rgb_persist(Test **test, Rgb_Persist *persist);
 
 static Dtest rgb_persist_dtest __attribute__((unused)) = {
   "RGB Bit Persistence Test",
-  "rgb_persist", 
+  "rgb_persist",
   "\n\
 #========================================================================\n\
 #                   RGB Bit Persistence Test\n\
@@ -41,5 +41,3 @@ static Dtest rgb_persist_dtest __attribute__((unused)) = {
   rgb_persist,
   0
 };
-
-unsigned int *rgb_persist_rand_uint;

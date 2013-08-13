@@ -61,7 +61,7 @@ unsigned int get_bit_ntuple(unsigned int *bitstring,unsigned int bslen,unsigned 
    /* dumpbits(&nmask,32); */
  }
  /* dumpbits(&nmask,32); */
- 
+
  if(verbose == D_BITS || verbose == D_ALL){
    printf("# get_bit_ntuple(): bslen = %u, blen = %u, boffset = %u\n",bslen,blen,boffset);
    printf("# get_bit_ntuple(): bitstring (uint) = %u\n",*bitstring);
@@ -122,51 +122,51 @@ unsigned int get_bit_ntuple(unsigned int *bitstring,unsigned int bslen,unsigned 
 
  while(blen > rlen){
    /*
-    * If we get here, we have to use either bitstring[ioffset-1] or
-    * bitstring[bslen-1], shifted and filled into result starting
-    * at the correct slot.  Put this into carry to work on.
-    */
+	* If we get here, we have to use either bitstring[ioffset-1] or
+	* bitstring[bslen-1], shifted and filled into result starting
+	* at the correct slot.  Put this into carry to work on.
+	*/
    ioffset--;
    if(ioffset < 0) ioffset = bslen-1;
    carry = bitstring[ioffset];
    if(verbose == D_BITS || verbose == D_ALL){
-     printf("bitstring[%d] = %u\n",ioffset,carry);
-     printf("Next carry =              ");
-     dumpbits(&carry,32);
+	 printf("bitstring[%d] = %u\n",ioffset,carry);
+	 printf("Next carry =              ");
+	 dumpbits(&carry,32);
    }
 
    /*
-    * This is tricky!  Shift carry left until the first bit lines
-    * up with the first empty bit in result, which we'll hope is
-    * the current rlen bit.
-    */
+	* This is tricky!  Shift carry left until the first bit lines
+	* up with the first empty bit in result, which we'll hope is
+	* the current rlen bit.
+	*/
    for(b=0;b<rlen;b++){
-     carry = carry << 1;
+	 carry = carry << 1;
    }
    if(verbose == D_BITS || verbose == D_ALL){
-     printf("Shifted carry =           ");
-     dumpbits(&carry,32);
+	 printf("Shifted carry =           ");
+	 dumpbits(&carry,32);
    }
 
    /*
-    * Now we simply add result and carry AND increment rlen by
-    * rmax_bit (since this is the exact number of bits it adds
-    * to rlen).
-    */
+	* Now we simply add result and carry AND increment rlen by
+	* rmax_bit (since this is the exact number of bits it adds
+	* to rlen).
+	*/
    result += carry;
    rlen += rmax_bits;
    if(verbose == D_BITS || verbose == D_ALL){
-     printf("Cumulated %u signifcant bits\n",rlen);
-     printf("result+carry =            ");
-     dumpbits(&result,32);
+	 printf("Cumulated %u signifcant bits\n",rlen);
+	 printf("result+carry =            ");
+	 dumpbits(&result,32);
    }
  }
 
  result = result & nmask;
    if(verbose == D_BITS || verbose == D_ALL){
-     printf("Returning Result =        ");
-     dumpbits(&result,32);
-     printf("==========================================================\n");
+	 printf("Returning Result =        ");
+	 dumpbits(&result,32);
+	 printf("==========================================================\n");
    }
  return(result);
 
@@ -184,11 +184,11 @@ void dumpbits(unsigned int *data, unsigned int nbits)
  if(nbits > 8*sizeof(unsigned int)) {
    nbits = 8*sizeof(unsigned int);
  }
- 
+
  mask = (unsigned int)pow(2,nbits-1);
  for(i=0;i<nbits;i++){
    if(verbose == -1){
-     printf("\nmask = %u = %04x :",mask,mask);
+	 printf("\nmask = %u = %04x :",mask,mask);
    }
    j = (mask & *data)?1:0;
    printf("%1u",j);
@@ -285,7 +285,7 @@ int get_bit(unsigned int *rand_uint, unsigned int n)
   * element contains the bit being sought:
   */
  index = (int) (n/rmax_bits);
- 
+
  /*
   * Then we have to compute the offset of the bit desired, starting from
   * the first significant/valid bit in the unsigned int.
@@ -298,7 +298,7 @@ int get_bit(unsigned int *rand_uint, unsigned int n)
  } else {
    return(0);
  }
- 
+
 }
 
 int get_int_bit(unsigned int i, unsigned int n)
@@ -316,7 +316,7 @@ int get_int_bit(unsigned int i, unsigned int n)
    exit(0);
  }
 
- 
+
  /*
   * Then we have make a mask and shift it over from the first (least
   * significant) bit in the unsigned int.  AND the result with i and
@@ -331,7 +331,7 @@ int get_int_bit(unsigned int i, unsigned int n)
  } else {
    return(0);
  }
- 
+
 }
 
 /*
@@ -346,13 +346,13 @@ void dumpbits_left(unsigned int *data, unsigned int nbits)
  if(nbits > 8*sizeof(unsigned int)) {
    nbits = 8*sizeof(unsigned int);
  }
- 
+
  mask = 1;
  for(i=0;i<nbits;i++){
    if(mask & *data){
-     printf("1");
+	 printf("1");
    } else {
-     printf("0");
+	 printf("0");
    }
    mask = mask << 1;
  }
@@ -379,7 +379,7 @@ unsigned int bit2uint(char *abit,unsigned int blen)
    result += bit;
    /* Debugging
    if(verbose == D_BITS || verbose == D_ALL){
-     printf("# bit2uint(): bit[%d] = %d, result = %u\n",i,bit,result);
+	 printf("# bit2uint(): bit[%d] = %d, result = %u\n",i,bit,result);
    }
    */
  }
@@ -404,13 +404,9 @@ void fill_uint_buffer(unsigned int *data,unsigned int buflength)
   * is worth it to create a routine to do this once and for all.
   */
 
- unsigned int bufbits,bdelta;
+ unsigned int bdelta;
  unsigned int i,tmp1,tmp2,mask;
 
- /*
-  * Number of bits we must generate.
-  */
- bufbits = buflength*sizeof(unsigned int)*CHAR_BIT;
  bdelta = sizeof(unsigned int)*CHAR_BIT - rmax_bits;
  mask = 0;
  for(i=0;i<bdelta;i++) {
@@ -660,7 +656,7 @@ unsigned int b_rotate_right(unsigned int input, unsigned int shift)
  * below is AFAIK tested and reliable, if not optimal.
  */
 void get_ntuple_cyclic(unsigned int *input,unsigned int ilen,
-    unsigned int *output,unsigned int jlen,unsigned int ntuple,unsigned int offset)
+	unsigned int *output,unsigned int jlen,unsigned int ntuple,unsigned int offset)
 {
 
  /* important bitlevel indices */
@@ -680,7 +676,7 @@ void get_ntuple_cyclic(unsigned int *input,unsigned int ilen,
  br2 = bu - bs;                /* For Rule 2 */
  MYDEBUG(D_BITS) {
    printf("bu = %d, bs = %d, be = %d, br1 = %d, br2 = %d\n",
-             bu,bs,be,br1,br2);
+			 bu,bs,be,br1,br2);
  }
 
  /*
@@ -721,14 +717,14 @@ void get_ntuple_cyclic(unsigned int *input,unsigned int ilen,
   */
  if(bleft == br2) {
    MYDEBUG(D_BITS) {
-     printf("Rule 2a: From input[%d] to output[%d] = ",i,j);
+	 printf("Rule 2a: From input[%d] to output[%d] = ",i,j);
    }
    output[j] += b_window(input[i],bs,bu-1,bu-br2);
    bleft -= br2;
    MYDEBUG(D_BITS) {
-     dumpuintbits(&output[j],1);printf("\n");
-     printf("bleft = %d\n",bleft);
-     printf("Rule 2a: terminate.\n");
+	 dumpuintbits(&output[j],1);printf("\n");
+	 printf("bleft = %d\n",bleft);
+	 printf("Rule 2a: terminate.\n");
    }
  }
 
@@ -739,132 +735,132 @@ void get_ntuple_cyclic(unsigned int *input,unsigned int ilen,
   */
  if(bleft == br1) {
    MYDEBUG(D_BITS) {
-     printf("Rule 1a: From input[%d] to output[%d] = ",i,j);
+	 printf("Rule 1a: From input[%d] to output[%d] = ",i,j);
    }
    output[j] = b_window(input[i],bs,be-1,bu-bleft);
    bleft -= br1;
    MYDEBUG(D_BITS) {
-     dumpuintbits(&output[j],1);printf("\n");
-     printf("bleft = %d\n",bleft);
-     printf("Rule 1a: terminate.\n");
+	 dumpuintbits(&output[j],1);printf("\n");
+	 printf("bleft = %d\n",bleft);
+	 printf("Rule 1a: terminate.\n");
    }
  }
 
 
- 
+
  while(bleft > 0){
 
    /*
-    * Rule 1
-    */
-   if(bleft == br1) {
-     MYDEBUG(D_BITS) {
-       printf("Rule  1: From input[%d] to output[%d] = ",i,j);
-     }
-     output[j] = b_window(input[i],bs,be-1,bu-bleft);
-     bleft -= br1;
-     MYDEBUG(D_BITS) {
-       dumpuintbits(&output[j],1);printf("\n");
-       printf("bleft = %d\n",bleft);
-       printf("Rule  1: terminate.\n");
-     }
-     break;  /* Terminate while loop */
-   }
-
-   /*
-    * Rule Right -- with termination check
-    */
-   if(bleft != 0) {
-     MYDEBUG(D_BITS) {
-       printf("Rule  R: From input[%d] to output[%d] = ",i,j);
-     }
-     output[j] += b_window(input[i],0,be-1,bu-be);
-     bleft -= be;
-     MYDEBUG(D_BITS) {
-       dumpuintbits(&output[j],1);printf("\n");
-       printf("bleft = %d\n",bleft);
-     }
-     i--;
-     if(i<0) i = ilen-1;  /* wrap i around */
-   } else {
-     MYDEBUG(D_BITS) {
-       printf("Rule  R: terminate.\n");
-     }
-     break;  /* Terminate while loop */
-   }
-
-   /*
-    * This rule terminates if Rule Right is getting whole lines and
-    * we're down to the last whole or partial line.  In this case we
-    * have to decrement j on our own, as we haven't yet reached
-    * Rule Left.
-    * Rule 2b
-    */
-   if(bleft == br2 && be == bu ) {
-     j--;
-     MYDEBUG(D_BITS) {
-       printf("Rule 2b: From input[%d] to output[%d] = ",i,j);
-     }
-     output[j] += b_window(input[i],bs,bu-1,bu - br2);
-     bleft -= br2;
-     MYDEBUG(D_BITS) {
-       dumpuintbits(&output[j],1);printf("\n");
-       printf("bleft = %d\n",bleft);
-       printf("Rule 2b: terminate.\n");
-     }
-     break;  /* Terminate while loop */
-   }
-
- 
-   /*
-    * This rule terminates when Rule Right is getting partial lines.
-    * In this case we KNOW that we must terminate with a Rule 2
-    * partial line.
-    * Rule 2c
-    */
-   if(bleft == br2 && br2 < bu) {
-     MYDEBUG(D_BITS) {
-       printf("Rule 2c: From input[%d] to output[%d] = ",i,j);
-     }
-     output[j] += b_window(input[i],bs,bu-1,bs - be);
-     bleft -= br2;
-     MYDEBUG(D_BITS) {
-       dumpuintbits(&output[j],1);printf("\n");
-       printf("bleft = %d\n",bleft);
-       printf("Rule 2c: terminate.\n");
-     }
-     break;  /* Terminate while loop */
-   }
-
- 
-   /*
-    * Rule Left -- with termination check
-    */
-   if(bleft != 0) {
-     if(be != bu) {
-       /*
-        * We skip Rule Left if Rule Right is getting full lines
+	* Rule 1
 	*/
-       MYDEBUG(D_BITS) {
-         printf("Rule  L: From input[%d] to output[%d] = ",i,j);
-       }
-       output[j] += b_window(input[i],be,bu-1,0);
-       bleft -= bu-be;
-       MYDEBUG(D_BITS) {
-         dumpuintbits(&output[j],1);printf("\n");
-         printf("bleft = %d\n",bleft);
-       }
-     }
+   if(bleft == br1) {
+	 MYDEBUG(D_BITS) {
+	   printf("Rule  1: From input[%d] to output[%d] = ",i,j);
+	 }
+	 output[j] = b_window(input[i],bs,be-1,bu-bleft);
+	 bleft -= br1;
+	 MYDEBUG(D_BITS) {
+	   dumpuintbits(&output[j],1);printf("\n");
+	   printf("bleft = %d\n",bleft);
+	   printf("Rule  1: terminate.\n");
+	 }
+	 break;  /* Terminate while loop */
+   }
+
+   /*
+	* Rule Right -- with termination check
+	*/
+   if(bleft != 0) {
+	 MYDEBUG(D_BITS) {
+	   printf("Rule  R: From input[%d] to output[%d] = ",i,j);
+	 }
+	 output[j] += b_window(input[i],0,be-1,bu-be);
+	 bleft -= be;
+	 MYDEBUG(D_BITS) {
+	   dumpuintbits(&output[j],1);printf("\n");
+	   printf("bleft = %d\n",bleft);
+	 }
+	 i--;
+	 if(i<0) i = ilen-1;  /* wrap i around */
    } else {
-     MYDEBUG(D_BITS) {
-       printf("Rule  L: terminate.\n");
-     }
-     break;  /* Terminate while loop */
+	 MYDEBUG(D_BITS) {
+	   printf("Rule  R: terminate.\n");
+	 }
+	 break;  /* Terminate while loop */
+   }
+
+   /*
+	* This rule terminates if Rule Right is getting whole lines and
+	* we're down to the last whole or partial line.  In this case we
+	* have to decrement j on our own, as we haven't yet reached
+	* Rule Left.
+	* Rule 2b
+	*/
+   if(bleft == br2 && be == bu ) {
+	 j--;
+	 MYDEBUG(D_BITS) {
+	   printf("Rule 2b: From input[%d] to output[%d] = ",i,j);
+	 }
+	 output[j] += b_window(input[i],bs,bu-1,bu - br2);
+	 bleft -= br2;
+	 MYDEBUG(D_BITS) {
+	   dumpuintbits(&output[j],1);printf("\n");
+	   printf("bleft = %d\n",bleft);
+	   printf("Rule 2b: terminate.\n");
+	 }
+	 break;  /* Terminate while loop */
+   }
+
+
+   /*
+	* This rule terminates when Rule Right is getting partial lines.
+	* In this case we KNOW that we must terminate with a Rule 2
+	* partial line.
+	* Rule 2c
+	*/
+   if(bleft == br2 && br2 < bu) {
+	 MYDEBUG(D_BITS) {
+	   printf("Rule 2c: From input[%d] to output[%d] = ",i,j);
+	 }
+	 output[j] += b_window(input[i],bs,bu-1,bs - be);
+	 bleft -= br2;
+	 MYDEBUG(D_BITS) {
+	   dumpuintbits(&output[j],1);printf("\n");
+	   printf("bleft = %d\n",bleft);
+	   printf("Rule 2c: terminate.\n");
+	 }
+	 break;  /* Terminate while loop */
+   }
+
+
+   /*
+	* Rule Left -- with termination check
+	*/
+   if(bleft != 0) {
+	 if(be != bu) {
+	   /*
+		* We skip Rule Left if Rule Right is getting full lines
+	*/
+	   MYDEBUG(D_BITS) {
+		 printf("Rule  L: From input[%d] to output[%d] = ",i,j);
+	   }
+	   output[j] += b_window(input[i],be,bu-1,0);
+	   bleft -= bu-be;
+	   MYDEBUG(D_BITS) {
+		 dumpuintbits(&output[j],1);printf("\n");
+		 printf("bleft = %d\n",bleft);
+	   }
+	 }
+   } else {
+	 MYDEBUG(D_BITS) {
+	   printf("Rule  L: terminate.\n");
+	 }
+	 break;  /* Terminate while loop */
    }
    /*
-    * With this arrangment we can always decrement the second loop counter
-    * here.
-    */
+	* With this arrangment we can always decrement the second loop counter
+	* here.
+	*/
    j--;
 
  }
@@ -921,21 +917,21 @@ unsigned int get_uint_rand(gsl_rng *gsl_rng)
    /* This is how many bits we still need. */
    bleft = bu - rmax_bits;
    /*
-    * The state of the generator is now what it would be on a
-    * typical running call.  bits_rand[1] contains the leftover bits from the
-    * last call (if any).  We now have to interatively fill bits_rand[0],
-    * grab (from the RIGHT) just the number of bits we need to fill the
-    * rest of bits_rand[1] (which might be zero bits).  Then we save bits_rand[1]
-    * for return and move the LEFTOVER (unused) bits from bits_rand[0] into
-    * bits_rand[1], adjust bleft accordingly, and return the uint bits_rand.
-    */
+	* The state of the generator is now what it would be on a
+	* typical running call.  bits_rand[1] contains the leftover bits from the
+	* last call (if any).  We now have to interatively fill bits_rand[0],
+	* grab (from the RIGHT) just the number of bits we need to fill the
+	* rest of bits_rand[1] (which might be zero bits).  Then we save bits_rand[1]
+	* for return and move the LEFTOVER (unused) bits from bits_rand[0] into
+	* bits_rand[1], adjust bleft accordingly, and return the uint bits_rand.
+	*/
    MYDEBUG(D_BITS) {
-     printf("bu = %d bl = %d\n",bu,bl);
-     printf("  init: |");
-     dumpbits(&bits_rand[0],bu);
-     printf("|");
-     dumpbits(&bits_rand[1],bu);
-     printf("|\n");
+	 printf("bu = %d bl = %d\n",bu,bl);
+	 printf("  init: |");
+	 dumpbits(&bits_rand[0],bu);
+	 printf("|");
+	 dumpbits(&bits_rand[1],bu);
+	 printf("|\n");
    }
  }
 
@@ -947,20 +943,20 @@ unsigned int get_uint_rand(gsl_rng *gsl_rng)
    /* Get a bits_rand's worth (rmax_bits) into bits_rand[0] */
    bits_rand[0] = gsl_rng_get(gsl_rng);
    MYDEBUG(D_BITS) {
-     printf("before %2d: |",bleft);
-     dumpbits(&bits_rand[0],bu);
-     printf("|");
-     dumpbits(&bits_rand[1],bu);
-     printf("|\n");
+	 printf("before %2d: |",bleft);
+	 dumpbits(&bits_rand[0],bu);
+	 printf("|");
+	 dumpbits(&bits_rand[1],bu);
+	 printf("|\n");
    }
    /* get the good bits only and fill in bits_rand[1] */
    bits_rand[1] += b_window(bits_rand[0],bu-rmax_bits,bu-1,bleft-rmax_bits);
    MYDEBUG(D_BITS) {
-     printf(" after %2d: |",bleft);
-     dumpbits(&bits_rand[0],bu);
-     printf("|");
-     dumpbits(&bits_rand[1],bu);
-     printf("|\n");
+	 printf(" after %2d: |",bleft);
+	 dumpbits(&bits_rand[0],bu);
+	 printf("|");
+	 dumpbits(&bits_rand[1],bu);
+	 printf("|\n");
    }
    bleft -= rmax_bits;  /* Number of bits we still need to fill bits_rand[1] */
  }
@@ -1001,11 +997,11 @@ unsigned int get_uint_rand(gsl_rng *gsl_rng)
    bits_rand[1] = b_window(bits_rand[0],bu-rmax_bits,bu-bleft-1,bu-rmax_bits+bleft);
    bleft = bu - rmax_bits + bleft;
    MYDEBUG(D_BITS) {
-     printf("  done %2d: |",bleft);
-     dumpbits(&bits_rand[0],bu);
-     printf("|");
-     dumpbits(&bits_rand[1],bu);
-     printf("|\n");
+	 printf("  done %2d: |",bleft);
+	 dumpbits(&bits_rand[0],bu);
+	 printf("|");
+	 dumpbits(&bits_rand[1],bu);
+	 printf("|\n");
    }
  }
  return(tmp);
@@ -1071,33 +1067,33 @@ void get_rand_bits(void *result,unsigned int rsize,unsigned int nbits,gsl_rng *g
 
  if(brindex == -1){
    /*
-    * First call, fill the buffer BACKWARDS.  I know this looks odd,
-    * but we have to think of bits coming off the generator from least
-    * significant on the right to most significant on the left as
-    * filled by get_uint_rand(), so we have to do it this way to avoid
-    * a de-facto shuffle for generators with rmax_bits < 32.
-    */
+	* First call, fill the buffer BACKWARDS.  I know this looks odd,
+	* but we have to think of bits coming off the generator from least
+	* significant on the right to most significant on the left as
+	* filled by get_uint_rand(), so we have to do it this way to avoid
+	* a de-facto shuffle for generators with rmax_bits < 32.
+	*/
    for(i=BRBUF-1;i>=0;i--) {
-     bits_randbuf[i] = get_uint_rand(gsl_rng);
-     /* printf("bits_randbuf[%d] = %u\n",i,bits_randbuf[i]); */
+	 bits_randbuf[i] = get_uint_rand(gsl_rng);
+	 /* printf("bits_randbuf[%d] = %u\n",i,bits_randbuf[i]); */
    }
    /*
-    * Set the pointers to point to the last line, and the bit AFTER the
-    * last bit.  Note that iclear should always start equal to brindex
-    * as one enters the next code segment.
-    */
+	* Set the pointers to point to the last line, and the bit AFTER the
+	* last bit.  Note that iclear should always start equal to brindex
+	* as one enters the next code segment.
+	*/
    brindex = BRBUF;
    iclear = brindex-1;
    bitindex = 0;
    MYDEBUG(D_BITS) {
-     printf("Initialization: iclear = %d  brindex = %d   bitindex = %d\n",iclear,brindex,bitindex);
+	 printf("Initialization: iclear = %d  brindex = %d   bitindex = %d\n",iclear,brindex,bitindex);
    }
  }
  MYDEBUG(D_BITS) {
    for(i=0;i<BRBUF;i++){
-     printf("%2d: ",i);
-     dumpuintbits(&bits_randbuf[i],1);
-     printf("\n");
+	 printf("%2d: ",i);
+	 dumpuintbits(&bits_randbuf[i],1);
+	 printf("\n");
    }
  }
  /*
@@ -1153,9 +1149,9 @@ void get_rand_bits(void *result,unsigned int rsize,unsigned int nbits,gsl_rng *g
   */
  MYDEBUG(D_BITS) {
    for(i=0;i<BRBUF;i++){
-     printf("%2d: ",i);
-     dumpuintbits(&bits_randbuf[i],1);
-     printf("\n");
+	 printf("%2d: ",i);
+	 dumpuintbits(&bits_randbuf[i],1);
+	 printf("\n");
    }
  }
 
@@ -1183,11 +1179,11 @@ void get_rand_bits(void *result,unsigned int rsize,unsigned int nbits,gsl_rng *g
  for(i=0;i<rsize;i++){
    resultp[i] = output[i];
    MYDEBUG(D_BITS) {
-     printf(" Returning: result[%d} = ",i);
-     dumpbits((unsigned int *)&resultp[i],8);
-     printf(" output[%d} = ",i);
-     dumpbits((unsigned int *)&output[i],8);
-     printf("\n");
+	 printf(" Returning: result[%d} = ",i);
+	 dumpbits((unsigned int *)&resultp[i],8);
+	 printf(" output[%d} = ",i);
+	 dumpbits((unsigned int *)&output[i],8);
+	 printf("\n");
    }
  }
 
@@ -1230,40 +1226,40 @@ void mybitadd(char *dst, int doffset, char *src, int soffset, int slen)
    /* dumpbitwin((char *)&tmp,4,0,32); */
    printf("\n");
    /*
-    * This signals the final byte to process
-    */
+	* This signals the final byte to process
+	*/
    if(sblen >= slen){
-     sblen = slen;                            /* number of bits we get */
+	 sblen = slen;                            /* number of bits we get */
    }
    tmp = tmp >> (CHAR_BIT - soffset - sblen); /* right shift to byte edge */
    soffset = CHAR_BIT - sblen;                /* fix offset */
 
    /*
-    * tmp is now in "standard form" -- right aligned, with
-    * sblen = CHAR_BIT - soffset.  We don't care how we got there -- now
-    * we just put it away.
-    */
+	* tmp is now in "standard form" -- right aligned, with
+	* sblen = CHAR_BIT - soffset.  We don't care how we got there -- now
+	* we just put it away.
+	*/
    tmp = tmp << (CHAR_BIT+soffset-doffset);   /* align with target bytes */
    dst[dindex] += btmp[0];                    /* always add in left byte */
 
    /*
-    * This is the final piece of trickiness.  If the left byte is too small
-    * to reach the right margin of dst[dindex], we do NOT increment dindex,
-    * instead we increment doffset by sblen and are done.  Otherwise we
-    * go ahead and increment dindex and add in the second byte.  We have to
-    * be careful with the boundary case where sblen PRECISELY fills the
-    * first byte, as then we want to increment dindex but set doffset to 0.
-    */
+	* This is the final piece of trickiness.  If the left byte is too small
+	* to reach the right margin of dst[dindex], we do NOT increment dindex,
+	* instead we increment doffset by sblen and are done.  Otherwise we
+	* go ahead and increment dindex and add in the second byte.  We have to
+	* be careful with the boundary case where sblen PRECISELY fills the
+	* first byte, as then we want to increment dindex but set doffset to 0.
+	*/
    if(soffset >= doffset){
-     doffset += sblen;
-     if(doffset == CHAR_BIT){
-       dindex++;
-       doffset = 0;
-     }
+	 doffset += sblen;
+	 if(doffset == CHAR_BIT){
+	   dindex++;
+	   doffset = 0;
+	 }
    } else {
-     dindex++;
-     dst[dindex] = btmp[1];
-     doffset = sblen - CHAR_BIT + doffset;
+	 dindex++;
+	 dst[dindex] = btmp[1];
+	 doffset = sblen - CHAR_BIT + doffset;
    }
 
    slen -= sblen;         /* This accounts for the chunk we've just gotten */
@@ -1293,16 +1289,16 @@ void get_rand_pattern(void *result,unsigned int rsize,int *pattern,gsl_rng *gsl_
  while(pattern[i]){
    if(pattern[i]>0) nbits += pattern[i];
    /*
-    * Sorry, I want to use a uint to hold snippets from get_rand_bits().
-    * So we must bitch if we try to use more and quit.
-    */
+	* Sorry, I want to use a uint to hold snippets from get_rand_bits().
+	* So we must bitch if we try to use more and quit.
+	*/
    if(pattern[i]>32) {
-     fprintf(stderr,"Error: pattern[%d] = %d chunks must not exceed 32 in length.\n",i,pattern[i]);
-     fprintf(stderr,"         Use contiguous 32 bit pieces to create a longer chunk.\n");
-     exit(0);
+	 fprintf(stderr,"Error: pattern[%d] = %d chunks must not exceed 32 in length.\n",i,pattern[i]);
+	 fprintf(stderr,"         Use contiguous 32 bit pieces to create a longer chunk.\n");
+	 exit(0);
    }
    MYDEBUG(D_BITS) {
-     printf("# get_rand_pattern: pattern[%d] = %d nbits = %u\n",i,pattern[i],nbits);
+	 printf("# get_rand_pattern: pattern[%d] = %d nbits = %u\n",i,pattern[i],nbits);
    }
    i++;
  }
@@ -1360,61 +1356,61 @@ void get_rand_pattern(void *result,unsigned int rsize,int *pattern,gsl_rng *gsl_
 
    if(pattern[i] > 0){
 
-     /*
-      * Get pattern[i] bits (in uint chunks)
-      */
-     j = pattern[i];
-     while(j>bu) {
+	 /*
+	  * Get pattern[i] bits (in uint chunks)
+	  */
+	 j = pattern[i];
+	 while(j>bu) {
 
-       get_rand_bits(&tmpuint,sizeof(unsigned int),bu,rng);
-       /*
-        * Pack this whole uint into result at the offset.
+	   get_rand_bits(&tmpuint,sizeof(unsigned int),bu,rng);
+	   /*
+		* Pack this whole uint into result at the offset.
 	*/
-       mybitadd((char *)(&resultp + pindex),poffset,(char *)&tmpuint,0,bu);
+	   mybitadd((char *)(&resultp + pindex),poffset,(char *)&tmpuint,0,bu);
 
-       /*
-        * Decrement j, increment pindex, poffset remains unchanged.
-        */
-       j -= bu;
-       pindex += sizeof(unsigned int);
+	   /*
+		* Decrement j, increment pindex, poffset remains unchanged.
+		*/
+	   j -= bu;
+	   pindex += sizeof(unsigned int);
 
-     }
+	 }
 
-     get_rand_bits(&tmpuint,sizeof(unsigned int),j,rng);
-     /*
-      * Pack this partial uint into resultp
-      */
-     mybitadd((char *)(&resultp + pindex),poffset,(char *)&tmpuint,bu-j,j);
+	 get_rand_bits(&tmpuint,sizeof(unsigned int),j,rng);
+	 /*
+	  * Pack this partial uint into resultp
+	  */
+	 mybitadd((char *)(&resultp + pindex),poffset,(char *)&tmpuint,bu-j,j);
 
-     /*
-      * Done with pattern, decrement nbits
-      */
-     nbits -= pattern[i];
-      
+	 /*
+	  * Done with pattern, decrement nbits
+	  */
+	 nbits -= pattern[i];
+
    } else if(pattern[i] < 0){
 
-     /* Skip -pattern[i] bits */
-     j = -pattern[i];
-     while(j>bu) {
-       /* skip whole uint's worth */
-       get_rand_bits(&tmpuint,sizeof(unsigned int),bu,rng);
-       j -= bu;
+	 /* Skip -pattern[i] bits */
+	 j = -pattern[i];
+	 while(j>bu) {
+	   /* skip whole uint's worth */
+	   get_rand_bits(&tmpuint,sizeof(unsigned int),bu,rng);
+	   j -= bu;
 
-     }
-     /* skip final remaining <bu chunk */
-     get_rand_bits(&tmpuint,sizeof(unsigned int),j,rng);
+	 }
+	 /* skip final remaining <bu chunk */
+	 get_rand_bits(&tmpuint,sizeof(unsigned int),j,rng);
 
    } else {
 
-     /* We SHOULD terminate by running out of nbits exactly... */
-     fprintf(stdout,"# get_rand_pattern():  Sorry, this cannot happen.\n\
-    If it did, then you're in deep trouble bugwise.  Refer to rgb.\n");
-     exit(0);
+	 /* We SHOULD terminate by running out of nbits exactly... */
+	 fprintf(stdout,"# get_rand_pattern():  Sorry, this cannot happen.\n\
+	If it did, then you're in deep trouble bugwise.  Refer to rgb.\n");
+	 exit(0);
 
    }
 
  }
- 
+
 
 }
 
@@ -1427,12 +1423,12 @@ void reset_bit_buffers()
 {
 
   int i;
-  
+
   bits_rand[0] = bits_rand[1] = 0;
   bleft = -1;
   for(i = 0;i<BRBUF;i++){
-    bits_randbuf[i] = 0;
-    bits_output[i] = 0;
+	bits_randbuf[i] = 0;
+	bits_output[i] = 0;
   }
   brindex = -1;
   iclear = -1;

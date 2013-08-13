@@ -37,6 +37,8 @@
 #include <dieharder/libdieharder.h>
 #define RGB_OPERM_KMAX 10
 
+static unsigned int rgb_operm_k;
+
 /*
  * Some globals that will eventually go in the test include where they
  * arguably belong.
@@ -115,10 +117,10 @@ int rgb_operm(Test **test,int irun)
    cexpt[i] = &cvexpt[i*nperms];
    idty[i] = &vidty[i*nperms];
    for(j = 0;j<nperms;j++){
-     cexact[i][j] = 0.0;
-     ceinv[i][j] = 0.0;
-     cexpt[i][j]  = 0.0;
-     idty[i][j]   = 0.0;
+	 cexact[i][j] = 0.0;
+	 ceinv[i][j] = 0.0;
+	 cexpt[i][j]  = 0.0;
+	 idty[i][j]   = 0.0;
    }
  }
 
@@ -128,9 +130,9 @@ int rgb_operm(Test **test,int irun)
  iv=0;
  for(i=0;i<nperms;i++){
    for(j=0;j<nperms;j++){
-     cvexact[iv] = cexact[i][j];
-     cvexpt[iv]  = cexpt[i][j];
-     vidty[iv]   = 0.0;
+	 cvexact[iv] = cexact[i][j];
+	 cvexpt[iv]  = cexpt[i][j];
+	 vidty[iv]   = 0.0;
    }
  }
 
@@ -163,11 +165,11 @@ int rgb_operm(Test **test,int irun)
 
    printf("#==================================================================\n");
    for (i = 0; i < nperms; i++) {
-     double eval_i = gsl_vector_get (eval, i);
-     gsl_vector_view evec_i = gsl_matrix_column (evec, i);
-     printf ("eigenvalue[%u] = %g\n", i, eval_i);
-     printf ("eigenvector[%u] = \n",i);
-     gsl_vector_fprintf (stdout,&evec_i.vector, "%10.5f");
+	 double eval_i = gsl_vector_get (eval, i);
+	 gsl_vector_view evec_i = gsl_matrix_column (evec, i);
+	 printf ("eigenvalue[%u] = %g\n", i, eval_i);
+	 printf ("eigenvector[%u] = \n",i);
+	 gsl_vector_fprintf (stdout,&evec_i.vector, "%10.5f");
    }
    printf("#==================================================================\n");
  }
@@ -185,7 +187,7 @@ int rgb_operm(Test **test,int irun)
  for(i=0;i<nperms;i++){
    printf("# ");
    for(j = 0;j<nperms;j++){
-     printf("%8.3f ",idty[i][j]);
+	 printf("%8.3f ",idty[i][j]);
    }
    printf("\n");
  }
@@ -195,14 +197,14 @@ int rgb_operm(Test **test,int irun)
  for(i=0;i<nperms;i++){
    printf("# ");
    for(j = 0;j<nperms;j++){
-     printf("%8.3f ",idty[i][j]);
+	 printf("%8.3f ",idty[i][j]);
    }
    printf("\n");
  }
  printf("#==================================================================\n");
  */
 
-    
+
 
  /*
   * OK, at this point we have two matrices:  cexact[][] is filled with
@@ -217,8 +219,8 @@ int rgb_operm(Test **test,int irun)
   * where the diagonal terms should form a vector that is chisq distributed?
   * Let's try this...
   */
- 
- 
+
+
 
  /*
   * Free cexact[][] and cexpt[][]
@@ -230,7 +232,7 @@ int rgb_operm(Test **test,int irun)
  free(cexact);
  free(cexpt);
   */
- 
+
  return(0);
 
 }
@@ -269,9 +271,9 @@ void make_cexact()
  MYDEBUG(D_RGB_OPERM){
    printf("# rgb_operm: Testing fpipi()\n");
    for(i=0;i<nperms;i++){
-     for(j = 0;j<nperms;j++){
-       printf("# rgb_operm: fpipi(%u,%u,%u) = %f\n",i,j,nperms,fpipi(i,j,nperms));
-     }
+	 for(j = 0;j<nperms;j++){
+	   printf("# rgb_operm: fpipi(%u,%u,%u) = %f\n",i,j,nperms,fpipi(i,j,nperms));
+	 }
    }
  }
  */
@@ -287,19 +289,19 @@ void make_cexact()
    operms[i] = gsl_permutation_alloc(3*rgb_operm_k - 2);
    /* Must quiet down
    MYDEBUG(D_RGB_OPERM){
-     printf("# rgb_operm: ");
+	 printf("# rgb_operm: ");
    }
    */
    if(i == 0){
-     gsl_permutation_init(operms[i]);
+	 gsl_permutation_init(operms[i]);
    } else {
-     gsl_permutation_memcpy(operms[i],operms[i-1]);
-     gsl_permutation_next(operms[i]);
+	 gsl_permutation_memcpy(operms[i],operms[i-1]);
+	 gsl_permutation_next(operms[i]);
    }
    /*
    MYDEBUG(D_RGB_OPERM){
-     gsl_permutation_fprintf(stdout,operms[i]," %u");
-     printf("\n");
+	 gsl_permutation_fprintf(stdout,operms[i]," %u");
+	 printf("\n");
    }
    */
  }
@@ -314,56 +316,56 @@ void make_cexact()
   */
  for(t=0;t<noperms;t++){
    /*
-    * To sort into a perm, test vector needs to be double.
-    */
+	* To sort into a perm, test vector needs to be double.
+	*/
    for(k=0;k<3*rgb_operm_k - 2;k++) testv[k] = (double) operms[t]->data[k];
 
    /* Not cruft, but quiet...
    MYDEBUG(D_RGB_OPERM){
-     printf("#------------------------------------------------------------------\n");
-     printf("# Generating offset sample permutation pi's\n");
+	 printf("#------------------------------------------------------------------\n");
+	 printf("# Generating offset sample permutation pi's\n");
    }
    */
    for(k=0;k<2*rgb_operm_k - 1;k++){
-     gsl_sort_index((size_t *) ps,&testv[k],1,rgb_operm_k);
-     pi[k] = piperm((size_t *) ps,rgb_operm_k);
+	 gsl_sort_index((size_t *) ps,&testv[k],1,rgb_operm_k);
+	 pi[k] = piperm((size_t *) ps,rgb_operm_k);
 
-     /* Not cruft, but quiet...
-     MYDEBUG(D_RGB_OPERM){
-       printf("# %u: ",k);
-       for(ip=k;ip<rgb_operm_k+k;ip++){
-         printf("%.1f ",testv[ip]);
-       }
-       printf("\n# ");
-       for(ip=0;ip<rgb_operm_k;ip++){
-         printf("%u ",ps[ip]);
-       }
-       printf(" = %u\n",pi[k]);
-     }
-     */
+	 /* Not cruft, but quiet...
+	 MYDEBUG(D_RGB_OPERM){
+	   printf("# %u: ",k);
+	   for(ip=k;ip<rgb_operm_k+k;ip++){
+		 printf("%.1f ",testv[ip]);
+	   }
+	   printf("\n# ");
+	   for(ip=0;ip<rgb_operm_k;ip++){
+		 printf("%u ",ps[ip]);
+	   }
+	   printf(" = %u\n",pi[k]);
+	 }
+	 */
 
    }
 
    /*
-    * This is the business end of things.  The covariance matrix is the
-    * the sum of a central function of the permutation indices that yields
-    * nperms-1/nperms on diagonal, -1/nperms off diagonal, for all the
-    * possible permutations, for the FIRST permutation in a sample (fi)
-    * times the sum of the same function over all the overlapping permutations
-    * drawn from the same sample.  Quite simple, really.
-    */
+	* This is the business end of things.  The covariance matrix is the
+	* the sum of a central function of the permutation indices that yields
+	* nperms-1/nperms on diagonal, -1/nperms off diagonal, for all the
+	* possible permutations, for the FIRST permutation in a sample (fi)
+	* times the sum of the same function over all the overlapping permutations
+	* drawn from the same sample.  Quite simple, really.
+	*/
    for(i=0;i<nperms;i++){
-     fi = fpipi(i,pi[rgb_operm_k-1],nperms);
-     for(j=0;j<nperms;j++){
-       fj = 0.0;
-       for(k=0;k<rgb_operm_k;k++){
-         fj += fpipi(j,pi[rgb_operm_k - 1 + k],nperms);
-         if(k != 0){
-           fj += fpipi(j,pi[rgb_operm_k - 1 - k],nperms);
+	 fi = fpipi(i,pi[rgb_operm_k-1],nperms);
+	 for(j=0;j<nperms;j++){
+	   fj = 0.0;
+	   for(k=0;k<rgb_operm_k;k++){
+		 fj += fpipi(j,pi[rgb_operm_k - 1 + k],nperms);
+		 if(k != 0){
+		   fj += fpipi(j,pi[rgb_operm_k - 1 - k],nperms);
 	 }
-       }
-       cexact[i][j] += fi*fj;
-     }
+	   }
+	   cexact[i][j] += fi*fj;
+	 }
    }
 
  }
@@ -374,16 +376,16 @@ void make_cexact()
  }
  for(i=0;i<nperms;i++){
    MYDEBUG(D_RGB_OPERM){
-     printf("# ");
+	 printf("# ");
    }
    for(j=0;j<nperms;j++){
-     cexact[i][j] /= noperms;
-     MYDEBUG(D_RGB_OPERM){
-       printf("%10.6f  ",cexact[i][j]);
-     }
+	 cexact[i][j] /= noperms;
+	 MYDEBUG(D_RGB_OPERM){
+	   printf("%10.6f  ",cexact[i][j]);
+	 }
    }
    MYDEBUG(D_RGB_OPERM){
-     printf("\n");
+	 printf("\n");
    }
  }
 
@@ -449,55 +451,55 @@ void make_cexpt()
   */
  for(t=0;t<tsamples;t++){
    /*
-    * To sort into a perm, test vector needs to be double.
-    */
+	* To sort into a perm, test vector needs to be double.
+	*/
    for(k=0;k<3*rgb_operm_k - 2;k++) testv[k] = (double) gsl_rng_get(rng);
 
    /* Not cruft, but quiet...
    MYDEBUG(D_RGB_OPERM){
-     printf("#------------------------------------------------------------------\n");
-     printf("# Generating offset sample permutation pi's\n");
+	 printf("#------------------------------------------------------------------\n");
+	 printf("# Generating offset sample permutation pi's\n");
    }
    */
    for(k=0;k<2*rgb_operm_k-1;k++){
-     gsl_sort_index(ps,&testv[k],1,rgb_operm_k);
-     pi[k] = piperm(ps,rgb_operm_k);
+	 gsl_sort_index(ps,&testv[k],1,rgb_operm_k);
+	 pi[k] = piperm(ps,rgb_operm_k);
 
-     /* Not cruft, but quiet...
-     MYDEBUG(D_RGB_OPERM){
-       printf("# %u: ",k);
-       for(ip=k;ip<rgb_operm_k+k;ip++){
-         printf("%.1f ",testv[ip]);
-       }
-       printf("\n# ");
-       for(ip=0;ip<rgb_operm_k;ip++){
-         printf("%u ",permsample->data[ip]);
-       }
-       printf(" = %u\n",pi[k]);
-     }
-     */
+	 /* Not cruft, but quiet...
+	 MYDEBUG(D_RGB_OPERM){
+	   printf("# %u: ",k);
+	   for(ip=k;ip<rgb_operm_k+k;ip++){
+		 printf("%.1f ",testv[ip]);
+	   }
+	   printf("\n# ");
+	   for(ip=0;ip<rgb_operm_k;ip++){
+		 printf("%u ",permsample->data[ip]);
+	   }
+	   printf(" = %u\n",pi[k]);
+	 }
+	 */
    }
 
    /*
-    * This is the business end of things.  The covariance matrix is the
-    * the sum of a central function of the permutation indices that yields
-    * nperms-1/nperms on diagonal, -1/nperms off diagonal, for all the
-    * possible permutations, for the FIRST permutation in a sample (fi)
-    * times the sum of the same function over all the overlapping permutations
-    * drawn from the same sample.  Quite simple, really.
-    */
+	* This is the business end of things.  The covariance matrix is the
+	* the sum of a central function of the permutation indices that yields
+	* nperms-1/nperms on diagonal, -1/nperms off diagonal, for all the
+	* possible permutations, for the FIRST permutation in a sample (fi)
+	* times the sum of the same function over all the overlapping permutations
+	* drawn from the same sample.  Quite simple, really.
+	*/
    for(i=0;i<nperms;i++){
-     fi = fpipi(i,pi[rgb_operm_k-1],nperms);
-     for(j=0;j<nperms;j++){
-       fj = 0.0;
-       for(k=0;k<rgb_operm_k;k++){
-         fj += fpipi(j,pi[rgb_operm_k - 1 + k],nperms);
+	 fi = fpipi(i,pi[rgb_operm_k-1],nperms);
+	 for(j=0;j<nperms;j++){
+	   fj = 0.0;
+	   for(k=0;k<rgb_operm_k;k++){
+		 fj += fpipi(j,pi[rgb_operm_k - 1 + k],nperms);
 	 if(k != 0){
-           fj += fpipi(j,pi[rgb_operm_k - 1 - k],nperms);
+		   fj += fpipi(j,pi[rgb_operm_k - 1 - k],nperms);
 	 }
-       }
-       cexpt[i][j] += fi*fj;
-     }
+	   }
+	   cexpt[i][j] += fi*fj;
+	 }
    }
 
  }
@@ -508,16 +510,16 @@ void make_cexpt()
  }
  for(i=0;i<nperms;i++){
    MYDEBUG(D_RGB_OPERM){
-     printf("# ");
+	 printf("# ");
    }
    for(j=0;j<nperms;j++){
-     cexpt[i][j] /= tsamples;
-     MYDEBUG(D_RGB_OPERM){
-       printf("%10.6f  ",cexpt[i][j]);
-     }
+	 cexpt[i][j] /= tsamples;
+	 MYDEBUG(D_RGB_OPERM){
+	   printf("%10.6f  ",cexpt[i][j]);
+	 }
    }
    MYDEBUG(D_RGB_OPERM){
-     printf("\n");
+	 printf("\n");
    }
  }
 
@@ -536,58 +538,58 @@ uint piperm(size_t *data,int len)
  if(lookup == 0){
    lookup = (gsl_permutation**) malloc(nperms*sizeof(gsl_permutation*));
    MYDEBUG(D_RGB_OPERM){
-     printf("# rgb_operm: Allocating piperm lookup table of perms.\n");
+	 printf("# rgb_operm: Allocating piperm lookup table of perms.\n");
    }
    for(i=0;i<nperms;i++){
-        lookup[i] = gsl_permutation_alloc(rgb_operm_k);
+		lookup[i] = gsl_permutation_alloc(rgb_operm_k);
    }
    for(i=0;i<nperms;i++){
-     if(i == 0){
-       gsl_permutation_init(lookup[i]);
-     } else {
-       gsl_permutation_memcpy(lookup[i],lookup[i-1]);
-       gsl_permutation_next(lookup[i]);
-     }
+	 if(i == 0){
+	   gsl_permutation_init(lookup[i]);
+	 } else {
+	   gsl_permutation_memcpy(lookup[i],lookup[i-1]);
+	   gsl_permutation_next(lookup[i]);
+	 }
    }
 
    /*
-    * This method yields a mirror symmetry in the permutations top to
-    * bottom.
+	* This method yields a mirror symmetry in the permutations top to
+	* bottom.
    for(i=0;i<nperms/2;i++){
-     if(i == 0){
-       gsl_permutation_init(lookup[i]);
-       for(j=0;j<rgb_operm_k;j++){
-         lookup[nperms-i-1]->data[rgb_operm_k-j-1] = lookup[i]->data[j];
-       }
-     } else {
-       gsl_permutation_memcpy(lookup[i],lookup[i-1]);
-       gsl_permutation_next(lookup[i]);
-       for(j=0;j<rgb_operm_k;j++){
-         lookup[nperms-i-1]->data[rgb_operm_k-j-1] = lookup[i]->data[j];
-       }
-     }
+	 if(i == 0){
+	   gsl_permutation_init(lookup[i]);
+	   for(j=0;j<rgb_operm_k;j++){
+		 lookup[nperms-i-1]->data[rgb_operm_k-j-1] = lookup[i]->data[j];
+	   }
+	 } else {
+	   gsl_permutation_memcpy(lookup[i],lookup[i-1]);
+	   gsl_permutation_next(lookup[i]);
+	   for(j=0;j<rgb_operm_k;j++){
+		 lookup[nperms-i-1]->data[rgb_operm_k-j-1] = lookup[i]->data[j];
+	   }
+	 }
    }
    */
    MYDEBUG(D_RGB_OPERM){
-     for(i=0;i<nperms;i++){
-       printf("# rgb_operm: %u => ",i);
-       gsl_permutation_fprintf(stdout,lookup[i]," %u");
-       printf("\n");
-     }
+	 for(i=0;i<nperms;i++){
+	   printf("# rgb_operm: %u => ",i);
+	   gsl_permutation_fprintf(stdout,lookup[i]," %u");
+	   printf("\n");
+	 }
    }
 
  }
 
  for(i=0;i<nperms;i++){
    if(memcmp(data,lookup[i]->data,len*sizeof(uint))==0){
-     /* Not cruft, but off:
-     MYDEBUG(D_RGB_OPERM){
-       printf("# piperm(): ");
-       gsl_permutation_fprintf(stdout,lookup[i]," %u");
-       printf(" = %u\n",i);
-     }
-     */
-     return(i);
+	 /* Not cruft, but off:
+	 MYDEBUG(D_RGB_OPERM){
+	   printf("# piperm(): ");
+	   gsl_permutation_fprintf(stdout,lookup[i]," %u");
+	   printf(" = %u\n",i);
+	 }
+	 */
+	 return(i);
    }
  }
  printf("We'd better not get here...\n");
@@ -611,7 +613,7 @@ double fpipi(int pi1,int pi2,int nkp)
 
    fret = (double) (nkp - 1.0)/nkp;
    if(verbose < 0){
-     printf(" f(%d,%d) = %10.6f\n",pi1,pi2,fret);
+	 printf(" f(%d,%d) = %10.6f\n",pi1,pi2,fret);
    }
    return(fret);
 
@@ -619,7 +621,7 @@ double fpipi(int pi1,int pi2,int nkp)
 
    fret = (double) (-1.0/nkp);
    if(verbose < 0){
-     printf(" f(%d,%d) = %10.6f\n",pi1,pi2,fret);
+	 printf(" f(%d,%d) = %10.6f\n",pi1,pi2,fret);
    }
    return(fret);
 
@@ -627,7 +629,3 @@ double fpipi(int pi1,int pi2,int nkp)
 
 
 }
-
-
-
-

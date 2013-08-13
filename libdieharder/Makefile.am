@@ -1,11 +1,7 @@
 #========================================================================
 # This is a Makefile.am for the libdieharder library, part of the
 # overall dieharder package.  It pretty much sets up standard library
-# 
-# These two targets execute in the toplevel project directory only.
-# make svn      does a svn commit and creates the timestamp $(SVNTIME)
-# make sync     does a svn commit and rsyncs the project repo to a 
-#               list of hosts and also creates $(SVNTIME)
+#
 #========================================================================
 
 # This is automagically set in the toplevel build.  Do not edit by
@@ -14,6 +10,8 @@ VERSION=@VERSION@
 LITTLE_ENDIAN=@LITTLE_ENDIAN@
 # VERSION_MAJOR = $(shell expr $(VERSION) : '\(.*\)\..*\..*' \| $(VERSION))
 # RELEASE=0
+
+EXTRA_DIST = static_get_bits.c libdieharder.3
 
 # Man page
 man3_MANS = libdieharder.3
@@ -115,18 +113,4 @@ DEFINES = -DVERSION=$(VERSION) -DLITTLE_ENDIAN=$(LITTLE_ENDIAN)
 
 # Compile flags (use fairly standard -O3 as default)
 AM_CPPFLAGS = $(DEFINES) -I ${top_srcdir}/include -I ${includedir}
-AM_CFLAGS = -O3 -Wall -pedantic -Wno-unused-variable 
-
-#========================================================================
-# The only safe place to do commits is in the toplevel directory
-#========================================================================
-SVNTREE = $(HOME)/Src/svn-tree
-SVNPATH = $(SVNTREE)/dieharder
-SVNTIME = dieharder.svn.time
-
-svn:
-	(cd ..;make svn)
-
-sync:
-	(cd ..;make sync)
-
+AM_CFLAGS = -O3 -Wall -pedantic -Wno-unused-variable

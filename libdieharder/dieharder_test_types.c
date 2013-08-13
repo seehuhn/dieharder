@@ -4,7 +4,7 @@
  * ========================================================================
  */
 
-/* 
+/*
  * ========================================================================
  * This program initializes a permanent internal vector of pointers to all
  * the tests known to dieharder that generate a pvalue or vector of
@@ -26,6 +26,17 @@
  */
 
 #include <dieharder/libdieharder.h>
+
+Dtest *dh_test_types[MAXTESTS];
+
+unsigned int dh_num_diehard_tests;  /* diehard tests available in dieharder */
+unsigned int dh_num_sts_tests;      /* STS tests available in dieharder */
+unsigned int dh_num_other_tests;    /* other tests available in dieharder */
+unsigned int dh_num_user_tests;     /* user tests added in ui segment */
+unsigned int dh_num_tests;          /* total tests available in dieharder */
+
+Dtest *dh_test;             /* global pointer to the current test */
+
 
 void dieharder_test_types()
 {
@@ -157,7 +168,7 @@ void dieharder_test_types()
   * order).
   */
  dh_num_tests = dh_num_diehard_tests + dh_num_sts_tests + dh_num_other_tests
-                + dh_num_user_tests;
+				+ dh_num_user_tests;
 
  /*
   * Except that clever old me will put an undocumented test range out here
@@ -173,7 +184,6 @@ void dieharder_test_types()
  /* ADD_TEST(&rgb_lmn_dtest); */
  /* dh_num_other_tests++; */
 
- 
+
 
 }
-

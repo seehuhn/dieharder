@@ -18,7 +18,7 @@
  /*
   * Shared space
   */
- char splitbuf[PK][PBUF];
+extern char splitbuf[PK][PBUF];
 
  /*
   * parse.c prototypes

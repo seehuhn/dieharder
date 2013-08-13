@@ -1,18 +1,18 @@
 /*
  * This is a hack of the GSL's rng/types.c:
- * 
+ *
  * Copyright (C) 2001 Brian Gough
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -38,6 +38,19 @@
 
 #include <dieharder/libdieharder.h>
 FILE *test_fp;
+
+const gsl_rng_type *dh_rng_types[MAXRNGS];
+const gsl_rng_type **gsl_types;    /* where all the rng types go */
+
+unsigned int dh_num_rngs;           /* dh rngs available in dieharder */
+unsigned int dh_num_gsl_rngs;       /* GSL rngs available in dieharder */
+unsigned int dh_num_dieharder_rngs; /* dh rngs available in libdieharder */
+unsigned int dh_num_R_rngs;         /* R-derived rngs available in libdieharder */
+unsigned int dh_num_hardware_rngs;  /* hardware rngs supported in libdieharder */
+unsigned int dh_num_user_rngs;      /* user-added rngs */
+unsigned int dh_num_reserved_rngs;  /* ngs added in reserved space by new UI */
+
+gsl_rng *rng;                  /* global gsl random number generator */
 
 void dieharder_rng_types()
 {
@@ -79,7 +92,7 @@ void dieharder_rng_types()
   * and to expose users to some new/interesting rngs.
   */
  i = 200;
- dh_num_dieharder_rngs = 0; 
+ dh_num_dieharder_rngs = 0;
  ADD(gsl_rng_stdin_input_raw);
  dh_num_dieharder_rngs++;
  ADD(gsl_rng_file_input_raw);
@@ -159,7 +172,6 @@ void dieharder_rng_types()
   * Tally up all the generators we found.
   */
  dh_num_rngs = dh_num_gsl_rngs + dh_num_dieharder_rngs + dh_num_R_rngs +
-            dh_num_hardware_rngs;
+			dh_num_hardware_rngs;
 
 }
-

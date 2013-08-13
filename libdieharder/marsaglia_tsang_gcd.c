@@ -5,7 +5,7 @@
 /*
  *========================================================================
  *                    Marsaglia and Tsang GCD Test
- * 
+ *
  * 10^7 tsamples (default) of uint rands u, v are generated and two
  * statistics are generated: their greatest common divisor (GCD) (w)
  * and the number of steps of Euclid's Method required to find it
@@ -29,6 +29,13 @@
  */
 
 #include <dieharder/libdieharder.h>
+
+double *ks_pvalue, *ks_pvalue2;
+unsigned int kspi;
+struct timeval tv_start,tv_stop;
+int dummy,idiot;
+FILE *fp;
+char **fields;
 
 /*
  * Include inline uint generator
@@ -79,7 +86,7 @@ double kprob[41] = {
  5.23531000e-04, 1.87855000e-04, 6.08240000e-05, 1.77430000e-05, 4.71300000e-06, 1.10000000e-06,
  2.40000000e-07, 3.60000000e-08, 5.00000000e-09, 0.00000000e+00, 0.00000000e+00 };
 */
-       
+
 /*
  * 1000000000 passes through ranlxd2 produce this table
 double kprob[41] = {
@@ -91,7 +98,7 @@ double kprob[41] = {
  5.24012000e-04, 1.88015000e-04, 6.05240000e-05, 1.78120000e-05, 4.61000000e-06, 1.09400000e-06,
  2.26000000e-07, 4.60000000e-08, 6.00000000e-09, 0.00000000e+00, 0.00000000e+00 };
  */
-       
+
 /*
  * 1000000000 passes through taus2 produce this table
 double kprob[41] = {
@@ -109,12 +116,12 @@ double kprob[41] = {
  * building it, using all four "good" rng's above.
  */
 double kprob_orig[41] = {
-0.00000000e+00, 5.04750000e-09, 6.02750000e-08, 4.85600000e-07, 2.95277750e-06, 1.44486175e-05, 
-5.90652150e-05, 2.06498620e-04, 6.27678690e-04, 1.67988137e-03, 3.99620540e-03, 8.51586863e-03, 
-1.63523276e-02, 2.84322640e-02, 4.49370192e-02, 6.47662520e-02, 8.53358330e-02, 1.03002036e-01, 
-1.14069579e-01, 1.16043292e-01, 1.08530910e-01, 9.33655294e-02, 7.38958017e-02, 5.38017783e-02, 
-3.60191431e-02, 2.21585513e-02, 1.25137621e-02, 6.47848384e-03, 3.06968758e-03, 1.32847777e-03, 
-5.23845965e-04, 1.87623133e-04, 6.08442950e-05, 1.77866925e-05, 4.65595750e-06, 1.09139000e-06, 
+0.00000000e+00, 5.04750000e-09, 6.02750000e-08, 4.85600000e-07, 2.95277750e-06, 1.44486175e-05,
+5.90652150e-05, 2.06498620e-04, 6.27678690e-04, 1.67988137e-03, 3.99620540e-03, 8.51586863e-03,
+1.63523276e-02, 2.84322640e-02, 4.49370192e-02, 6.47662520e-02, 8.53358330e-02, 1.03002036e-01,
+1.14069579e-01, 1.16043292e-01, 1.08530910e-01, 9.33655294e-02, 7.38958017e-02, 5.38017783e-02,
+3.60191431e-02, 2.21585513e-02, 1.25137621e-02, 6.47848384e-03, 3.06968758e-03, 1.32847777e-03,
+5.23845965e-04, 1.87623133e-04, 6.08442950e-05, 1.77866925e-05, 4.65595750e-06, 1.09139000e-06,
 2.26025000e-07, 4.06075000e-08, 6.64500000e-09, 9.07500000e-10, 9.00000000e-11 };
 
 double kprob1[KTBLSIZE] = {
@@ -136,7 +143,7 @@ double kprob[KTBLSIZE] = {
 	2.2668e-07,  4.104e-08,   6.42e-09,    8.4e-10,    1.4e-10 };
 
 double kprob2[KTBLSIZE] = {
-          0.0,  5.213e-09, 6.0704e-08, 4.8521e-07, 2.95083e-06, 1.4447958e-05,
+		  0.0,  5.213e-09, 6.0704e-08, 4.8521e-07, 2.95083e-06, 1.4447958e-05,
  5.9070059e-05, 0.000206521906, 0.000627679842, 0.001679797186, 0.003996414492, 0.008515785524,
  0.016352439788, 0.028432147703, 0.044937745833, 0.064765999943, 0.085335932168, 0.103001938773,
  0.114069284452, 0.116042509045, 0.108530663851, 0.093367044789, 0.073896153625, 0.053801064832,
@@ -168,10 +175,10 @@ int marsaglia_tsang_gcd(Test **test, int irun)
  printf(" %10.8f",gsl_ran_binomial_pdf(0,pbin,nbin));
  for(i=1;i<KTBLSIZE;i++){
    if(i%6 == 0) {
-     if((i)%6 == 0) printf(", \n");
-     printf(" %10.8f",gsl_ran_binomial_pdf(i,pbin,nbin));
+	 if((i)%6 == 0) printf(", \n");
+	 printf(" %10.8f",gsl_ran_binomial_pdf(i,pbin,nbin));
    } else {
-     printf(", %10.8f",gsl_ran_binomial_pdf(i,pbin,nbin));
+	 printf(", %10.8f",gsl_ran_binomial_pdf(i,pbin,nbin));
    }
  }
  printf("};\n");
@@ -207,35 +214,35 @@ int marsaglia_tsang_gcd(Test **test, int irun)
    k = 0;
    /* Get nonzero u,v */
    do{
-    u = get_rand_bits_uint(32,0xffffffff,rng);
+	u = get_rand_bits_uint(32,0xffffffff,rng);
    } while(u == 0);
    do{
-    v = get_rand_bits_uint(32,0xffffffff,rng);
+	v = get_rand_bits_uint(32,0xffffffff,rng);
    } while(v == 0);
 
    do{
-     w = u%v;
-     u = v;
-     v = w;
-     k++;
+	 w = u%v;
+	 u = v;
+	 v = w;
+	 k++;
    } while(v>0);
 
    /*
-    * We just need test[0]->tsamples*c/u^2 to be greater than about 10, the
-    * cutoff built into Vtest_eval()  For test[0]->tsamples = 10^7, turns out that
-    * gtblsize < sqrt((double)test[0]->tsamples*gnorm/10.0) (about 780) should be just
-    * about right.  We lump all counts larger than that into "the tail",
-    * which MUST be included in the chisq targets down below.
-    */
+	* We just need test[0]->tsamples*c/u^2 to be greater than about 10, the
+	* cutoff built into Vtest_eval()  For test[0]->tsamples = 10^7, turns out that
+	* gtblsize < sqrt((double)test[0]->tsamples*gnorm/10.0) (about 780) should be just
+	* about right.  We lump all counts larger than that into "the tail",
+	* which MUST be included in the chisq targets down below.
+	*/
    if(u>=gtblsize) u = gtblsize-1;
    if(u<gtblsize) {
-     gcd[u]++;
+	 gcd[u]++;
    }
 
    /*
-    * lump the k's > KTBLSIZE only because that's what we did generating
-    * the table...
-    */
+	* lump the k's > KTBLSIZE only because that's what we did generating
+	* the table...
+	*/
    k = (k>KTBLSIZE-1)?KTBLSIZE-1:k;
    ktbl[k]++;
 
@@ -271,7 +278,7 @@ int marsaglia_tsang_gcd(Test **test, int irun)
    vtest_k.x[i] = (double)ktbl[i];
    vtest_k.y[i] = test[0]->tsamples*kprob[i];
    MYDEBUG(D_MARSAGLIA_TSANG_GCD) {
-     printf(" %2u\t%f\t%f\t%f\n",i,vtest_k.x[i],vtest_k.y[i],vtest_k.x[i]-vtest_k.y[i]);
+	 printf(" %2u\t%f\t%f\t%f\n",i,vtest_k.x[i],vtest_k.y[i],vtest_k.x[i]-vtest_k.y[i]);
    }
  }
  /*
@@ -280,26 +287,26 @@ int marsaglia_tsang_gcd(Test **test, int irun)
   */
  for(i=0;i<gtblsize;i++){
    /*
-    * No cutoff for this test?
-    */
+	* No cutoff for this test?
+	*/
    vtest_u.cutoff = 5.0;
    if(i>1){
-     vtest_u.x[i] = (double)gcd[i];
-     if(i == gtblsize-1){
-       /* This should be close enough to convergence */
-       for(j=i;j<100000;j++){
-         vtest_u.y[i] += test[0]->tsamples*gnorm/(1.0*j*j);
-       }
-       /* printf(" %2u\t%f\t%f\t%f\n",i,vtest_u.x[i],vtest_u.y[i],vtest_u.x[i]-vtest_u.y[i]); */
-     } else {
-       vtest_u.y[i] = test[0]->tsamples*gnorm/(i*i);
-     }
+	 vtest_u.x[i] = (double)gcd[i];
+	 if(i == gtblsize-1){
+	   /* This should be close enough to convergence */
+	   for(j=i;j<100000;j++){
+		 vtest_u.y[i] += test[0]->tsamples*gnorm/(1.0*j*j);
+	   }
+	   /* printf(" %2u\t%f\t%f\t%f\n",i,vtest_u.x[i],vtest_u.y[i],vtest_u.x[i]-vtest_u.y[i]); */
+	 } else {
+	   vtest_u.y[i] = test[0]->tsamples*gnorm/(i*i);
+	 }
    } else {
-     vtest_u.x[i] = 0.0;
-     vtest_u.y[i] = 0.0;
+	 vtest_u.x[i] = 0.0;
+	 vtest_u.y[i] = 0.0;
    }
    MYDEBUG(D_MARSAGLIA_TSANG_GCD) {
-     printf(" %2u\t%f\t%f\t%f\n",i,vtest_u.x[i],vtest_u.y[i],vtest_u.x[i]-vtest_u.y[i]);
+	 printf(" %2u\t%f\t%f\t%f\n",i,vtest_u.x[i],vtest_u.y[i],vtest_u.x[i]-vtest_u.y[i]);
    }
  }
 
@@ -312,7 +319,7 @@ int marsaglia_tsang_gcd(Test **test, int irun)
 
  test[0]->pvalues[irun] = vtest_k.pvalue;
  test[1]->pvalues[irun] = vtest_u.pvalue;
- 
+
 
  MYDEBUG(D_MARSAGLIA_TSANG_GCD) {
    printf("# diehard_runs(): test[0]->pvalues[%u] = %10.5f\n",irun,test[0]->pvalues[irun]);

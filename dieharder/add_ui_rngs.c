@@ -16,9 +16,6 @@
 
 void add_ui_rngs()
 {
-
- int i;
-
  /*
   * If you are hacking dieharder to add your own rng, add it below using
   * the "empty_random" example as a template (right AFTER the example) and
@@ -26,7 +23,6 @@ void add_ui_rngs()
   * and be immediately useful.  Note that the range 600-699 is currently
   * reserved "only" for UI rngs.
   */
- i = 600;
  dh_num_user_rngs = 0;
  /* Template from here.  Uncomment and fill in your own generator:
  dh_rng_types[i] = gsl_rng_empty_random;
@@ -48,6 +44,5 @@ void add_ui_rngs()
   * enter user example and set i = 700 to start and increment the
   * global dh_num_reserved_rngs counter.
   */
-  
-}
 
+}

@@ -80,7 +80,7 @@ int diehard_runs(Test **test, int irun)
  int i,j,k,t;
  unsigned int ucount,dcount;
  int upruns[RUN_MAX],downruns[RUN_MAX];
- double uv,dv,up_pks,dn_pks;
+ double uv,dv;
  uint first, last, next = 0;
 
  /*
@@ -88,7 +88,7 @@ int diehard_runs(Test **test, int irun)
   */
  test[0]->ntuple = 0;
  test[1]->ntuple = 0;
-   
+
  /*
   * Clear up and down run bins
   */
@@ -110,22 +110,22 @@ int diehard_runs(Test **test, int irun)
  for(t=1;t<test[0]->tsamples;t++) {
    next = gsl_rng_get(rng);
    if(verbose){
-     printf("%d:  %10u   %u    %u\n",t,next,ucount,dcount);
+	 printf("%d:  %10u   %u    %u\n",t,next,ucount,dcount);
    }
 
    /*
-    * Did we increase?
-    */
+	* Did we increase?
+	*/
    if(next > last){
-     ucount++;
-     if(ucount > RUN_MAX) ucount = RUN_MAX;
-     downruns[dcount-1]++;
-     dcount = 1;
+	 ucount++;
+	 if(ucount > RUN_MAX) ucount = RUN_MAX;
+	 downruns[dcount-1]++;
+	 dcount = 1;
    } else {
-     dcount++;
-     if(dcount > RUN_MAX) dcount = RUN_MAX;
-     upruns[ucount-1]++;
-     ucount = 1;
+	 dcount++;
+	 if(dcount > RUN_MAX) dcount = RUN_MAX;
+	 upruns[ucount-1]++;
+	 ucount = 1;
    }
    last = next;
  }
@@ -152,22 +152,16 @@ int diehard_runs(Test **test, int irun)
  }
  for(i=0;i<RUN_MAX;i++) {
    if(verbose){
-     printf("%d:   %7d   %7d\n",i,upruns[i],downruns[i]);
+	 printf("%d:   %7d   %7d\n",i,upruns[i],downruns[i]);
    }
    for(j=0;j<RUN_MAX;j++) {
-     uv += ((double)upruns[i]   - test[0]->tsamples*b[i])*(upruns[j]   - test[0]->tsamples*b[j])*a[i][j];
-     dv += ((double)downruns[i] - test[0]->tsamples*b[i])*(downruns[j] - test[0]->tsamples*b[j])*a[i][j];
+	 uv += ((double)upruns[i]   - test[0]->tsamples*b[i])*(upruns[j]   - test[0]->tsamples*b[j])*a[i][j];
+	 dv += ((double)downruns[i] - test[0]->tsamples*b[i])*(downruns[j] - test[0]->tsamples*b[j])*a[i][j];
    }
  }
  uv /= (double)test[0]->tsamples;
  dv /= (double)test[0]->tsamples;
 
- /*
-  * This NEEDS WORK!  It isn't right, somehow...
-  */
- up_pks = 1.0 - exp ( -0.5 * uv ) * ( 1.0 + 0.5 * uv + 0.125 * uv*uv );
- dn_pks = 1.0 - exp ( -0.5 * dv ) * ( 1.0 + 0.5 * dv + 0.125 * dv*dv );
- 
  MYDEBUG(D_DIEHARD_RUNS) {
    printf("uv = %f   dv = %f\n",uv,dv);
  }
@@ -182,4 +176,3 @@ int diehard_runs(Test **test, int irun)
  return(0);
 
 }
-

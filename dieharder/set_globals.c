@@ -4,6 +4,49 @@
 
 #include "dieharder.h"
 
+char gnames[GVECMAX][128];
+unsigned int gseeds[GVECMAX];
+unsigned int gnumbs[GVECMAX];
+unsigned int gvcount;
+unsigned int gscount;
+unsigned int help_flag;
+unsigned int hist_flag;
+unsigned int iterations;
+unsigned int ks_test;
+unsigned int list;
+unsigned int List;
+double multiply_p;
+unsigned int ntuple;
+unsigned int output_file;
+unsigned int output_format;
+unsigned int overlap;
+unsigned int psamples;
+unsigned int Seed;
+off_t tsamples;
+double Xweak;
+double Xfail;
+unsigned int Xtrategy;
+unsigned int Xstep;
+unsigned int Xoff;
+double x_user;
+double y_user;
+double z_user;
+
+unsigned int all;
+unsigned int binary;
+unsigned int bits;
+unsigned int diehard;
+unsigned int generator;
+
+char filename[K];
+int fromfile;
+
+unsigned long int seed;
+unsigned int random_max;
+unsigned int rmax;
+unsigned int rmax_bits;
+unsigned int rmax_mask;
+
 void set_globals()
 {
 
@@ -43,7 +86,7 @@ void set_globals()
   *    -T seed -T pvalues
   */
  tflag_default = THEADER + TSHOW_RNG + TLINE_HEADER + TTEST_NAME + TNTUPLE +
-                 TPSAMPLES + TTSAMPLES + TPVALUES + TASSESSMENT + TRATE +
+				 TPSAMPLES + TTSAMPLES + TPVALUES + TASSESSMENT + TRATE +
 		 TSEED;
  tflag = 0;             /* We START with this zero so we can accumulate */
  verbose = 0;		/* Default is not to be verbose. */
@@ -65,4 +108,3 @@ void set_globals()
  z_user = 0.0;          /* rewrite parsecl() or add global variables */
 
 }
-

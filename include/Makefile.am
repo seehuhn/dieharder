@@ -1,11 +1,12 @@
-nobase_include_HEADERS = dieharder/copyright.h \
+nobase_include_HEADERS = \
+	dieharder/brg_endian.h \
+	dieharder/brg_types.h \
+	dieharder/copyright.h \
 	dieharder/dab_bytedistrib.h \
 	dieharder/dab_dct.h \
-	dieharder/dab_filltree2.h \
 	dieharder/dab_filltree.h \
+	dieharder/dab_filltree2.h \
 	dieharder/dab_monobit2.h \
-	dieharder/dieharder_rng_types.h \
-	dieharder/dieharder_test_types.h \
 	dieharder/diehard_2dsphere.h \
 	dieharder/diehard_3dsphere.h \
 	dieharder/diehard_birthdays.h \
@@ -23,6 +24,8 @@ nobase_include_HEADERS = dieharder/copyright.h \
 	dieharder/diehard_runs.h \
 	dieharder/diehard_squeeze.h \
 	dieharder/diehard_sums.h \
+	dieharder/dieharder_rng_types.h \
+	dieharder/dieharder_test_types.h \
 	dieharder/Dtest.h \
 	dieharder/libdieharder.h \
 	dieharder/marsaglia_tsang_gcd.h \
@@ -34,9 +37,12 @@ nobase_include_HEADERS = dieharder/copyright.h \
 	dieharder/rgb_lmn.h \
 	dieharder/rgb_minimum_distance.h \
 	dieharder/rgb_operm.h \
-	dieharder/rgb_persist.h \
 	dieharder/rgb_permutations.h \
+	dieharder/rgb_persist.h \
 	dieharder/rgb_timing.h \
+	dieharder/rijndael-alg-fst.h \
+	dieharder/skein.h \
+	dieharder/skein_port.h \
 	dieharder/std_test.h \
 	dieharder/sts_monobit.h \
 	dieharder/sts_runs.h \
@@ -44,9 +50,4 @@ nobase_include_HEADERS = dieharder/copyright.h \
 	dieharder/tests.h \
 	dieharder/verbose.h \
 	dieharder/Vtest.h \
-	dieharder/Xtest.h \
-	dieharder/dab_bytedistrib.h \
-	dieharder/dab_dct.h \
-	dieharder/dab_filltree2.h \
-	dieharder/dab_filltree.h \
-	dieharder/dab_monobit2.h
+	dieharder/Xtest.h

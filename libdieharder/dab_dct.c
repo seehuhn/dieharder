@@ -12,7 +12,7 @@
  * positions of the maximum (absolute) value in each transform are
  * recorded and subjected to a chisq test for uniformity/independence. [1]
  * (A standard type II DCT is used.)
- * 
+ *
  * If tsamples is smaller than or equal to 5 times ntuple then a fallback
  * test will be used, whereby all DCT values are converted to p-values
  * and tested for uniformity via a KS test. This version is significantly
@@ -130,16 +130,16 @@ int dab_dct(Test **test,int irun)
    double max = 0;
 
    /* Change the rotation amount after each quarter of the samples
-    * have been used.
-    */
+	* have been used.
+	*/
    if (j != 0 && (j % (test[0]->tsamples / 4) == 0)) {
-     rotAmount += rmax_bits/4;
+	 rotAmount += rmax_bits/4;
    }
 
    /* Read (and rotate) the actual rng words. */
    for (i=0; i<len; i++) {
-     input[i] = gsl_rng_get(rng);
-     input[i] = RotL(input[i], rotAmount);
+	 input[i] = gsl_rng_get(rng);
+	 input[i] = RotL(input[i], rotAmount);
    }
 
    /* Perform the DCT */
@@ -150,39 +150,39 @@ int dab_dct(Test **test,int irun)
    dct[0] /= sqrt(2);  // Experimental + guess; seems to be correct.
 
    if (!useFallbackMethod) {
-     /* Primary method: find the position of the largest value. */
-     for (i=0; i<len; i++) {
-       if (fabs(dct[i]) > max) {
-         pos = i;
-         max = fabs(dct[i]);
-       }
-     }
-     /* And record it. */
-     positionCounts[pos]++;
+	 /* Primary method: find the position of the largest value. */
+	 for (i=0; i<len; i++) {
+	   if (fabs(dct[i]) > max) {
+		 pos = i;
+		 max = fabs(dct[i]);
+	   }
+	 }
+	 /* And record it. */
+	 positionCounts[pos]++;
    } else {
-     /* Fallback method: convert all values to pvalues. */
-     for (i=0; i<len; i++) {
-       ptest.x = dct[i] / sd;
-       Xtest_eval(&ptest);
-       pvalues[j*len + i] = ptest.pvalue;
-     }
+	 /* Fallback method: convert all values to pvalues. */
+	 for (i=0; i<len; i++) {
+	   ptest.x = dct[i] / sd;
+	   Xtest_eval(&ptest);
+	   pvalues[j*len + i] = ptest.pvalue;
+	 }
    }
  }
 
  if (!useFallbackMethod) {
    /* Primary method: perform a chisq test for uniformity
-    * of discrete counts. */
+	* of discrete counts. */
    double p;
    double *expected = (double *) malloc(sizeof(double) * len);
    for (i=0; i<len; i++) {
-     expected[i] = (double) test[0]->tsamples / len;
+	 expected[i] = (double) test[0]->tsamples / len;
    }
    p = chisq_pearson(positionCounts, expected, len);
    test[0]->pvalues[irun] = p;
    free(expected);
  } else {
    /* Fallback method: perform a ks test for uniformity of the
-    * continuous p-values. */
+	* continuous p-values. */
    test[0]->pvalues[irun] = kstest(pvalues, len * test[0]->tsamples);
  }
 
@@ -248,7 +248,7 @@ void fDCT2(const unsigned int input[], double output[], size_t len) {
 
  for (i = 0; i < len; i++) {
    for (j = 0; j < len; j++) {
-     output[i] += (double) input[j] * cos((M_PI / len) * (0.5 + j) * i);
+	 output[i] += (double) input[j] * cos((M_PI / len) * (0.5 + j) * i);
    }
  }
 }
@@ -271,7 +271,7 @@ void iDCT2(const double input[], double output[], size_t len) {
  for (i = 0; i < len; i++) {
    double sum = 0;
    for (j = 0; j < len; j++) {
-     sum += input[j] * cos(((M_PI * j) / len) * (0.5 + i));
+	 sum += input[j] * cos(((M_PI * j) / len) * (0.5 + i));
    }
    output[i] = (sum - (input[0] / 2.0)) / (len / 2);
  }
@@ -286,19 +286,17 @@ double evalMostExtreme(double *pvalue, unsigned int num) {
  double ext = 1.0;
  int sign = 1;
  unsigned int i;
- unsigned int pos = 0;
 
  for (i = 0; i < num; i++) {
    double p = pvalue[i];
    int cursign = -1;
    if (p > 0.5) {
-     p = 1-p;
-     cursign = 1;
+	 p = 1-p;
+	 cursign = 1;
    }
    if (p < ext) {
-     ext = p;
-     sign = cursign;
-     pos = i;
+	 ext = p;
+	 sign = cursign;
    }
  }
 
@@ -323,4 +321,3 @@ int main_dab_dct() {
 
  return 0;
 }
-
