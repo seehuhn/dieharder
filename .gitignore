@@ -1,0 +1,15 @@
+Makefile
+Makefile.in
+aclocal.m4
+ar-lib
+autom4te.cache
+compile
+config.h.in
+config.log
+config.status
+configure
+depcomp
+install-sh
+ltmain.sh
+m4
+missing

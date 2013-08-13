@@ -26,11 +26,12 @@ AC_DEFINE([RELEASED], [], [Description])
 # See the libtool manual for an explanation of the numbers.
 # NOTE WELL!  One MUST bump LT_VERSION along with AC_INIT,
 # apparently.
-# 
+#
 # dieharder-1.0    libdieharder 0:0:0
 #==================================================================
 # This command "should" keep libtool up to date.
 AC_CONFIG_MACRO_DIR([m4])
+AM_PROG_AR
 LT_INIT
 AC_SUBST([LIBTOOL_DEPS])
 DIEHARDER_LT_VERSION="3:31:1"
@@ -40,13 +41,13 @@ AC_SUBST(DIEHARDER_LIB_VERSION)
 
 case "$VERSION" in
     *+)
-        AC_DEFINE(RELEASED,0)
-        ;;
+	AC_DEFINE(RELEASED,0)
+	;;
     *)
-        AC_DEFINE(RELEASED,1)
-        ;;
+	AC_DEFINE(RELEASED,1)
+	;;
 esac
-AC_SUBST(RELEASED)      
+AC_SUBST(RELEASED)
 
 #==================================================================
 # Check for which system.
@@ -61,24 +62,6 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
-
-#==================================================================
-# OK, these five macros prevent my personal path from appearing
-# in the default Makefile, and actually should make it work to
-# rebuilt itself even if somebody completely blows off running
-# ./autogen.sh.  And it ALMOST WORKS
-#==================================================================
-ACLOCAL="${SHELL} ./missing --run aclocal"
-ACTAR="${SHELL} ./missing --run tar"
-AUTOCONF="${SHELL} ./missing --run autoconf;echo \"Run ./configure\";exit"
-AUTOHEADER="${SHELL} ./missing --run autoheader"
-AUTOMAKE="${SHELL} ./missing --run automake --add-missing --copy --gnu"
-
-AC_SUBST(ACLOCAL)
-AC_SUBST(ACTAR)
-AC_SUBST(AUTOCONF)
-AC_SUBST(AUTOHEADER)
-AC_SUBST(AUTOMAKE)
 
 #==================================================================
 # Disable unnecessary libtool tests for c++,fortran,java
@@ -130,9 +113,9 @@ AC_DEFUN([AC_C_ENDIAN],
 [
   AC_RUN_IFELSE(
     [AC_LANG_PROGRAM([], [dnl
-        long val = 1;
-        char *c = (char *) &val;
-        exit(*c == 1);
+	long val = 1;
+	char *c = (char *) &val;
+	exit(*c == 1);
     ])
   ],[
     ac_cv_c_endian=big
@@ -141,15 +124,15 @@ AC_DEFUN([AC_C_ENDIAN],
   ])
 ])
 if test $ac_cv_c_endian = big; then
-  AC_SUBST(LITTLE_ENDIAN,0) 
+  AC_SUBST(LITTLE_ENDIAN,0)
 fi
 if test $ac_cv_c_endian = little; then
-  AC_SUBST(LITTLE_ENDIAN,1) 
+  AC_SUBST(LITTLE_ENDIAN,1)
 fi
 ])
 
 AC_C_ENDIAN
- 
+
 
 #==================================================================
 # Checks for typedefs, structures, and compiler characteristics.
@@ -163,13 +146,13 @@ AC_HEADER_TIME
 # all happy and macro-replaced.
 #==================================================================
 AC_CONFIG_FILES([
- dieharder_version.h 
+ dieharder_version.h
  dieharder.spec
  dieharder.html
  dieharder-config
- dieharder/Makefile 
+ dieharder/Makefile
  include/Makefile
- libdieharder/Makefile 
+ libdieharder/Makefile
  manual/Makefile
  manual/macros.tex
  Makefile])

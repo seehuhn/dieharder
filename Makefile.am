@@ -1,4 +1,5 @@
 ## Process this file with automake to produce Makefile.in
+
 # These are made, in order presented, from the toplevel make
 SUBDIRS = libdieharder dieharder include
 
@@ -43,7 +44,7 @@ RDIEHARDER = RDieHarder
 #========================================================================
 # Constructs used in project maintenance and installation.
 #
-# The destination on an ssh-accessible remote webserver $(WLOGIN), 
+# The destination on an ssh-accessible remote webserver $(WLOGIN),
 # used as:
 #    $(HOME)/public_html/$(WDIR)
 #========================================================================
@@ -152,13 +153,13 @@ tgz: Makefile COPYING Copyright NOTES README $(SPEC) $(ABS) $(PHP)
 	cp README $(PROJECTDIR); \
 	cp NOTES $(PROJECTDIR); \
 	tar -cvpf $(TAR) \
-            --exclude=.svn \
+	    --exclude=.svn \
 	    --exclude=Cruft \
 	    --exclude=Exclude \
-            --exclude=*.tar \
-            --exclude=*.tgz \
-            --exclude=*.rpm \
-            ./$(PROJECTDIR); \
+	    --exclude=*.tar \
+	    --exclude=*.tgz \
+	    --exclude=*.rpm \
+	    ./$(PROJECTDIR); \
 	gzip $(TAR); \
 	mv $(TAR).gz $(TGZ); \
 	rm -rf $(PROJECTDIR))
@@ -293,4 +294,3 @@ rdhprep:
 # This has to be run only as root, sorry.
 rdh:	$(RDHPKG)
 	R CMD INSTALL $(RDHPKG)
-
