@@ -1,0 +1,64 @@
+\usepackage{epsfig}
+\usepackage{html}
+\usepackage{geometry}
+\usepackage{hyperref}
+
+% Standard 6x9 trade paperback
+% This layout works "perfectly" for lulu.
+
+% Set paper size
+\geometry{paperwidth=7.444in,paperheight=9.681in}
+
+% set left/right margins for binding
+\geometry{twoside}
+
+% Specify the four OUTER margins, only -- let header, footer, etc live
+% within this space and do not otherwise specify them.
+\geometry{left=1.60in,right=0.5in,top=0.75in,bottom=0.75in}
+
+% I'm not certain, but I think that this helps with fonts and passing
+% the pagesize through to ps2pdf.
+\geometry{dvips} 
+
+% The following are individual preferences, adjust to taste.
+
+% I like a small gap between paragraphs to improve readability.
+\parskip = 0.075in
+
+% This penalizes breaking things at the end of pages.
+\widowpenalty=300
+\clubpenalty=300
+
+% Similarly, I like having a bit more than single spacing to improve
+% readability.
+\renewcommand{\baselinestretch}{1.1}
+
+% I find the following to be useful in text layout.
+\newcommand{\ind}{\hspace{5 em}}
+\newcommand{\vsfill}{\vspace*{\fill}}
+\newcommand{\pagefill}{\vsfill \newpage \vsfill}
+
+% \blankpage is more than useful, it is essential.  A lulu book needs
+% the FIRST page to be a TITLE page, probably laid out by hand 
+% (\maketitle just doesn't do very well with it).  \pagestyle should be
+% empty.  Page TWO should be BLANK.  Page THREE should be a COPYRIGHT
+% page, plus any acknowledgements or license restrictions desired.  Page
+% FOUR should be BLANK.  Alternate odd (content) even (blank) pages up
+% to the table of contents.  Turn on \pagestyle headings, and
+% choose \pagenumbering{roman} for the TOC and possibly the preface, if
+% any.  Make sure that TOC starts on an odd page (facing the reader on
+% the right hand page) -- add blank page(s) as needed to pad things out
+% so that this works out.  ONCE YOU ARE IN THE MAIN TEXT, the \chapter
+% macro will arrange this for you and you can stop.  Finally, when you
+% start the main text, reset the page counter to 1, set page numbering
+% to arabic, and deal with page headers however you like.  The default
+% is often ok, but there are nice styles you can include to give you
+% better (even complete) control of the headers.  I personally favor
+% having a "free" web version of the book available clearly marked "for
+% on-screen viewing only" that directs a user to the lulu site for
+% possible book purchase in the header or footer, for example... but
+% only in the online PDF.  This may require the use of autoconf or
+% make/sed to hack a line or two in this very style file to accomplish
+% automagically.
+\newcommand{\blankpage}{\newpage \vsfill \newpage}
+

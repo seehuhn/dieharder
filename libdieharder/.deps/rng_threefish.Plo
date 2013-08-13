@@ -1,0 +1,567 @@
+rng_threefish.lo: rng_threefish.c ../include/dieharder/libdieharder.h \
+ ../include/dieharder/copyright.h /usr/include/stdio.h \
+ /usr/include/features.h /usr/include/sys/cdefs.h \
+ /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
+ /usr/include/gnu/stubs-64.h \
+ /usr/lib/gcc/x86_64-redhat-linux/4.5.1/include/stddef.h \
+ /usr/include/bits/types.h /usr/include/bits/typesizes.h \
+ /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
+ /usr/lib/gcc/x86_64-redhat-linux/4.5.1/include/stdarg.h \
+ /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
+ /usr/include/bits/stdio.h /usr/include/stdlib.h \
+ /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
+ /usr/include/endian.h /usr/include/bits/endian.h \
+ /usr/include/bits/byteswap.h /usr/include/sys/types.h \
+ /usr/include/time.h /usr/include/sys/select.h /usr/include/bits/select.h \
+ /usr/include/bits/sigset.h /usr/include/bits/time.h \
+ /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h \
+ /usr/include/alloca.h /usr/include/string.h /usr/include/xlocale.h \
+ /usr/include/bits/string.h /usr/include/bits/string2.h \
+ /usr/include/sys/time.h /usr/include/sys/stat.h /usr/include/bits/stat.h \
+ /usr/include/unistd.h /usr/include/bits/posix_opt.h \
+ /usr/include/bits/environments.h /usr/include/bits/confname.h \
+ /usr/include/getopt.h /usr/include/math.h /usr/include/bits/huge_val.h \
+ /usr/include/bits/huge_valf.h /usr/include/bits/huge_vall.h \
+ /usr/include/bits/inf.h /usr/include/bits/nan.h \
+ /usr/include/bits/mathdef.h /usr/include/bits/mathcalls.h \
+ /usr/include/bits/mathinline.h \
+ /usr/lib/gcc/x86_64-redhat-linux/4.5.1/include/limits.h \
+ /usr/lib/gcc/x86_64-redhat-linux/4.5.1/include/syslimits.h \
+ /usr/include/limits.h /usr/include/bits/posix1_lim.h \
+ /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
+ /usr/include/bits/posix2_lim.h /usr/include/gsl/gsl_rng.h \
+ /usr/include/gsl/gsl_types.h /usr/include/gsl/gsl_errno.h \
+ /usr/include/errno.h /usr/include/bits/errno.h \
+ /usr/include/linux/errno.h /usr/include/asm/errno.h \
+ /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
+ /usr/include/gsl/gsl_inline.h /usr/include/gsl/gsl_randist.h \
+ /usr/include/gsl/gsl_cdf.h /usr/include/gsl/gsl_sf.h \
+ /usr/include/gsl/gsl_sf_result.h /usr/include/gsl/gsl_sf_airy.h \
+ /usr/include/gsl/gsl_mode.h /usr/include/gsl/gsl_sf_bessel.h \
+ /usr/include/gsl/gsl_precision.h /usr/include/gsl/gsl_sf_clausen.h \
+ /usr/include/gsl/gsl_sf_coupling.h /usr/include/gsl/gsl_sf_coulomb.h \
+ /usr/include/gsl/gsl_sf_dawson.h /usr/include/gsl/gsl_sf_debye.h \
+ /usr/include/gsl/gsl_sf_dilog.h /usr/include/gsl/gsl_sf_elementary.h \
+ /usr/include/gsl/gsl_sf_ellint.h /usr/include/gsl/gsl_sf_elljac.h \
+ /usr/include/gsl/gsl_sf_erf.h /usr/include/gsl/gsl_sf_exp.h \
+ /usr/include/gsl/gsl_sf_expint.h /usr/include/gsl/gsl_sf_fermi_dirac.h \
+ /usr/include/gsl/gsl_sf_gamma.h /usr/include/gsl/gsl_sf_gegenbauer.h \
+ /usr/include/gsl/gsl_sf_hyperg.h /usr/include/gsl/gsl_sf_laguerre.h \
+ /usr/include/gsl/gsl_sf_lambert.h /usr/include/gsl/gsl_sf_legendre.h \
+ /usr/include/gsl/gsl_sf_log.h /usr/include/gsl/gsl_sf_mathieu.h \
+ /usr/include/gsl/gsl_eigen.h /usr/include/gsl/gsl_vector.h \
+ /usr/include/gsl/gsl_vector_complex_long_double.h \
+ /usr/include/gsl/gsl_complex.h /usr/include/gsl/gsl_check_range.h \
+ /usr/include/gsl/gsl_vector_long_double.h \
+ /usr/include/gsl/gsl_block_long_double.h \
+ /usr/include/gsl/gsl_vector_complex.h \
+ /usr/include/gsl/gsl_block_complex_long_double.h \
+ /usr/include/gsl/gsl_vector_complex_double.h \
+ /usr/include/gsl/gsl_vector_double.h /usr/include/gsl/gsl_block_double.h \
+ /usr/include/gsl/gsl_block_complex_double.h \
+ /usr/include/gsl/gsl_vector_complex_float.h \
+ /usr/include/gsl/gsl_vector_float.h /usr/include/gsl/gsl_block_float.h \
+ /usr/include/gsl/gsl_block_complex_float.h \
+ /usr/include/gsl/gsl_vector_ulong.h /usr/include/gsl/gsl_block_ulong.h \
+ /usr/include/gsl/gsl_vector_long.h /usr/include/gsl/gsl_block_long.h \
+ /usr/include/gsl/gsl_vector_uint.h /usr/include/gsl/gsl_block_uint.h \
+ /usr/include/gsl/gsl_vector_int.h /usr/include/gsl/gsl_block_int.h \
+ /usr/include/gsl/gsl_vector_ushort.h /usr/include/gsl/gsl_block_ushort.h \
+ /usr/include/gsl/gsl_vector_short.h /usr/include/gsl/gsl_block_short.h \
+ /usr/include/gsl/gsl_vector_uchar.h /usr/include/gsl/gsl_block_uchar.h \
+ /usr/include/gsl/gsl_vector_char.h /usr/include/gsl/gsl_block_char.h \
+ /usr/include/gsl/gsl_matrix.h \
+ /usr/include/gsl/gsl_matrix_complex_long_double.h \
+ /usr/include/gsl/gsl_matrix_complex_double.h \
+ /usr/include/gsl/gsl_matrix_complex_float.h \
+ /usr/include/gsl/gsl_matrix_long_double.h \
+ /usr/include/gsl/gsl_matrix_double.h /usr/include/gsl/gsl_matrix_float.h \
+ /usr/include/gsl/gsl_matrix_ulong.h /usr/include/gsl/gsl_matrix_long.h \
+ /usr/include/gsl/gsl_matrix_uint.h /usr/include/gsl/gsl_matrix_int.h \
+ /usr/include/gsl/gsl_matrix_ushort.h /usr/include/gsl/gsl_matrix_short.h \
+ /usr/include/gsl/gsl_matrix_uchar.h /usr/include/gsl/gsl_matrix_char.h \
+ /usr/include/gsl/gsl_sf_pow_int.h /usr/include/gsl/gsl_sf_psi.h \
+ /usr/include/gsl/gsl_sf_synchrotron.h \
+ /usr/include/gsl/gsl_sf_transport.h /usr/include/gsl/gsl_sf_trig.h \
+ /usr/include/gsl/gsl_sf_zeta.h /usr/include/gsl/gsl_permutation.h \
+ /usr/include/gsl/gsl_heapsort.h /usr/include/gsl/gsl_sort.h \
+ /usr/include/gsl/gsl_sort_long_double.h \
+ /usr/include/gsl/gsl_sort_double.h /usr/include/gsl/gsl_sort_float.h \
+ /usr/include/gsl/gsl_sort_ulong.h /usr/include/gsl/gsl_sort_long.h \
+ /usr/include/gsl/gsl_sort_uint.h /usr/include/gsl/gsl_sort_int.h \
+ /usr/include/gsl/gsl_sort_ushort.h /usr/include/gsl/gsl_sort_short.h \
+ /usr/include/gsl/gsl_sort_uchar.h /usr/include/gsl/gsl_sort_char.h \
+ /usr/include/gsl/gsl_blas.h /usr/include/gsl/gsl_blas_types.h \
+ /usr/include/gsl/gsl_cblas.h ../include/dieharder/Dtest.h \
+ ../include/dieharder/parse.h ../include/dieharder/verbose.h \
+ ../include/dieharder/Xtest.h ../include/dieharder/Vtest.h \
+ ../include/dieharder/std_test.h ../include/dieharder/tests.h \
+ ../include/dieharder/rgb_timing.h ../include/dieharder/rgb_persist.h \
+ ../include/dieharder/rgb_bitdist.h \
+ ../include/dieharder/rgb_kstest_test.h \
+ ../include/dieharder/rgb_lagged_sums.h \
+ ../include/dieharder/rgb_minimum_distance.h \
+ ../include/dieharder/rgb_operm.h ../include/dieharder/rgb_permutations.h \
+ ../include/dieharder/dab_bytedistrib.h ../include/dieharder/dab_dct.h \
+ ../include/dieharder/dab_filltree.h ../include/dieharder/dab_filltree2.h \
+ ../include/dieharder/dab_monobit2.h \
+ ../include/dieharder/diehard_birthdays.h \
+ ../include/dieharder/diehard_operm5.h \
+ ../include/dieharder/diehard_rank_32x32.h \
+ ../include/dieharder/diehard_rank_6x8.h \
+ ../include/dieharder/diehard_bitstream.h \
+ ../include/dieharder/diehard_opso.h ../include/dieharder/diehard_oqso.h \
+ ../include/dieharder/diehard_dna.h \
+ ../include/dieharder/diehard_count_1s_stream.h \
+ ../include/dieharder/diehard_count_1s_byte.h \
+ ../include/dieharder/diehard_parking_lot.h \
+ ../include/dieharder/diehard_2dsphere.h \
+ ../include/dieharder/diehard_3dsphere.h \
+ ../include/dieharder/diehard_squeeze.h \
+ ../include/dieharder/diehard_sums.h ../include/dieharder/diehard_runs.h \
+ ../include/dieharder/diehard_craps.h \
+ ../include/dieharder/marsaglia_tsang_gcd.h \
+ ../include/dieharder/sts_monobit.h ../include/dieharder/sts_runs.h \
+ ../include/dieharder/sts_serial.h \
+ ../include/dieharder/dieharder_rng_types.h \
+ ../include/dieharder/dieharder_test_types.h ../include/dieharder/skein.h \
+ ../include/dieharder/skein_port.h ../include/dieharder/brg_types.h \
+ ../include/dieharder/brg_endian.h /usr/include/byteswap.h
+
+../include/dieharder/libdieharder.h:
+
+../include/dieharder/copyright.h:
+
+/usr/include/stdio.h:
+
+/usr/include/features.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/gnu/stubs-64.h:
+
+/usr/lib/gcc/x86_64-redhat-linux/4.5.1/include/stddef.h:
+
+/usr/include/bits/types.h:
+
+/usr/include/bits/typesizes.h:
+
+/usr/include/libio.h:
+
+/usr/include/_G_config.h:
+
+/usr/include/wchar.h:
+
+/usr/lib/gcc/x86_64-redhat-linux/4.5.1/include/stdarg.h:
+
+/usr/include/bits/stdio_lim.h:
+
+/usr/include/bits/sys_errlist.h:
+
+/usr/include/bits/stdio.h:
+
+/usr/include/stdlib.h:
+
+/usr/include/bits/waitflags.h:
+
+/usr/include/bits/waitstatus.h:
+
+/usr/include/endian.h:
+
+/usr/include/bits/endian.h:
+
+/usr/include/bits/byteswap.h:
+
+/usr/include/sys/types.h:
+
+/usr/include/time.h:
+
+/usr/include/sys/select.h:
+
+/usr/include/bits/select.h:
+
+/usr/include/bits/sigset.h:
+
+/usr/include/bits/time.h:
+
+/usr/include/sys/sysmacros.h:
+
+/usr/include/bits/pthreadtypes.h:
+
+/usr/include/alloca.h:
+
+/usr/include/string.h:
+
+/usr/include/xlocale.h:
+
+/usr/include/bits/string.h:
+
+/usr/include/bits/string2.h:
+
+/usr/include/sys/time.h:
+
+/usr/include/sys/stat.h:
+
+/usr/include/bits/stat.h:
+
+/usr/include/unistd.h:
+
+/usr/include/bits/posix_opt.h:
+
+/usr/include/bits/environments.h:
+
+/usr/include/bits/confname.h:
+
+/usr/include/getopt.h:
+
+/usr/include/math.h:
+
+/usr/include/bits/huge_val.h:
+
+/usr/include/bits/huge_valf.h:
+
+/usr/include/bits/huge_vall.h:
+
+/usr/include/bits/inf.h:
+
+/usr/include/bits/nan.h:
+
+/usr/include/bits/mathdef.h:
+
+/usr/include/bits/mathcalls.h:
+
+/usr/include/bits/mathinline.h:
+
+/usr/lib/gcc/x86_64-redhat-linux/4.5.1/include/limits.h:
+
+/usr/lib/gcc/x86_64-redhat-linux/4.5.1/include/syslimits.h:
+
+/usr/include/limits.h:
+
+/usr/include/bits/posix1_lim.h:
+
+/usr/include/bits/local_lim.h:
+
+/usr/include/linux/limits.h:
+
+/usr/include/bits/posix2_lim.h:
+
+/usr/include/gsl/gsl_rng.h:
+
+/usr/include/gsl/gsl_types.h:
+
+/usr/include/gsl/gsl_errno.h:
+
+/usr/include/errno.h:
+
+/usr/include/bits/errno.h:
+
+/usr/include/linux/errno.h:
+
+/usr/include/asm/errno.h:
+
+/usr/include/asm-generic/errno.h:
+
+/usr/include/asm-generic/errno-base.h:
+
+/usr/include/gsl/gsl_inline.h:
+
+/usr/include/gsl/gsl_randist.h:
+
+/usr/include/gsl/gsl_cdf.h:
+
+/usr/include/gsl/gsl_sf.h:
+
+/usr/include/gsl/gsl_sf_result.h:
+
+/usr/include/gsl/gsl_sf_airy.h:
+
+/usr/include/gsl/gsl_mode.h:
+
+/usr/include/gsl/gsl_sf_bessel.h:
+
+/usr/include/gsl/gsl_precision.h:
+
+/usr/include/gsl/gsl_sf_clausen.h:
+
+/usr/include/gsl/gsl_sf_coupling.h:
+
+/usr/include/gsl/gsl_sf_coulomb.h:
+
+/usr/include/gsl/gsl_sf_dawson.h:
+
+/usr/include/gsl/gsl_sf_debye.h:
+
+/usr/include/gsl/gsl_sf_dilog.h:
+
+/usr/include/gsl/gsl_sf_elementary.h:
+
+/usr/include/gsl/gsl_sf_ellint.h:
+
+/usr/include/gsl/gsl_sf_elljac.h:
+
+/usr/include/gsl/gsl_sf_erf.h:
+
+/usr/include/gsl/gsl_sf_exp.h:
+
+/usr/include/gsl/gsl_sf_expint.h:
+
+/usr/include/gsl/gsl_sf_fermi_dirac.h:
+
+/usr/include/gsl/gsl_sf_gamma.h:
+
+/usr/include/gsl/gsl_sf_gegenbauer.h:
+
+/usr/include/gsl/gsl_sf_hyperg.h:
+
+/usr/include/gsl/gsl_sf_laguerre.h:
+
+/usr/include/gsl/gsl_sf_lambert.h:
+
+/usr/include/gsl/gsl_sf_legendre.h:
+
+/usr/include/gsl/gsl_sf_log.h:
+
+/usr/include/gsl/gsl_sf_mathieu.h:
+
+/usr/include/gsl/gsl_eigen.h:
+
+/usr/include/gsl/gsl_vector.h:
+
+/usr/include/gsl/gsl_vector_complex_long_double.h:
+
+/usr/include/gsl/gsl_complex.h:
+
+/usr/include/gsl/gsl_check_range.h:
+
+/usr/include/gsl/gsl_vector_long_double.h:
+
+/usr/include/gsl/gsl_block_long_double.h:
+
+/usr/include/gsl/gsl_vector_complex.h:
+
+/usr/include/gsl/gsl_block_complex_long_double.h:
+
+/usr/include/gsl/gsl_vector_complex_double.h:
+
+/usr/include/gsl/gsl_vector_double.h:
+
+/usr/include/gsl/gsl_block_double.h:
+
+/usr/include/gsl/gsl_block_complex_double.h:
+
+/usr/include/gsl/gsl_vector_complex_float.h:
+
+/usr/include/gsl/gsl_vector_float.h:
+
+/usr/include/gsl/gsl_block_float.h:
+
+/usr/include/gsl/gsl_block_complex_float.h:
+
+/usr/include/gsl/gsl_vector_ulong.h:
+
+/usr/include/gsl/gsl_block_ulong.h:
+
+/usr/include/gsl/gsl_vector_long.h:
+
+/usr/include/gsl/gsl_block_long.h:
+
+/usr/include/gsl/gsl_vector_uint.h:
+
+/usr/include/gsl/gsl_block_uint.h:
+
+/usr/include/gsl/gsl_vector_int.h:
+
+/usr/include/gsl/gsl_block_int.h:
+
+/usr/include/gsl/gsl_vector_ushort.h:
+
+/usr/include/gsl/gsl_block_ushort.h:
+
+/usr/include/gsl/gsl_vector_short.h:
+
+/usr/include/gsl/gsl_block_short.h:
+
+/usr/include/gsl/gsl_vector_uchar.h:
+
+/usr/include/gsl/gsl_block_uchar.h:
+
+/usr/include/gsl/gsl_vector_char.h:
+
+/usr/include/gsl/gsl_block_char.h:
+
+/usr/include/gsl/gsl_matrix.h:
+
+/usr/include/gsl/gsl_matrix_complex_long_double.h:
+
+/usr/include/gsl/gsl_matrix_complex_double.h:
+
+/usr/include/gsl/gsl_matrix_complex_float.h:
+
+/usr/include/gsl/gsl_matrix_long_double.h:
+
+/usr/include/gsl/gsl_matrix_double.h:
+
+/usr/include/gsl/gsl_matrix_float.h:
+
+/usr/include/gsl/gsl_matrix_ulong.h:
+
+/usr/include/gsl/gsl_matrix_long.h:
+
+/usr/include/gsl/gsl_matrix_uint.h:
+
+/usr/include/gsl/gsl_matrix_int.h:
+
+/usr/include/gsl/gsl_matrix_ushort.h:
+
+/usr/include/gsl/gsl_matrix_short.h:
+
+/usr/include/gsl/gsl_matrix_uchar.h:
+
+/usr/include/gsl/gsl_matrix_char.h:
+
+/usr/include/gsl/gsl_sf_pow_int.h:
+
+/usr/include/gsl/gsl_sf_psi.h:
+
+/usr/include/gsl/gsl_sf_synchrotron.h:
+
+/usr/include/gsl/gsl_sf_transport.h:
+
+/usr/include/gsl/gsl_sf_trig.h:
+
+/usr/include/gsl/gsl_sf_zeta.h:
+
+/usr/include/gsl/gsl_permutation.h:
+
+/usr/include/gsl/gsl_heapsort.h:
+
+/usr/include/gsl/gsl_sort.h:
+
+/usr/include/gsl/gsl_sort_long_double.h:
+
+/usr/include/gsl/gsl_sort_double.h:
+
+/usr/include/gsl/gsl_sort_float.h:
+
+/usr/include/gsl/gsl_sort_ulong.h:
+
+/usr/include/gsl/gsl_sort_long.h:
+
+/usr/include/gsl/gsl_sort_uint.h:
+
+/usr/include/gsl/gsl_sort_int.h:
+
+/usr/include/gsl/gsl_sort_ushort.h:
+
+/usr/include/gsl/gsl_sort_short.h:
+
+/usr/include/gsl/gsl_sort_uchar.h:
+
+/usr/include/gsl/gsl_sort_char.h:
+
+/usr/include/gsl/gsl_blas.h:
+
+/usr/include/gsl/gsl_blas_types.h:
+
+/usr/include/gsl/gsl_cblas.h:
+
+../include/dieharder/Dtest.h:
+
+../include/dieharder/parse.h:
+
+../include/dieharder/verbose.h:
+
+../include/dieharder/Xtest.h:
+
+../include/dieharder/Vtest.h:
+
+../include/dieharder/std_test.h:
+
+../include/dieharder/tests.h:
+
+../include/dieharder/rgb_timing.h:
+
+../include/dieharder/rgb_persist.h:
+
+../include/dieharder/rgb_bitdist.h:
+
+../include/dieharder/rgb_kstest_test.h:
+
+../include/dieharder/rgb_lagged_sums.h:
+
+../include/dieharder/rgb_minimum_distance.h:
+
+../include/dieharder/rgb_operm.h:
+
+../include/dieharder/rgb_permutations.h:
+
+../include/dieharder/dab_bytedistrib.h:
+
+../include/dieharder/dab_dct.h:
+
+../include/dieharder/dab_filltree.h:
+
+../include/dieharder/dab_filltree2.h:
+
+../include/dieharder/dab_monobit2.h:
+
+../include/dieharder/diehard_birthdays.h:
+
+../include/dieharder/diehard_operm5.h:
+
+../include/dieharder/diehard_rank_32x32.h:
+
+../include/dieharder/diehard_rank_6x8.h:
+
+../include/dieharder/diehard_bitstream.h:
+
+../include/dieharder/diehard_opso.h:
+
+../include/dieharder/diehard_oqso.h:
+
+../include/dieharder/diehard_dna.h:
+
+../include/dieharder/diehard_count_1s_stream.h:
+
+../include/dieharder/diehard_count_1s_byte.h:
+
+../include/dieharder/diehard_parking_lot.h:
+
+../include/dieharder/diehard_2dsphere.h:
+
+../include/dieharder/diehard_3dsphere.h:
+
+../include/dieharder/diehard_squeeze.h:
+
+../include/dieharder/diehard_sums.h:
+
+../include/dieharder/diehard_runs.h:
+
+../include/dieharder/diehard_craps.h:
+
+../include/dieharder/marsaglia_tsang_gcd.h:
+
+../include/dieharder/sts_monobit.h:
+
+../include/dieharder/sts_runs.h:
+
+../include/dieharder/sts_serial.h:
+
+../include/dieharder/dieharder_rng_types.h:
+
+../include/dieharder/dieharder_test_types.h:
+
+../include/dieharder/skein.h:
+
+../include/dieharder/skein_port.h:
+
+../include/dieharder/brg_types.h:
+
+../include/dieharder/brg_endian.h:
+
+/usr/include/byteswap.h:

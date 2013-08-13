@@ -1,0 +1,3425 @@
+------------------------------------------------------------------------
+r529 | rgbatduke | 2011-04-01 13:49:31 -0400 (Fri, 01 Apr 2011) | 117 lines
+
+OK, this is a fairly enormously major brutal checkin.  Both dieharder
+and libdieharder are ALMOST -Wall -pedantic clean.  To get it there I
+had to learn several things, such as how to get gcc to ignore "unused
+variables" that are conveniently in a shared include file but aren't
+really used in all the modules that share it, the fact that the various
+flavors of C have varying "maximum string size guaranteed to be
+supported" limits (none of which are really relevant to gcc, but it
+complains about them anyway), and more.  And of course I had to delete
+all the cruftish lines of e.g. unused loop variables.  I'm not quite
+done with cleanup -- I may have gone overboard in a place or two and may
+need to put some things back or address things that might affect
+function -- but I want to get this all checked in.
+
+There are two build errors left -- one is in dieharder/rdieharder.c (and
+hence is yours, Dirk) and the other is in the skein code (and hence is
+yours, David).  David, I also need you to check a fix I made to the
+rng_threefish code -- I finally took the time to figure out the dread
+"dereferencing type-punned pointer breaks strict aliasing rules"
+warning.  I replaced the offending line:
+
+        *((unsigned long int *) state->block) = s;
+
+with
+
+        unsigned long int *blockptr;
+...
+        blockptr = (unsigned long int*) &state->block;
+        *blockptr = s;
+
+That is, I read what you were trying to do as "Set the contents of
+state->block, cast to an unsigned long int pointer, equal to unsigned
+long int pointer s" which might work but gcc -Wall hated it even before
+-pedantic and (from what I've read) can have undesired side effects.  So
+I introduced an actual unsigned long int pointer, put the address of
+state->block in it, and the set its contents equal to s.  It didn't seem
+to break threefish -- I tested the first few returns before and after
+the fix with -S 1 and they were the same -- and I'm using threefish
+right now in a validate.sh run to make sure that I didn't egregiously
+break dieharder with all of the changes.
+
+Changes you should be aware of:
+
+  * To avoid most of the "too long string" errors I went to -std=c95,
+which permits strings a page in size (4095 bytes).  That accommodates
+the auto-documentation strings in the test headers.  There may be
+another way of doing this -- in fact there are probably two or three --
+but to alter the dh headers at this point would (marginally) break the
+API so it will need to wait for v4, I think.  Apparently gcc is about to
+be dressed up with an __attribute__ that will probably enable extra
+large or unlimited data strings without complaints which is sensible
+enough since it works on them anyway AFAICT.
+
+  * c95 turned off uint translation .  I went through a huge block of
+code turning uint into the two words unsigned int before getting
+irritated enough to look at the headers where I discovered that yeah,
+you can turn on the uint -> unsigned int macro with a suitable define.
+So I did.
+
+  * c95 turned of BSD math macros in math.h, including M_PI.  That
+seemed really silly, so I turned them back on with a suitable define.  I
+didn't turn on the long forms (they only really make sense for long
+doubles) but we can do that if we ever need PI to 24 places or whatever
+it was.
+
+  * -Wall -pedantic really hates any sort of data that is included in a
+source file where it isn't used.  If we were all perfect programmers, I
+suppose that we would create enough include files and control where they
+were included precisely enough that no source file even included an
+include file with a variable it didn't actually use.  Alas, I'm not a
+perfect programmer and lots of the data structures used only inside
+certain tests or by certain generators are shared via libdieharder.h
+with program modules that don't use them.  Adding
+__attribute__((unused)) after the definition but before the = sign
+basically tells the compiler "Yes, I know, I planned it that way, now
+shut the fuck up" and passes them through -pedantic without complaint.
+
+I suppose that the virtue of the check is that it helps prevent
+namespace collision, but of course the compiler checks for that anyway
+and general local vs global rules seem like they would handle any
+accidents that crop up the right way.  If I feel really, really
+energetic someday I may go and segregate out the data and either add it
+to the sources directly (in a lot of cases that's a good place for it
+anyway) or put it in a separate include file per module.  OTOH things
+like the dh headers are shared because I DO access content from them in
+lots of places and want to be able to get to it from anyplace, so there
+will always be some ((unused)) attribute variables in the program.
+Printing out the test description string for any given test, or looking
+up the default tsamples or psamples, for example, is something any sort
+of application that uses the libdieharder library might want to do.
+
+  * As per current GBT recommendations and Dirk's suggestions, all of
+the auto-whatever stuff in autogen.sh is now basically a single
+autoreconf call.  In fact, it looks like they made autoreconf just
+because getting all of the things just right after a major GBT update
+is, in fact, the pain in the ass that it has been to me from the
+beginning, so this is rather a relief.  I did leave the configure call
+in the bottom, so running autogen.sh should still take one from a clean
+checkout to make-ready, or of course you can enter autoreconf by hand
+and run configure by hand as per usual.  Hopefully this will all make
+Debianheads happy...;-)
+
+Things that I have NOT done yet -- this checkin is basically six hours
+of work from 9 to 3 am plus another couple of hours today, so I'm
+working as fast as I can as it is -- include debugging the endian
+problem in the threefish (or was it AES?) code on e.g. a sparc or
+powerpc set to the other endianness and dealing with a few real bug
+reports that have come in from users already.  I wanted to get the code
+clean first as who knows, maybe doing so will help solve the problem?
+
+SO, if you guys could each fix the two remaining problems (or tell me to
+play through in spite of the fact that I'm not sure what is being
+accomplished and what would break what) then I'll try to move on to the
+next step.
+
+   rgb
+
+
+------------------------------------------------------------------------
+r523 | rgbatduke | 2011-03-10 11:09:12 -0500 (Thu, 10 Mar 2011) | 4 lines
+
+A last minute oops.  I wanted to mark operm5 as good, and mark all of
+the monkeys suspect (as they can pretty easily be run to failure for
+good generators still).
+
+------------------------------------------------------------------------
+r510 | rgbatduke | 2011-01-07 16:19:40 -0500 (Fri, 07 Jan 2011) | 31 lines
+
+This is a WORKING snap and bump to 3.29.6beta.  I actually fixed several
+things that I broke before in the rng selection process.  New features:
+
+ rng_kiss -- a damn fine rng.  Faster than mt, better than mt except for
+period.
+
+ rng_XOR -- Select this rng, and a list of others, e.g.
+
+   ./dieharder -g 207 -g 208 -g 14 -g 6 -g 205 -a
+
+dieharder will then return the output of 208 (kiss), 14 (mt19937_1999),
+6 (gfsr4) and 205 (aes) all xor'd together.  Period infinite, no LESS
+random than the MOST random of the generators alone.  The price you pay
+is sure, 2, 3, 4 times slower.  But this is now the official gold
+standard dieharder testing generator, as finding something randomer will
+be difficult and of longer period impossible (what is the least common
+multiple of 19937, 121, and all the rest? 2 to that power, like that).
+
+I'm working on superkiss, a vectorized version of kiss with an insanely
+long period, but the double precision part is broken and I don't see
+why.  The integer part works.  I'll figure it out maybe tonight, and
+have a few other Marsaglia generators to add.
+
+Then I'll return (finally) to tests, with the gold standard generator
+well and truly in place.  At least three dieharder (diehard) tests are
+broken, and I'd like to fix at least ONE of them before I get bogged
+down teaching again.
+
+   rgb
+
+
+------------------------------------------------------------------------
+r508 | rgbatduke | 2010-02-19 13:13:56 -0500 (Fri, 19 Feb 2010) | 9 lines
+
+Oops, forgot to update FIRST.  This should get me back in sync.  You
+guys should ignore this; I'm rearranging my whole source tree on my
+laptop(s), dieharder included, and am just trying to make sure that the
+rebuilt one is clean.
+
+I also haven't completely forgotten the last post/request for interface
+room -- I've just been insanely busy and haven't had time to even think
+about it for the last few weeks.  But I will get back there, I promise.
+
+------------------------------------------------------------------------
+r498 | rgbatduke | 2009-10-28 01:48:25 -0400 (Wed, 28 Oct 2009) | 28 lines
+
+Wow, a lot of stuff.  This checkin contains a working -Y 2 option for
+"test to destruction" where ttd is by default a return pvalue of
+0.000001 or less OR getting to 10000 samples alive (both parameters
+can be set on the command line with -X tolerance and -Z cutoff).  I
+actually did it two ways, and will keep the second (better) one and
+shortly remove the cruft in std_test.c.  In addition I had to update the
+help, I updated the output routines in output_rnds so I could dump a
+list of formatted floats (to test another rng tester that alas was so
+broken it couldn't read any format I tried anyway), I fixed and updated
+the man page, I got rid of the old overlap variable (no longer
+desireable or necessary, although I have a bit of cruft left behind to
+clean up still).
+
+As a result of the initial ttd test, I am certain that there is a
+problem with diehard_dna, one that causes it to fail aes at 0.000001 in
+1500-4000 samples.  This is odd, since this test has an "exactly"
+computed mean and sigma target.  I may try threefish in a second to see
+if it fails too, in the same general order.  Haven't done the auto-xor
+generator thing yet.
+
+I still have to implement -Y 1 (resolve ambiguity mode) where it will
+force a test to fail or come back up with more samples, but it should be
+straightforward.  However, it is almost 2 am and I teach way too early,
+so it is off to bed.
+
+    rgb
+
+
+------------------------------------------------------------------------
+r497 | rgbatduke | 2009-10-22 09:45:52 -0400 (Thu, 22 Oct 2009) | 20 lines
+
+This is a not-quite-yet-broken checkin of -Xtreme mode changes.  Three new
+control variables are in place.  They are parsed (untested).  They are
+used in std_test to allocate much larger pvalue vectors (Xcutoff in
+size) at test initialization time.  I'm JUST READY to hack into the main
+std_test execution loop with case switches or other conditionals and
+implement at least resolve ambiguity and ttd modes.  But as usual, I
+have to go in and teach.  At the moment, though, DH still builds and
+runs -a correctly, so it seems like a good idea to check in a still
+working snap in case I break everything and want to start over from
+here.
+
+Oh, I also am cleaning up a bit and made the multiply_p variable (-m
+option) a double, so you CAN enter -m 0.1 and run only 10 psamples for a
+fast version of -a(ll).  At this point a lot of debugging is just
+ensuring that all the tests run, and it is a PITA to wait 30+ minutes
+for a -a(ll) run to get through.  So you now CAN test fewer than the
+default number of psamples in an -all run, even though most people won't
+use the option in actual testing.  The usual usage, -m 10 or -m 100,
+works fine still.
+
+------------------------------------------------------------------------
+r495 | rgbatduke | 2009-10-20 14:25:32 -0400 (Tue, 20 Oct 2009) | 34 lines
+
+I'm checking in a lot of changes down below.  -m is implemented and
+documented.  -k is implemented and documented.  The man page is fixed
+(post good-kstest and aes/threefish).  The endian bug went away when I
+refreshed the include files, making me wonder if it wasn't some sort of
+strange GBT stuff and not a real problem -- I left in the endian code in
+configure.ac but don't use it.  I re-fixed diehard_runs.c -- it was
+broken post patching but now seems good.  I filed some documentation and
+bug reports.  I fixed a number of pernicious warnings about needing
+casts (one still remains in threefish, but it is David's and I don't
+know how to fix it).  I worked on dieharder.html.in pretty substantially
+to get it to match all of the above.
+
+Next, -x (and maybe -X).
+
+(p.s. -- Welcome David.)
+
+(p.p.s. -- I'm still testing -- sigh, forever -- but it looks like all
+non-deprecated tests are working OK in this snap, and that the -m
+feature works nicely.  I documented timings for the k options, and
+basically it comes down the kstest being too slow to do large numbers of
+samples without switching over to the asymptotic form of the test at
+some point.  I mean, going from three minute runs to over three hours
+and still counting when I quit for a factor of 10 difference in the
+number of samples, really serious nonlinear gains in the amount of
+work/time required, and this was still -k 1 with Marsaglia's more modest
+speedup, not even the "exact" mode with no speedup at all.  
+
+This will quite possibly require some further hacking of the boundaries
+for a crossover that is "practical" and not too inaccurate as we gain
+experience with our own patience, especially as we implement a -x like
+option that just keeps crankin' on the number of samples to hit a
+prespecified tolerance for failure.)
+
+
+------------------------------------------------------------------------
+r494 | rgbatduke | 2009-10-19 09:46:39 -0400 (Mon, 19 Oct 2009) | 3 lines
+
+This is all of the Bauer patches.  Some are tested, but the testing
+continues.
+
+------------------------------------------------------------------------
+r493 | rgbatduke | 2009-10-18 10:43:52 -0400 (Sun, 18 Oct 2009) | 108 lines
+
+This is checking in what will be 3.29.4beta.
+
+Primary fixes so far:
+
+  Several changes to configure.ac to eliminate all reference to libaes
+and to set macros ENDIAN_BIG or ENDIAN_LITTLE to 1 in the configure
+stage of the build.  I plan to insert a very simple prequel in Brian
+Goodman's brg_endian.h header file that handles endian issues cleanly
+and skips most of the stuff below for little endian.  I do need to
+ensure that it builds on i386 as well (when I'm done) as I have a report
+that 3beta doesn't build clean on that architecture due to problems in
+this header file.
+
+  A fix due to Glenn Emelko, GEmelko@aclara.com, where I correctly
+bumped filecount to type off_t in libdieharder.h but failed to redefine
+rtot and rptr accordingly in the rng_file_input.c struct and code.  He
+was running 18 GB raw files and obviously this overflowed uint variables
+with bad results.  Oops, and thanks Glenn.
+
+  I am trying to get sts_serial.h to run at 24 bits by default, not 16
+(I think that this will still take a not unreasonable amount of time).
+The problem is that sts_serial doesn't use bits.c calls to parse out the
+next 24 bits, it just grabs 16 bit, then the next 16 bits, out of 32 bit
+uints.  This is fast but not scalable.  I have to go in and edit the
+code to use bits calls to get the next 24 bits, no foolin, or better yet
+use -n ntuple to set the maximum number of bits teste (that's my real
+goal, with 24 being the default).
+
+Plans:  David Bauer sent me a fairly extensive patch against 3.29.3beta
+that fixes some memory leaks and/or speed issues in bits (?) as well as
+fixing some parts of the diehard OP code -- probably fixing Marsaglia's
+bugs and not mine, but hard to say.  There are bugs in there and I've
+already squashed several so it wouldn't surprise me if there are more
+(even more of my own:-).  I'm going to TRY to implement most of his
+fixes if they work well and seem to fix something that makes sense to
+me, although I'd feel better (per fix) if I could find a test case that
+illustrates the failure.  I may have to ask him how he found the bugs so
+I can document them in svn somewhere, later.  Memory leaks of course are
+relatively easy and again, I could easily have created some -- getting
+rid of them is definitely called for.  David is also looking at the
+rgb_bitdist tests (which SHOULD be as sensitive as the OP tests if
+cranked up to the correct degree) -- there may be some fixes there
+coming.  
+
+Finally, I have a few operational changes in mind -- primarily adding or
+altering the new interface in a couple of small ways.  Kuiper will go
+away as an option (but not the code -- I'll leave a macro in place that
+can switch it back on in case there is ever any point in reconsidering
+the test, if for example I or David or somebody else figures out an
+exact CDF for it so it becomes as accurate and perhaps faster than KS,
+or it is needed for a specific rng test in the future.  -k flags will be
+used to control how hard ks works (and hence how fast vs accurate
+dieharder is) with a default of pretty fast, pretty accurate and
+alternatives of slow but to-convergence-exact and really fast but only
+accurate enough for the short version of the -a(ll) run.
+
+I'd also like to introduce two new run modes controlled by flags.  One
+of them, -m(ultiplier), will allow the user to enter a scale factor to
+be applied to the default 100 -psamples used in -a(ll) runs (otherwise
+ignored).  So if one want to run all the tests but with 1000 psamples
+per test (or 10x whatever the per-test default is) one runs -a -m 10.
+This should make it MUCH easier to test to destruction, increase test
+resolution, etc.  
+
+Second, I want to introduce a flag that runs a test "to failure" --
+something I've planned to do for a long time.  David has already hacked
+in his own version of doing this, and I used to do something very
+similar in my numerical simulations.  The idea of running in -x(treme)
+mode (or whatever I name the flag) would be to start with e.g. 100
+pvalues and then add 100 pvalues at a time to the test run until the
+final pvalue fails a fairly stringent (user selectable) cutoff.
+
+  -d 1 -x 0.000001
+
+would add psamples to the birthdays test until the final pvalue is under
+0.000001.
+
+  -d 1 -X 0.000001
+
+would do the same thing, but it would run the test to this degree of
+failure psamples = 100 times with different rng seeds (if appropriate)
+and return something like max, min, mean number of psamples required to
+cause a test failure.  SOMETHING like this is going to be needed,
+because I think it is entirely plausible that some tests have
+"poisonous" seeds that have just the right prime modulus to introduce
+correlations in their stream, but that NEARLY ALWAYS are started with
+seeds that yield good streams.
+
+I'd like to have these last two options work for -a -m runs as well, so
+
+  -a -m 10 -X 0.000001
+
+runs all tests until they fail low or high at one part in a million,
+1000 times for different seeds per run, returning the average number of
+psamples required to reach failure.  I'd even like to be able to plot
+the distribution of this number so one can pick out e.g. bimodal
+distributions (bad seeds!) etc.
+
+At some point being able to do everything that dieharder will want/need
+to do is going to require a GUI -- something that can generate scatter
+plots, candlesticks, real non-ascii histograms, line graphs, 2d/3d
+surfaces.  But that's still a ways in the future.  -X is going to be
+pretty tricky as well, as dieharder isn't equipped to return anything
+but a final cumulative "pvalue" in [0,1] for a test.  But it is probably
+better to do it now in the beta phase where this doesn't really damage
+any other future dependent interfaces (e.g R).
+
+
+------------------------------------------------------------------------
+r492 | rgbatduke | 2009-10-12 18:53:13 -0400 (Mon, 12 Oct 2009) | 8 lines
+
+THis is mostly to check in the dieharder NSF proposal from last year as
+it has a roadmap for future dieharder development, and I'm thinking hard
+about adding a few of the many missing generators now that kstest is
+reliable.  I'm still working on kstest, mind you, but it is mostly on
+the details, not on the basic code.
+
+   rgb
+
+------------------------------------------------------------------------
+r491 | rgbatduke | 2009-10-12 14:55:55 -0400 (Mon, 12 Oct 2009) | 6 lines
+
+This actually works PRECISELY for all count ranges.  It is still in
+testing -- I've got a bit of work to do to be ready to release this
+globally (including letting David test it and see if he agrees) but it
+should COMPLETELY FIX dieharders final kstest (and I'll give it one
+last opportunity to fix diehard_sums():-).
+
+------------------------------------------------------------------------
+r490 | rgbatduke | 2009-10-12 12:39:51 -0400 (Mon, 12 Oct 2009) | 10 lines
+
+Checking in some key papers (and some stuff getting rid of broken
+diehard_sums altogether for now -- leaving in the test but strongly
+deprecating it in dieharder).  The papers SHOULD permit us to compute
+the exact CDF for the one-sided KS test against a uniform distribution
+for small N and thereby make the KS test reliable for all sample sizes.
+
+In particular ks_CDF_N.pdf looks like it will do the trick.
+
+    rgb
+
+------------------------------------------------------------------------
+r489 | rgbatduke | 2009-10-11 11:05:24 -0400 (Sun, 11 Oct 2009) | 32 lines
+
+FINALLY I got threefish to work.  brg_endian.h was broken as shit; it
+starts off by pulling something from crypt.h that is obviously broken on
+modern linux boxes (at least my Fedora 11 x86_64 box).  The remaining
+code looks quite general and seems to work, although I have to admit I
+absolutely hate crap code like this -- it smacks of aimk, imake, and
+other crap tools that detect platform type using some sort of transient
+trace from one tool or another that breaks three years later (or rather,
+requires yet another conditional).  I'll leave this in for now in case
+somebody wants to port to sparc or some bigendian platform, but since we
+are using threefish only to make random numbers and don't care to ever
+decrypt the stream of 0's or whatever it is applied to, I honestly doubt
+that it matters.  Getting endianness wrong sounds like it is at worst an
+extra byte shuffle.
+
+Either way, this will be 3.29.2beta and I'll put it up on the dieharder
+website in a few minutes (after a full -a run of threefish passes).  I
+may add a comment to brg_endian.h indicating my hack, lest people be
+tempted to use it as if it weren't modified.
+
+Grrr.  I'm REALLY tempted to just strip it to the two line definition
+that is all that matters in skein_port.h and screw the whole "automagic"
+thing.  Robust code is robust code, and there are bound to be
+intrinsically portable ways to handle endianness IF it is really
+necessary in the first place.
+
+At least this finally liberates me to move on and work on kstest and
+kuiper again.  That's been on hold for a few days, but I'm feeling like
+we're getting close to having one or the other work "perfectly" (if I
+can find and add the missing O(1/N) correction terms from the
+literature).
+
+
+------------------------------------------------------------------------
+r488 | rgbatduke | 2009-10-08 12:50:29 -0400 (Thu, 08 Oct 2009) | 25 lines
+
+This is most of the threefish stuff required, but I'm still having
+trouble with the big/smallendian conversions apparently needed by skein
+in threefish.  One function that is supposed to be defined automagically
+is coming out UNdefined in the linker, which is "bad".  I may have to
+ask David Bauer how he got this to compile.  Note that I've added both
+bauer and emelko's current round of bug reports and remarks to the Bugs
+directory below.  David in particular has been really looking hard at
+kstests, and with good justification.  The kstest is apparently very
+poorly defined even in stats texts and the literature.  It is apparently
+more broken in R than it is in dieharder, and it is still a bit broken
+in dieharder.
+
+As is so often the case in dieharder problems, pushing the test suite to
+new limits exposes weaknesses in code that has long been taken for
+granted because it has never been used for a rigorous analysis of this
+sort.  But it NEEDS a precise ks or kuiper test, not just a sorta-useful
+approximate one, or one cannot rely on its statements of weakness or
+failure.
+
+Anyway, this checkin is still broken but is within one #define or so of
+working, I think, once I figure out how to do it without violating the
+code in the brg_endian.h include that is supposed to automagically
+select the right Skein function that is currently undefined.
+
+
+------------------------------------------------------------------------
+r487 | rgbatduke | 2009-10-07 12:19:44 -0400 (Wed, 07 Oct 2009) | 16 lines
+
+David Bauer contribued two cryptographic grade GSL wrapped rngs (one of
+which I had been working on myself, but his has no dependencies and it
+works already).  rng_aes appears to work, very respectably.  It has
+minimal controls (compared to aespipe) but aespipe is still there if
+people want to play with it directly.  It isn't too shabby speedwise,
+actually, for what should be a world-class rng.  I'm going to see if he
+(David) cares if I contribute it back to the GSL -- it needs a few
+generators like this in its collection.  Although as it is GPL the
+answer is obviously not, I think.
+
+In a second I'm going to insert rng_3fish as a second one.  These are
+enormously useful for testing dieharder itself, and as GPL sources will
+be useful just being part of the dieharder unless/until they make the
+GSL.
+
+
+------------------------------------------------------------------------
+r486 | rgbatduke | 2009-10-06 14:26:39 -0400 (Tue, 06 Oct 2009) | 3 lines
+
+Little fixes, ignore.  Added -d 204 to -all properly, fixed its
+autodocumentation a bit.
+
+------------------------------------------------------------------------
+r485 | rgbatduke | 2009-10-06 14:17:43 -0400 (Tue, 06 Oct 2009) | 35 lines
+
+This records a validation script to use with aespipe to produce a
+"standard run" of dieharder in -v3.  aespipe with the fixed, trivial
+256-bit key in aeskey below, is used to encrypt /dev/zero into a stdin
+stream and fed to dieharder -a.  The encrypted stream should be as close
+to "truly random" as we can currently manage with simple, reasonably
+fast tools.  The interesting thing is that this stream actually PASSES
+ALL OF THE TESTS in dieharder, even the "known bad" tests such as
+diehard_operm5.  This makes it very, very useful for comparison
+purposes.  For example, for the first time ever, I feel like I can now
+say that mt19937 actually FAILS dieharder (or has weaknesses that are
+explicitly exposed by dieharder) when it consistently has tests (even
+very specific tests for very specific length ntuples) on which it is
+weak or fails or exhibits high bias in its output pvalues.
+
+To be fair, passing all of the tests isn't necessarily a good thing,
+since there are over 100 of them including ntuples.  One expects 1/100
+or 1/200 or thereabouts to be weak for a PERFECT RNG on most runs.
+Eyeballing the distribution of final P in the aespipe run reveals that
+dieharder still produces a weak high bias in the final distribution of
+pvalues, but this is very much in line for the bias revealed by
+rgb_kstest_test and is therefore very likely an artifact of using -p 100
+as the default for most of the tests in -a(ll).
+
+I'm going to run the validation line:
+
+  cat /dev/zero | aespipe -P aeskey | ./dieharder -g 200 -a
+
+with -p 1000 just for grins (which will take the rest of the day, I
+expect) and see if it doesn't push the final distribution right back
+where it belongs, with less visible bias towards the 0.9-1.0 range and
+away from 0.0-0.1 on the bottom.
+
+Still, a perfect PASS for a nearly perfect generator.  How cool is that?
+
+
+------------------------------------------------------------------------
+r484 | rgbatduke | 2009-10-06 12:45:36 -0400 (Tue, 06 Oct 2009) | 40 lines
+
+This is a set of changes that:
+
+  a) Fix (for the time being) a problem with ltmain.sh, badly.  I
+suspect that I'll need to add a libtoolize command to the autogen.sh
+script in order to prevent drift from local libtools in the long run, or
+give in and make it a link to /usr/share/libtool/config/ltmain.sh and
+pray that this is portable.
+
+  b) Changes the default ks test in dieharder from broken Kuiper or
+broken KS to fixed KS.  This is an CRITICAL fix and needs to backport to
+2.28 as with it dieharder will FINALLY give much more nearly correct
+pvalues for the relatively small number of pvalue samples in the kstest
+at the end of each test.  With the old code one needed two or three
+orders of magnitude more samples -- at LEAST -p 10000 -- in order for
+the final pvalue to be not VISIBLY high biased when applied to perfect
+uniform deviates.  With the fix -p 100 works "OK" although -p 1000 would
+be better and will probably be the default -a(ll) option in 3.x.  
+
+The actual fixes are a single line in dieharder/set_globals.c (change
+the comment name but not the default number of the ks_test global), a
+single line in libdieharder/kstest.c, and switching the order in
+libdieharder/std_test.c so that ks_test == 0 runs kstest, not
+kuiper_kstest.  Fixing the documentation is probably not worth it in
+2.28.
+
+I would suggest still holding out on actually making the fixes for a
+bit, as I'm actively playing with things and testing out the new code
+(in a moment with aespipe as I still haven't finished rng_aes).  The
+changes are preserved and saved as 3.29.1beta, though, with the addition
+of a very useful and useable rgb_kstest_test routine that can be used to
+further debug and/or improve the kstest used to generate final test
+pronouncements of pass/fail/weak etc.  And we still need to decide if it
+is time to move on to v3, as a lot of people are using it and it seems
+to be stable and usable and has lots of bug fixes and feature
+enhancements (including much better future scalability as I add tests
+and generators).
+
+   rgb
+
+
+------------------------------------------------------------------------
+r483 | rgbatduke | 2009-10-06 09:08:59 -0400 (Tue, 06 Oct 2009) | 7 lines
+
+The new rgb_kstest_test in this version actually works, but it looks
+like we have some sort of libtool derived bug in the build.  I'm
+checking in clean so I can rerun libtoolize, which will hopefully get me
+a new ltmain.sh, which will hopefully build a libtools script that
+contains the correct ECHO/echo lines and perhaps deals with MODE
+correctly.
+
+------------------------------------------------------------------------
+r482 | rgbatduke | 2009-10-04 09:44:12 -0400 (Sun, 04 Oct 2009) | 15 lines
+
+Ignore today's checkins, Dirk.  I'm adding a new test (rgb_kstest_test)
+to test the kstest routines (as well as to MAYBE function as a new test
+in the suite, but I doubt that it will be sensitive enough to be any
+use).  Basically, I plan to fill a vector with tsamples uniform
+deviates, run a kstest on them (which tests for uniformity and generates
+a pvalue that should itself be a uniform deviate) to fill in the usual
+vector of pvalues and run the final kstest on that.  A kstest SHOULD
+recursively take uniform deviates to a uniform deviate, for a large
+enough set of uniform deviates, and I want to find out a) if this is
+true; and b) if it is true just what a "large enough set" is.  This test
+should help me find out both, and if a) is incorrect, to perhaps "fix"
+the kstest as this is their THEORETICAL behavior and failure to
+accomplish this indicates a bug in the code or a real problem in the
+theory...
+
+------------------------------------------------------------------------
+r481 | rgbatduke | 2009-10-02 16:32:30 -0400 (Fri, 02 Oct 2009) | 3 lines
+
+This checks in what might be a VERY IMPORTANT fix to kstest, due to
+David Bauer.  Needs more testing, though, with a world class crypt.
+
+------------------------------------------------------------------------
+r480 | rgbatduke | 2009-03-17 08:27:23 -0400 (Tue, 17 Mar 2009) | 2 lines
+
+Checking in so I can leave.
+
+------------------------------------------------------------------------
+r479 | rgbatduke | 2009-03-17 00:28:25 -0400 (Tue, 17 Mar 2009) | 3 lines
+
+This is broken as far as the aes generator is concerned, AND I'll
+probably need to put libaes into the dieharder packaging.
+
+------------------------------------------------------------------------
+r478 | rgbatduke | 2009-01-29 10:57:43 -0500 (Thu, 29 Jan 2009) | 8 lines
+
+Checking in a LOT of changes and additions associated with v3 -- I've
+been holding them so as not to screw up the RDH side of things before
+everything stabilizes.  A lot of the stuff below is documentation
+intended to guide future development and additions.  Some of it is fixes
+(data and otherwise) in diehard tests.  Some of it fixes the way
+dieharder (the binary, not library) initializes (and adds local tests)
+and runs all tests.
+
+------------------------------------------------------------------------
+r477 | rgbatduke | 2008-10-08 15:11:30 -0400 (Wed, 08 Oct 2008) | 3 lines
+
+Sending in a minor change to START fixing up parsecl.c to be more
+robust.
+
+------------------------------------------------------------------------
+r476 | rgbatduke | 2008-09-29 22:22:38 -0400 (Mon, 29 Sep 2008) | 26 lines
+
+This checkin should make Mattias "perfectly happy".  It enables:
+
+rgb@lilith|B:1140>./dieharder -a -D default -D -1 -D prefix -D
+no_whitespace -D show_num -s 1
+0|rng_name|num|rands/second|
+1|mt19937|13|1.17e+08|
+0|test_name|num|ntup|tsamples|psamples|p-value|Assessment|Seed
+2|diehard_birthdays|0|0|100|100|0.16302070|PASSED|3542794731
+2|diehard_operm5|1|5|1000000|100|0.04115096|PASSED|2304163927
+2|diehard_rank_32x32|2|0|40000|100|0.92631752|PASSED|2245496723
+2|diehard_rank_6x8|3|0|100000|100|0.86585575|PASSED|3223183182
+2|diehard_bitstream|4|0|2097152|100|0.60520232|PASSED|2615297461
+2|diehard_opso|5|0|2097152|100|0.05852624|PASSED|1542897414
+
+which is, AFAICT, exactly what he wants.  Oh, he wants the full test
+name as an output field option instead of the short name, but he might
+have to wait on that...
+
+This also checks in a couple of minor bugfixes reported by Mattias and
+Marc Abel.  Marc has another feature request I haven't looked at yet.
+Both of them are using dieharder quite heavily in the beta version, so
+I'm hoping that it is shaking out.  I'm also hoping this round of
+changes didn't break anything.
+
+Not quite ready for a release, but perhaps getting closer.
+
+------------------------------------------------------------------------
+r475 | rgbatduke | 2008-09-22 19:10:01 -0400 (Mon, 22 Sep 2008) | 2 lines
+
+Added small section to man page on output control.
+
+------------------------------------------------------------------------
+r474 | rgbatduke | 2008-09-22 07:24:15 -0400 (Mon, 22 Sep 2008) | 12 lines
+
+Small changes to add dieharder-config.in to the Makefile.am and to
+get the rpm to autobuild with a split between @VERSION@ and
+@DIEHARDER_LT_VERSION@ -- I basically twinned the latter into
+@DIEHARDER_LIB_VERSION@.  A slight pain, but it means the library can
+have a different version (no beta) compared to the program (with beta).
+
+The successful RPM build means that everything is in place, although
+there is still cruft in include and probably libdieharder and there may
+be NON-cruft that isn't in the repo.  But I gotta go and won't find it
+now.
+
+
+------------------------------------------------------------------------
+r473 | rgbatduke | 2008-09-22 03:29:33 -0400 (Mon, 22 Sep 2008) | 24 lines
+
+OK, this is PARTIALLY decrufted -- I doubt that it is finished yet, and
+I haven't even started to tackly the proper decrufting of the library.
+I've cleaned up the dieharder man page, checked all the autodocumenting
+features of dieharder, and run a bunch of tests.  I've preemptively
+fixed around three or four bugs, and finished implementing a couple of
+features that were missing on the previous checkin, e.g. the ability to
+use any of:
+
+  dieharder -d diehard_sums -g 6
+  dieharder -d 14 -g gfsr4
+  ...
+
+(all tests AND rngs selectable by name OR number.  It is 3:20 am, and I
+have to get up by 6:40.  It is therefore bedtime.
+
+If I haven't forgotten to checkin any files, it should build and run
+pretty well.  Probably not perfectly, but pretty well.  Matthias should
+be happy -- if he uses -c ',' and -D prefix, he'll get close to exactly
+what he wants.  Everything seems to be working as far as I can tell with
+limited testing.
+
+Might be a day or three before I can really tackle this again.  G'night.
+
+
+------------------------------------------------------------------------
+r472 | rgbatduke | 2008-09-22 00:13:56 -0400 (Mon, 22 Sep 2008) | 92 lines
+
+OK, this is a checkin of dieharder 3.28.0beta.  It is NOT fully
+decrufted, but seems to mostly nearly hopefully all work.  That probably
+means that there are only a dozen or two bugs.  There are also a few
+API features I haven't implemented in the UI yet -- specifically the
+reporting of errors (like a rewind of a file in mid-test).  So this
+ISN'T really a beta -- more like an alpha.  
+
+Dirk, please do not start converting this over into Rdh yet. I'm
+checking it in for two reasons -- one is that I have to remove a whole
+pile of files to decruft and svn won't let me until I check in.  Another
+is that I NEED to checkin -- it makes me nervous to have this large a
+delta not checked in.  There are probably a couple of critical sources
+I've forgotten to add entirely and I won't know until I check in and
+check out and build a fresh clean copy.
+
+MOST of what I've done, from Rdh's point of view, should be invisible
+after Rdh is (fairly minimally) hacked one last time.  Basically Rdh
+should use its own version of set_globals.c (or patch mine, or ifdef
+mine).  Note that there are a lot fewer variables, and this list may
+shrink a bit more.
+
+ntuple's meaning hasn't changed, and you already handle that.
+
+Seed and strategy work together -- the latter is a new variable and
+SHOULDN'T affect Rdh, but just in case, here's what it does.
+
+The default strategy for dieharder is to reseed once when a rng is
+chosen.  In the default output view, the seed is written to the rng
+information part of the header.  That way if one wishes to reproduce
+a test result, one can enter the seed with -S seed.
+
+However, this is actually a PROBLEM if one runs multiple tests from this
+one seed.  If one runs tests out of order, the results will be
+different.  This is true for me running all the tests in order via
+dieharder -a if I should ever change test order, and is true for Rdh if
+one runs first one test, then another in different orders, from the same
+single specification of rng and/or Seed.
+
+Also, there may be situations where one wants to run a single test
+multiple times, each time from a newly selected seed to (in essence)
+determine if some seeds are "bad" for a given rng.  dieharder doesn't
+yet support that, but I think that in R it would be pretty easy.
+
+Setting strategy to anything nonzero (say, 1) causes dieharder to reseed
+the random number generator at the beginning of any test.  If -S seed
+was NOT specified, it just generates a new random seed, so that one
+could run e.g. diehard_birthdays 100 times in a loop and each one would
+reseed anew with a new random seed.  If -S seed IS specified, it uses
+the specified seed.  If a file is being used for input (not stdin) it
+forces a rewind at the beginning of each test, which is actually not a
+bad thing to do as it conserves rands.  (I hope, I haven't yet tested
+this latter feature much yet but it should work.:-).
+
+SO, Rdh will probably just leave strategy = 0 alone and either set the
+global value of Seed for one-time initialization with a fixed seed or
+not, accepting a one-time random seed.  But you CAN support strategy if
+you ever think you need to.
+
+(From my point of view its primary purpose is to make the creation of a
+validation run trivial -- if I run 
+
+  dieharder -a -S 1 -s 1 
+
+I generate a validation table.  If I run 
+
+  dieharder -a -S 1 -s 1 -D test_name -D pvalues
+
+I generate a very sparse validation table (basically, just test name and
+pvalue).  You can throw a -c ' ' in there if you want white space
+separation or -c ',' if you prefer comma separated values, etc.  You
+have nearly complete control over dieharder's output at this point, see:
+
+  dieharder -F 
+
+for a listing of output control flags.  dieharder -l and dieharder -h
+and dieharder -g -1 all work as before, but I've completely flattened
+and rationalized test-space so it works just like rng-space (and I mean
+JUST like it -- very similar setup.
+
+I completely changed (seriously streamlined and cleaned up) the test
+call procedure, so a SINGLE run_test() routine does pretty much all the
+work, a SINGLE output() routine does all of THAT work, and so that all
+the dieharder CLI-specific stuff is done in parsecl(), and then only if
+you enter specific commands, or in dieharder.c (main()).  I tried to
+label things that are CLI specific there as well.
+
+If you want to grab a copy of this and build it and play with it, feel
+free.  As soon as this checkin is complete, though, I'm going to start
+decrufting and checking to be sure I have all the required modules
+actually in the repo.
+
+
+------------------------------------------------------------------------
+r453 | rgb | 2008-09-10 07:16:17 -0400 (Wed, 10 Sep 2008) | 14 lines
+
+Dearie me.  This checkin actually works, although I still haven't
+implemented the output.c patch needed by Dirk or fixed the missing .h
+file in include/dieharder.  Still, I >>HAVE<< turned all the tests into
+type int's (still no returns) and stripped dieharder.h and split off a
+globals.h file that I don't think I'm going to need, actually, although
+it was useful while stripping dieharder.h as a reservoir of codelets
+that I needed to put back.
+
+Anyway, it is entirely possible that Dirk will read these words as I
+ALSO have dieharder.googlecode.com set up with him on it, and while this
+checkin is still local (about to be svnsync'd up, not directly checked
+in) VERY SOON NOW I may try checkout out from the google repo, which
+will of course check BACK into the google repo thereafter.
+
+------------------------------------------------------------------------
+r452 | rgb | 2008-09-09 18:38:14 -0400 (Tue, 09 Sep 2008) | 4 lines
+
+This checks in a code fragment that reseeds the rng at the beginning of
+each run_whatever segment.  This fragment "guarantees" that every test
+run uses a fixed Seed if it is set.
+
+------------------------------------------------------------------------
+r451 | rgb | 2008-09-08 01:18:25 -0400 (Mon, 08 Sep 2008) | 2 lines
+
+This now works.  2.28.1 indeed I dub thee.
+
+------------------------------------------------------------------------
+r450 | rgb | 2008-09-07 23:53:50 -0400 (Sun, 07 Sep 2008) | 3 lines
+
+This seems to fix the output of sts_serial so it is consistent.  I do
+have a few small bugs to clean up to get a "perfect" display.
+
+------------------------------------------------------------------------
+r449 | rgb | 2008-09-07 13:58:56 -0400 (Sun, 07 Sep 2008) | 2 lines
+
+So this is 2.28.1, for the moment and sake of argument.
+
+------------------------------------------------------------------------
+r448 | rgb | 2008-09-07 13:58:00 -0400 (Sun, 07 Sep 2008) | 2 lines
+
+This is ready to get some sort of rev boost.
+
+------------------------------------------------------------------------
+r447 | rgb | 2008-09-07 10:00:25 -0400 (Sun, 07 Sep 2008) | 6 lines
+
+This adds a "new" test -- the rgb_lagged_sums test, which is the
+user test but wrapped up to run on a whole sequence of values, the
+way I need to make sts_serial run very shortly.  It is sufficient
+to CLEARLY SHOW that mt19937 is actually a weak generator -- it
+is "too uniform".
+
+------------------------------------------------------------------------
+r444 | rgb | 2008-09-06 19:50:52 -0400 (Sat, 06 Sep 2008) | 2 lines
+
+This SHOULD be everything.  Table output mode should now work for -a.
+
+------------------------------------------------------------------------
+r443 | rgb | 2008-09-06 18:43:39 -0400 (Sat, 06 Sep 2008) | 3 lines
+
+This fixes four more tests.  I can now run a LOT of the way through -a
+before reverting to the old style output.
+
+------------------------------------------------------------------------
+r442 | rgb | 2008-09-06 14:37:53 -0400 (Sat, 06 Sep 2008) | 8 lines
+
+This is coming along nicely.  I have pretty much everything set up for
+table vs report output and am streamlining the run_whatever routines to
+the point where only a tiny bit of test-specific initiation
+differentiates them.  If I could move it into the test itself, I could
+pretty much completely simplify the dieharder CLI code to a single
+generic test shell call plus a SMALL set of specialized calls for e.g.
+benchmarks or non-standard tests that don't return pvalues per se.
+
+------------------------------------------------------------------------
+r441 | rgb | 2008-09-05 15:08:47 -0400 (Fri, 05 Sep 2008) | 7 lines
+
+This actually now works to display tables.  Time to hack hack hack
+and make ALL the tests work with a table.  Right now most of them will
+ignore it.  I really should combine report and table in "results" and
+put a SINGLE CALL to results in run_whatever.c.  Results must then
+"do it all".  Also, I think I'm going to run the benchmarker on ALL
+non-filesystem tests to get a timing, IF the table/timing flag is set.
+
+------------------------------------------------------------------------
+r440 | rgb | 2008-09-05 08:39:13 -0400 (Fri, 05 Sep 2008) | 3 lines
+
+This applies a small patch from Dirk that just cleans up a few issues in
+dieharder.h.
+
+------------------------------------------------------------------------
+r439 | rgb | 2008-09-05 07:20:58 -0400 (Fri, 05 Sep 2008) | 3 lines
+
+OK, we'll try ONE LAST change -- commenting out the fclose -- before
+sending this to Dirk.
+
+------------------------------------------------------------------------
+r438 | rgb | 2008-09-05 07:16:01 -0400 (Fri, 05 Sep 2008) | 15 lines
+
+This is a 2.27.14 checkin.  I'll shoot it off to Dirk who is waiting on
+it.  I noted, however, that my NEW permutations test FAILS (or should
+fail) mt19937!  It produces too GOOD a spread of permutations,
+consistently!  This is fascinating information.  It means that perhaps
+operm5 is NOT broken; maybe getting permutations to work out
+multinomially is the most difficult test one can put an rng to.
+
+Something to look at later.
+
+This checkin should fix dieharder and libdieharder so that one can run
+multiple tests (including invocation of the same test or different rngs)
+from a single dieharder call.  This cannot happen in dieharder -- don't
+worry.  But it can and will happen in Rdh and in gdieharder, so it is an
+important fix nonetheless.
+
+------------------------------------------------------------------------
+r437 | rgb | 2008-09-04 17:07:26 -0400 (Thu, 04 Sep 2008) | 20 lines
+
+This actually checks in so that we can pop the snapshot number in just a
+minute -- a major bugfix relative to Rdh.  The two problems addressed
+herein are:
+
+ a) In order to be able to run many tests, one after another, on many
+rngs, one after another, I have to be more careful than I have been
+about allocating and freeing test resources on the one hand, rngs (which
+must be freed) on the other hand, and resetting the static bit buffers
+used in bits.c on the third hand.
+
+ b) I also needed to set up startup with a split into two sections, one
+that runs only one time period and one that runs every time a new test
+is created, executed, and destroyed (with everything reset at the end to
+run a new test).
+
+The good thing beyond Rdh in these changes is that several of them are
+equally necessary in a GUI version e.g. gdieharder.  So nothing being
+done here is wasted...
+
+
+------------------------------------------------------------------------
+r436 | rgb | 2008-08-19 12:44:28 -0400 (Tue, 19 Aug 2008) | 4 lines
+
+This really, really should be IT!  I dub thee 2.27.12 as I've got to get
+on with things.  This version works for BOTH x86_64 and i386.  It should
+build into debian packages.  It should rpmbuild --rebuild.
+
+------------------------------------------------------------------------
+r435 | rgb | 2008-08-19 12:34:56 -0400 (Tue, 19 Aug 2008) | 5 lines
+
+This is a nearly final (for now) checkin for 2.27.12.  It builds
+decently.  I probably need to put back config.sub as it is one of the
+many things that should get automagically rebuilt -- if I have a
+placeholder for it already present.
+
+------------------------------------------------------------------------
+r434 | rgb | 2008-08-19 12:16:18 -0400 (Tue, 19 Aug 2008) | 4 lines
+
+We'll give this a try -- this defines __auto_build_post at the top of
+the specfile and SEEMS to prevent the check-buildroot crash in rpm
+building without my particular .rpmmacros.
+
+------------------------------------------------------------------------
+r433 | rgb | 2008-08-19 11:50:28 -0400 (Tue, 19 Aug 2008) | 2 lines
+
+With any luck at all, this will be ready to fly.
+
+------------------------------------------------------------------------
+r432 | rgb | 2008-08-19 11:42:31 -0400 (Tue, 19 Aug 2008) | 2 lines
+
+We're working our way back to not losing everything we just did, dammit.
+
+------------------------------------------------------------------------
+r431 | rgb | 2008-08-19 11:34:04 -0400 (Tue, 19 Aug 2008) | 2 lines
+
+Try try again...
+
+------------------------------------------------------------------------
+r430 | rgb | 2008-08-19 11:31:38 -0400 (Tue, 19 Aug 2008) | 3 lines
+
+Sending this towards lucifer.  We really need to make sure everything is
+in subversion!
+
+------------------------------------------------------------------------
+r429 | rgb | 2008-08-19 07:40:00 -0400 (Tue, 19 Aug 2008) | 4 lines
+
+This MAY fix things up so that they rebuild more cleanly.  I'll try
+sending them on to Dirk directly in tarball form to see if they make him
+all happy.
+
+------------------------------------------------------------------------
+r428 | rgb | 2008-08-19 06:43:42 -0400 (Tue, 19 Aug 2008) | 4 lines
+
+Well, perhaps we should send this in since we could be suffering from
+early hard disk crash syndrome.  In fact, I should drag out my 8 GB USB
+flash (at least) and back up Src if nothing else.
+
+------------------------------------------------------------------------
+r427 | rgb | 2008-08-19 06:22:07 -0400 (Tue, 19 Aug 2008) | 2 lines
+
+Moving math down to bugs, as it is really a set of patches.
+
+------------------------------------------------------------------------
+r426 | rgb | 2008-08-19 06:21:33 -0400 (Tue, 19 Aug 2008) | 14 lines
+
+We're rearranging this so I can track bugs a bit better.  I've really
+got only two outstanding ones -- getting aclocal to find libtool on a
+system I don't control or understand (problem possible solved by
+rerunning ./autogen.sh on that system) and getting the hard path of
+missing out of the toplevel Makefile and replacing it with a relative
+one so that it can be built without rerunning autogen.sh, maybe.  Oh,
+and some sort of rpm build wierdness.
+
+Also, Dirk wants me to decruft to where -Wall produces no unused
+variable complaints.  We'll see about that -- MAYBE I'll do it,
+eventually, but unused variables are really pretty harmless and are
+sometimes useful and I usually ignore them until I have too much time on
+my hands.
+
+------------------------------------------------------------------------
+r425 | rgb | 2008-08-19 06:01:36 -0400 (Tue, 19 Aug 2008) | 4 lines
+
+This removes RDieHarder (which Dirk is maintaining separately at this
+point).  It fixes the newly improved man page (which was broken).  It
+removes a redundant R directory.
+
+------------------------------------------------------------------------
+r424 | rgb | 2008-08-18 18:10:44 -0400 (Mon, 18 Aug 2008) | 3 lines
+
+This fixes a few small errors in the 2.27.11 abstract; no changes to the
+actual program, though.
+
+------------------------------------------------------------------------
+r423 | rgb | 2008-08-18 16:15:49 -0400 (Mon, 18 Aug 2008) | 19 lines
+
+This checks in the ChangeLog itself, as well as the last few
+minor changes in the tests run with the -a command and the
+test listing function in the CLI.  I think I declare this to be:
+
+    2.27.11
+
+and we'll start working on 12.  I think this actually fixes
+all the outstanding bugs except for the problem in sums and
+the problem in operm5 in diehard (and of course there are tests
+half implemented as well).
+
+I THOUGHT I'd fixed diehard_sums, actually, but it still most definitely
+fails on large -p.  I'll have to check sums out explicitly to see why it
+doesn't seem to work at the moment.  It's possible I dropped the fixes
+when recently changing systems.
+
+Anyway, here it is.  Bring on the bugs.
+
+
+------------------------------------------------------------------------
+r422 | rgb | 2008-08-18 15:50:15 -0400 (Mon, 18 Aug 2008) | 21 lines
+
+This might be ready for a production snapshot, or a testing snapshot,
+or something like that.  At any rate, I have BOTH fixed the generator
+problem (where rngs have numbers that can change as new generators
+are added.  I fixed this by significantly increasing the size of the
+types[] vector and working moderately hard to pack it with generators
+sparsely and sanely -- sparse so there is plenty of room, sane because
+the space is now blocked out by general category with room to grown.
+
+This will NOT GUARANTEE that the GSL will not change its internal order,
+and dieharder will continue to follow the GSL order where they overlap
+as nothing else makes sense.
+
+I >>also<< think I've fixed -r 5, rgb_permutations.  This is a
+non-overlapping permutations test and runs to more or less arbitrary
+order (and seems to work quite nicely where it runs, although it gets
+quite slow when we get to very large permutations as one might expect).
+
+I think it is time to bump the minor-minor number to 11 and post it, for
+the time being with -r 5 still marked out as experimental in the
+help listing.
+
+------------------------------------------------------------------------
+r421 | rgb | 2008-08-18 14:33:06 -0400 (Mon, 18 Aug 2008) | 5 lines
+
+This fixes the only real bug, I think -- dieharder now dies with a
+complaint if it is invoked with an invalid -g entry, sort of.  Hmmm,
+actually I might need to tweak this fix just a bit more to check
+on the complete range.
+
+------------------------------------------------------------------------
+r420 | rgb | 2008-08-18 14:29:17 -0400 (Mon, 18 Aug 2008) | 3 lines
+
+This actually works and has the number spaces previously discussed
+all implemented and everything.
+
+------------------------------------------------------------------------
+r419 | rgb | 2008-08-17 20:15:08 -0400 (Sun, 17 Aug 2008) | 6 lines
+
+This is a step in the process of figuring out how to "fix" the numbers
+for rngs to test.  I think I'm going to have to move my own setup
+routine to libdieharder.  But I'm still trying to figure out whether or
+not I can or should replace the gsl code itself, or run something in
+parallel.
+
+------------------------------------------------------------------------
+r417 | rgb | 2008-08-17 13:30:41 -0400 (Sun, 17 Aug 2008) | 3 lines
+
+This rearranges the Bugs stuff.  I need to create a "cleared" directory
+in Bugs so I can see what is done, as well.
+
+------------------------------------------------------------------------
+r416 | rgb | 2008-08-17 12:31:18 -0400 (Sun, 17 Aug 2008) | 5 lines
+
+This updates the abstract, which is also important documentation and has
+been added to the %doc lines in the specfile.  I should really create a
+make installdoc target in Makefile.am that can install a bunch of
+documents, but that is for another day.
+
+------------------------------------------------------------------------
+r415 | rgb | 2008-08-15 19:03:26 -0400 (Fri, 15 Aug 2008) | 4 lines
+
+This is 2.27.10-1, and adds stdin support and fixes a few bugs in the
+specfile.  I'm posting it for distribution, although it is still not
+"finished" -- this is very much development snapshot time.
+
+------------------------------------------------------------------------
+r414 | rgb | 2008-08-15 14:14:45 -0400 (Fri, 15 Aug 2008) | 4 lines
+
+This adds the capability to input a binary stream into stdin.  This
+patch is due to Paul Serice.  He also included a (standalone?) rng to
+test with, which I'll mess with in a moment.
+
+------------------------------------------------------------------------
+r413 | rgb | 2008-08-03 08:40:35 -0400 (Sun, 03 Aug 2008) | 3 lines
+
+Added a version string to help.  Probably should add one elsewhere, e.g.
+at the top of rng listing and test listing.
+
+------------------------------------------------------------------------
+r412 | rgb | 2008-08-01 09:11:10 -0400 (Fri, 01 Aug 2008) | 7 lines
+
+Had to back off the svn2cl in the rpm build -- it now has to be run BY
+HAND before just MY rpmbuild (dummy me) so that it won't fail for end
+users without svn2cl and an svn repo to match.  It still builds
+perfectly, and I'll do a full rpm build cycle including this step to get
+this last comment into the changelog.
+
+
+------------------------------------------------------------------------
+r411 | rgb | 2008-07-29 12:01:51 -0400 (Tue, 29 Jul 2008) | 46 lines
+
+...And it is.  So henceforth ALL of my svn checkins will be duly noted
+in the ChangeLog, which will therefore get to be very long indeed, as I
+check in a lot.
+
+Damn!  I guess this means no more swearing, and I sure hope I haven't
+impugned anyone's character in the first 400 plus checkins.  At least
+not too much.  Hmmm, I wonder just what I HAVE said down there.  I tend
+to treat SVN logs as sort of a free-association commentary about the
+project in addition to being a place to document changes.  Some changes
+have "real" documentation in the form of the svn diffs, as well -- I
+haven't been too specific about just EXACTLY what I've changed every
+time.
+
+Well, better a ChangeLog up to date and verbose than one months to years
+old, and I'll be hogtied and hung by the nose before I write a precisely
+formatted description of changes day to day as I work on this -- twice.
+So SVN it is (dating back to when it was really CVS, BTW, imported to
+SVN).
+
+Next, I suppose we should provide at least >>a<< fix for the problem of
+shifting generator numbers, and on my own I want to clean up some
+issues with file read -- arrange it so we can read in very large files
+and eliminate/document file-based usage redundancies such as needing -g
+65 AND -f filename.  This will be a bit tricky, as dieharder can read in
+raw (binary) as well as ascii in many formats, and using the -g flag to
+differentiate at least raw vs cooked has been an easy solution.
+
+Regarding numbers, it has been suggested that we do two things:
+
+a) Take action to ensure that the numbers don't change any more, even if
+the gsl or I or a user add new generators.  This is actually a bit of a
+PITA (much as I see the motivation for doing so, as moving numbers break
+user scripts) because the way generators are added is to run through all
+the supported ones of each type and just add them in gsl or call order.
+However, there are several ways I can do it (some requiring more
+programming than others) and I'll see which one looks to be easiest and
+most robust.
+
+b) Arrange it so we can call generators by name, not just by number.
+Names would presumably not change even if numbers were inserted, and
+many users will be interested in testing a single generator they are
+thinking of using by name.
+
+rgb
+
+
+------------------------------------------------------------------------
+r410 | rgb | 2008-07-29 11:40:30 -0400 (Tue, 29 Jul 2008) | 5 lines
+
+OK, this seems to work, autobuilding ChangeLog from the svn log of my
+timestamp file, that basically picks up a message like this one every
+time I do an svn checkin.  We'll see in a moment if this is reflected in
+ChangeLog on the next build.
+
+------------------------------------------------------------------------
+r409 | rgb | 2008-07-29 11:26:48 -0400 (Tue, 29 Jul 2008) | 2 lines
+
+Just testing...
+
+------------------------------------------------------------------------
+r407 | rgb | 2008-07-22 09:06:14 -0400 (Tue, 22 Jul 2008) | 5 lines
+
+This is, in fact, a major checkin.  A serious won't-build-on-lib64 bug
+was identified and resolved, the resolution being the addition of
+--libdir=... to the ./configure line in the toplevel specfile.
+Truthfully, I should probably add this to autogen.sh.
+
+------------------------------------------------------------------------
+r406 | rgb | 2008-03-27 12:33:04 -0400 (Thu, 27 Mar 2008) | 8 lines
+
+This is getting close to a release snapshot once again.  We do need to
+set the number of tests correctly.  I may have to give up on operm5 or
+rgb_operm for the time being (again) but at least I have
+rgb_permutations and rgb_bitdist, both of which test similar things
+along with sts_serial ditto.  I do need to try to fix sums.  I'd love to
+add a couple of the contributed tests.  I do need to go through the
+opso, dna, etc. tests and "fix" them wrt overlap and so on.
+
+------------------------------------------------------------------------
+r405 | rgb | 2008-03-26 21:20:57 -0400 (Wed, 26 Mar 2008) | 4 lines
+
+This APPEARS to be a functional permutations test, as expected/hoped.
+It uses NON-overlapping samples, although at a guess it would work
+for overlapping ones, just not as well.
+
+------------------------------------------------------------------------
+r404 | rgb | 2008-03-26 17:09:43 -0400 (Wed, 26 Mar 2008) | 4 lines
+
+This is one, last, poor attempt to get SOME sort of functioning
+permutations test.  I actually had this working "inside" rgb_operm()
+so I imagine I will have it working again here shortly.
+
+------------------------------------------------------------------------
+r403 | rgb | 2008-03-26 13:39:14 -0400 (Wed, 26 Mar 2008) | 6 lines
+
+This appears to be "fixed" so that bitstream runs without complaint.  I
+will need to check for memory leaks in the long run (heh heh).  This
+once again takes me to where "everything works" but sums operm5, I
+think.  I'll do another standard S 1 run in a second to make a new
+snapshot with a fixed/reference bitstring.
+
+------------------------------------------------------------------------
+r402 | rgb | 2008-03-24 15:39:49 -0400 (Mon, 24 Mar 2008) | 6 lines
+
+This fixes up all the tests that seem to require chisq with explicit
+cutoffs (frequently one that will be ignored).  Cutoff does matter
+in the rgb_bitdist test, though!  I think all of these tests are at last
+valid through -p 100 and possibly -p 1000, except for sums, bitstream
+(which I'll fix shortly) and the perennial operm5.
+
+------------------------------------------------------------------------
+r401 | rgb | 2008-03-24 00:18:51 -0400 (Mon, 24 Mar 2008) | 4 lines
+
+I am HOPING that this is all good, finally.  It runs and gives very
+reasonable answers (once) at -p 1000.  Now to see if this is
+semiconsistent.  I've fixed a few zillion small bugs...
+
+------------------------------------------------------------------------
+r400 | rgb | 2008-03-22 18:33:47 -0400 (Sat, 22 Mar 2008) | 6 lines
+
+This repairs one serious bug -- I was misinitializing itail -- and makes
+it a bit more precise as far as counting dofs.
+
+
+
+
+------------------------------------------------------------------------
+r399 | rgb | 2008-03-22 15:54:02 -0400 (Sat, 22 Mar 2008) | 6 lines
+
+This MAY at long last, actually fix rgb_bitdist by simultaneously fixing
+vtests in general.  Our chisq now AUTOMATICALLY bundles the tail(s) or
+low spots in a chisq, independent of where they occur.  It looks like I
+failed to set ndof correctly, so there will be another round of tests
+and a quick checkin in a moment.
+
+------------------------------------------------------------------------
+r398 | rgb | 2008-03-19 02:23:40 -0400 (Wed, 19 Mar 2008) | 13 lines
+
+THIS IS A WORKING STS SERIAL as far as I can tell.  It correctly reveals
+known weak generators.  It seems to pass known "decent" generators.  It
+is very sensitive to certain kinds of failure.
+
+I now should redo rgb_bitdist to be the NON-overlapping version of this
+test, at the very least comparing the freq output (generated with the
+same code, I think, ported the other way) to a multinomial chisq on the
+expected values.  If I can actually check the distribution of each
+number against an asymptotically normal curve, that would be great too.
+If I could IN THE SAME TEST check the asymptotic fraction -- something
+like the monkey tests do -- that would be just fabulous!  Especially if
+I use a normal and make the comparison very good and not empirical.
+
+------------------------------------------------------------------------
+r397 | rgb | 2008-03-18 20:45:03 -0400 (Tue, 18 Mar 2008) | 4 lines
+
+This is very, very close to working perfectly WITH LABELS for
+all the histograms generated by sts_serial.  We'll save it just because
+it looks really useful.
+
+------------------------------------------------------------------------
+r396 | rgb | 2008-03-18 17:13:51 -0400 (Tue, 18 Mar 2008) | 9 lines
+
+As far as I can tell, sts_serial now works perfectly.  Time to clean up
+its act.  I will start by decrufting some of the superfluous output from
+the library call, then I'm going to FIX the test struct so that each
+test has its OWN descriptor line that can be set along with its pvalue
+and that will be used by the histogram and/or single line output routine
+to identify the associated statistic.  I have to make it a bit easier
+to make a single test call and get back the MATRIX of p-values for a set
+of statistics all generated with the single call.
+
+------------------------------------------------------------------------
+r395 | rgb | 2008-03-17 00:58:13 -0400 (Mon, 17 Mar 2008) | 4 lines
+
+This, finally, appears to work perfectly.  The last thing I need to do
+is to put all of the pvalues somewhere to be passed back to the caller,
+in order.
+
+------------------------------------------------------------------------
+r394 | rgb | 2008-03-16 21:44:35 -0400 (Sun, 16 Mar 2008) | 3 lines
+
+This fixes a build problem on x86_64 -- must not have an explicit
+-L/usr/lib on x86_64 systems, empirically.
+
+------------------------------------------------------------------------
+r393 | rgb | 2008-03-16 20:55:43 -0400 (Sun, 16 Mar 2008) | 8 lines
+
+This is much closer.  Fixed a few small bugs, and one fairly large one
+from the transition to a loop.  This is "probably" right at this point.
+The interesting question is whether and how we can generate statistics,
+pvalues, and results for the whole vector of results.  In principle we
+can, but I don't know that I've done 14 in a row.  OR, maybe I'll figure
+out that all I need to do is m = 16 (as it includes all its smaller
+cousins, supposedly).
+
+------------------------------------------------------------------------
+r392 | rgb | 2008-03-16 15:40:29 -0400 (Sun, 16 Mar 2008) | 3 lines
+
+This isn't really done, but we're going to check it in since it sort of
+mostly works.
+
+------------------------------------------------------------------------
+r391 | rgb | 2008-03-12 17:47:53 -0400 (Wed, 12 Mar 2008) | 2 lines
+
+Let's see if this revision works...
+
+------------------------------------------------------------------------
+r388 | rgb | 2008-03-12 13:34:59 -0400 (Wed, 12 Mar 2008) | 5 lines
+
+Sending it ALL in to Duke and upstairs.  There is a bug
+of sorts in our chisq -- we don't have a good way of
+specifying the number of degrees of freedom for some
+of the tests and we need to.
+
+------------------------------------------------------------------------
+r385 | rgb | 2008-03-12 07:09:20 -0400 (Wed, 12 Mar 2008) | 3 lines
+
+This is about as fixed as I can make it without doing algebra.  Algebra
+later, fix code up now.
+
+------------------------------------------------------------------------
+r384 | rgb | 2008-03-11 19:26:01 -0400 (Tue, 11 Mar 2008) | 7 lines
+
+This APPEARS to check with John E. Davis's patches.  diehard_dna is no
+problem -- the drop-in replacement there produces identical numbers,
+runs in half the time.  rgb_bitdist gives DIFFERENT numbers but is MUCH
+faster.  I still have several "small bugs" to check out including bugs
+in specific tests, and I probably will need to test the static routines
+as well.
+
+------------------------------------------------------------------------
+r383 | rgb | 2008-03-11 15:49:34 -0400 (Tue, 11 Mar 2008) | 5 lines
+
+Preparing to do the next round(s) of patches.  I suppose we'll start
+with the get_bit_whatever patches.  First I need to generate a "before"
+for at least one test that uses them, e.g. birthdays.  Then we'll
+compare it to after with the fixed seed of 1.
+
+------------------------------------------------------------------------
+r382 | rgb | 2008-03-11 00:53:27 -0400 (Tue, 11 Mar 2008) | 3 lines
+
+This is beefing up the tarball so it just works with the usual
+preexisting configure.
+
+------------------------------------------------------------------------
+r381 | rgb | 2008-03-11 00:25:48 -0400 (Tue, 11 Mar 2008) | 5 lines
+
+RIGHT THIS INSTANT we finally have a clean F8 build with the new
+Makefile.am's and a hacked specfile.  Alas, to fix the rpath problem
+I had to resort to using chrpath, which sucks big time.  Unless there
+is a libtool directive for fixing it, though, I'm SOL.
+
+------------------------------------------------------------------------
+r380 | rgb | 2008-03-10 09:41:26 -0400 (Mon, 10 Mar 2008) | 5 lines
+
+I don't know -- I think that we're getting closer and closer.  We will
+have the code completely and cleanly GBT based by the end of the
+morning, I think.  Well, maybe not since I'm going in to see if there
+is anything entrepreneurial going on with Thom LaBean.
+
+------------------------------------------------------------------------
+r379 | rgb | 2008-03-10 08:08:18 -0400 (Mon, 10 Mar 2008) | 7 lines
+
+OK, this is pretty much all the patches, I think.  We should be very
+close to BSD-ready.  I wonder if I can add the word "beta" to the
+"release" or the "8" in VERSION?
+
+Oh, one other thing -- I very definitely need to fix the rpm build
+(specfile).  Let's install into /tmp and see what we've got.
+
+------------------------------------------------------------------------
+r378 | rgb | 2008-03-10 07:54:46 -0400 (Mon, 10 Mar 2008) | 6 lines
+
+Decrufted the makefiles, added a /dev/arandom rng for BSD, fixed tiny
+modulus bug in rng list display, added sensible error message extensions
+for people running across distros for the /dev/?random devices (I
+"could", of course, use fstat to determine if the devices are there and
+refuse to add them if they aren't, but that's for the future).
+
+------------------------------------------------------------------------
+r377 | rgb | 2008-03-09 22:07:15 -0400 (Sun, 09 Mar 2008) | 4 lines
+
+Checking in a mildly broken set.  FWIW, a full build actually works.
+OTOH, make rpm does not.  Perhaps not too unsurprising.  I need to do
+a full install into /tmp and see what comes up.
+
+------------------------------------------------------------------------
+r376 | rgb | 2008-03-09 15:35:38 -0400 (Sun, 09 Mar 2008) | 4 lines
+
+This actually is getting close to being done "the right way".  It still
+builds, and I think builds an RPM, but I need to work on the library
+side to clean it up as well.
+
+------------------------------------------------------------------------
+r375 | rgb | 2008-03-09 14:57:03 -0400 (Sun, 09 Mar 2008) | 2 lines
+
+OK, this is really close to being what freebsd wants.
+
+------------------------------------------------------------------------
+r374 | rgb | 2008-03-09 13:55:12 -0400 (Sun, 09 Mar 2008) | 5 lines
+
+OK, looks like the BSD patch for rngs_gnu_r.c works, and I'm guessing
+that it will work in general UNLESS it has to be the gnu error()
+program to interface with R, in which case the patch will have to be
+ifdef'd.
+
+------------------------------------------------------------------------
+r373 | rgb | 2008-03-09 13:38:06 -0400 (Sun, 09 Mar 2008) | 6 lines
+
+OK, we are in the middle of a Major Patch Job.  We're fixing various
+small things that are wrong with our GBT port, trying to get it so that
+it will automagically build on a wider set of systems.  The stuff I've
+done so far still builds (I need to test the rpm build though) and
+"should" build on gentoo as well as Debian and Fedora/RH.
+
+------------------------------------------------------------------------
+r372 | rgb | 2008-02-12 19:01:04 -0500 (Tue, 12 Feb 2008) | 9 lines
+
+This fixes the Crispin bug, -- a bad number in one column of s[i][j]
+relative to the original diehard.  Sure hope it is the correct one; the
+later (c version) diehard matched what I had.
+
+I really need to compute the r and s directly.  But then, I think I
+understand the operm5 test well enough to do it "directly" without
+overlap as a non-overlapping permutations test.  It might even be fun to
+make overlap just an option.
+
+------------------------------------------------------------------------
+r366 | rgb | 2008-01-30 07:47:48 -0500 (Wed, 30 Jan 2008) | 2 lines
+
+This fixes the abstract AGAIN...
+
+------------------------------------------------------------------------
+r365 | rgb | 2008-01-02 11:23:16 -0500 (Wed, 02 Jan 2008) | 4 lines
+
+This should be the absolute minimum needed to build clean from tarball
+using "just" ./configure followed by make.  Need to fix the configure
+script to check for the gsl and anything else that might be needed.
+
+------------------------------------------------------------------------
+r362 | rgb | 2007-12-07 12:40:35 -0500 (Fri, 07 Dec 2007) | 2 lines
+
+This checkin just updates the release number.
+
+------------------------------------------------------------------------
+r361 | rgb | 2007-12-06 14:39:53 -0500 (Thu, 06 Dec 2007) | 7 lines
+
+This patches two small things -- adds fflush(stdout); so tees of the
+results don't make you wait.  Removes a development line from
+diehard_operm5 that shouldn't be there in any KIND of real release.
+
+Need to bump the snap revision and reinstall.
+
+
+------------------------------------------------------------------------
+r360 | rgb | 2007-11-19 07:38:36 -0500 (Mon, 19 Nov 2007) | 29 lines
+
+This is pretty much a fully functional version.  I fixed the last bug,
+which turned out to be that I had the right idea but missed the:
+
+  I + P + P* + P^2 + P*^2 + ...
+
+and was accidentally doing (when I empirically noted that including k=0
+in the sum was necessary) either:
+
+  I + P + P^2...
+
+or
+
+  2I + P + P* + ...
+
+Added a conditional to eliminate the second k = 0 instance in the core
+loop summing the fi*fj and got perfect correspondance through -n 3.  The
+-n 3 matrix is different, but pretty obviously a permutation of the
+AKM matrix as to be expected since the permutation order is arbitrary
+and they probably didn't use lexical ordering.  The eigenvalues,
+however, are dead on the same!
+
+So I'm back up to the point where I should be able to form a test
+statistic somehow.  I have to covariance matrix precisely in hand --
+something at this point about weak inverses (weak because it is singular
+and has no inverse?).  A bit curious, actually.  We'll see.
+
+  rgb
+
+
+------------------------------------------------------------------------
+r359 | rgb | 2007-11-19 01:02:46 -0500 (Mon, 19 Nov 2007) | 13 lines
+
+OK, this SEEMS to repair everything, except for some spurious
+normalization stuff that is at least consistent between the exact
+and experimental matrices.  They now come out the same, and I suspect
+they are proportional to the nilpotent markov processes paper result.
+For k=2 they clearly are -- a factor of 2.  For k=3 it is harder to see
+for sure.  Time to go back to the paper with a calculator.
+
+At least now the matrices are properly symmetric, as well.  That means
+that their eigenvalues can be computed with my existing code with its
+symmetric matrix eigenvalue calls.  It does leave me with the
+substantial problem of computing a test statistic automagically, but one
+small step at a time...
+
+------------------------------------------------------------------------
+r358 | rgb | 2007-11-14 07:01:57 -0500 (Wed, 14 Nov 2007) | 7 lines
+
+This works, but my assumptions concerning the inverse of C are incorrect
+because (gasp) C isn't invertible.  It has eigenvalues and eigenvectors.
+I can compute them, apparently -- that's what this snapshot does (I'm
+going to compare the results now to what's in my nilpotent processes
+paper).  I still don't quite see how to make my results into a p-value,
+though, and may need help with this...
+
+------------------------------------------------------------------------
+r357 | rgb | 2007-11-13 11:53:48 -0500 (Tue, 13 Nov 2007) | 7 lines
+
+It is SO key to preserve this in precisely this state.  At this instant
+in time, cexact and cexpt are identically formed, one running over all
+permutations and the other from sampling, and they work perfectly EXECPT
+for the #!)#%@ sign error.  I had the sign right, and don't quite see
+how I changed the code, so I'm about to look.  In the meantime, though,
+we mustn't lose this working form...
+
+------------------------------------------------------------------------
+r356 | rgb | 2007-10-31 22:11:57 -0400 (Wed, 31 Oct 2007) | 3 lines
+
+This is a broken checkin, but I'm on track for getting operm finished at
+last, if only I stick to it.
+
+------------------------------------------------------------------------
+r354 | rgb | 2007-10-24 15:19:05 -0400 (Wed, 24 Oct 2007) | 2 lines
+
+Need to send to duke, dummy.s
+
+------------------------------------------------------------------------
+r353 | rgb | 2007-10-24 15:18:41 -0400 (Wed, 24 Oct 2007) | 2 lines
+
+This is needed for development, I think.
+
+------------------------------------------------------------------------
+r352 | rgb | 2007-10-24 15:17:37 -0400 (Wed, 24 Oct 2007) | 2 lines
+
+Trying again.  Dunno how this got screwed up but it is.
+
+------------------------------------------------------------------------
+r351 | rgb | 2007-10-03 16:16:38 -0400 (Wed, 03 Oct 2007) | 3 lines
+
+This is actually a pretty solid implementation of
+rgb_minimum_distance...
+
+------------------------------------------------------------------------
+r350 | rgb | 2007-09-29 17:43:55 -0400 (Sat, 29 Sep 2007) | 3 lines
+
+works perfectly.  fixed memory leak.  about to improve 2dsphere with
+sort, then run -a.
+
+------------------------------------------------------------------------
+r349 | rgb | 2007-09-29 11:24:16 -0400 (Sat, 29 Sep 2007) | 2 lines
+
+This is IT and works... rgb_minimum_distance is there.
+
+------------------------------------------------------------------------
+r347 | rgb | 2007-09-20 05:37:04 -0400 (Thu, 20 Sep 2007) | 3 lines
+
+I need to fix this, but probably not today.  In doc there is a "fix me"
+recipe for 2d spheres.  I'm currently adding the Linux Magazine invoice.
+
+------------------------------------------------------------------------
+r346 | rgb | 2007-09-19 14:44:10 -0400 (Wed, 19 Sep 2007) | 3 lines
+
+Checking in a fix for the BROKEN 2d spheres test.  I should be able to
+fix 3dspheres as well from it.
+
+------------------------------------------------------------------------
+r345 | rgb | 2007-08-28 12:54:51 -0400 (Tue, 28 Aug 2007) | 3 lines
+
+Bug reported by a user, sort of.  The README still said you could just
+type "make" and you can't.  Fixed.
+
+------------------------------------------------------------------------
+r344 | rgb | 2007-08-13 18:30:55 -0400 (Mon, 13 Aug 2007) | 2 lines
+
+Will this go in?  Time will tell...
+
+------------------------------------------------------------------------
+r343 | rgb | 2007-07-16 11:20:54 -0400 (Mon, 16 Jul 2007) | 45 lines
+
+We are working HARD or confirming or denying dieharder_operm5 AND
+working out a more general rgb_operm.  The convertoperm.pl script
+once AGAIN confirms that I'm unpacking and repacking (for C) the
+r and s matrices of diehard_operm correctly.
+
+However, AFAICT, the diehard_operm5 JUST tallies up t[120], the count of
+the different permutation indices.  However, all the permutations should
+occur with a SYMMETRIC probability -- I verified this directly by doing
+the actual integrals, but in retrospect it is pretty obvious from
+symmetry alone.  The t-vector therefore has NOTHING TO DO with the
+covariance matrix no matter what you do with it, which may be why
+diehard_operm5() is a bad test.  FWIW, I've added output statements to
+diehard_operm5() that dump the t-vector and verified empirically that
+yes, it produces a more or less uniform distribution of bin-probability
+1/120 -- one could in fact do a chisq test on this directly and very
+likely obtain an actual meaningful test, but that is not at all what is
+done.  
+
+Note well that the sampled distribution of t[] will not SIGNIFICANTLY
+vary if computed from overlapping samples!  This is simple to see -- it
+would be just like computing five distinct samplings of non-overlapping
+samples, each of which would be expected to have exactly the same mean
+and variance.  Because of the overlap there could be a tiny bit of
+correlation between the FLUCTUATIONS in the MEASURED mean values for any
+given bin, but the bin mean would have to be unchanged for each
+overlapping sampling, and for that matter the bin variance for each
+sampling would ALSO have to be the same. 
+
+The only effect of combining the overlapping five samplings (each with
+identical mean and variance!)  would therefore be to AT MOST alter the
+sampled VARIANCE of the bin distribution, per bin, a tiny bit from what
+one might expect analytically from truly iid samples.  One certainly
+isn't going to see this variation in the variance from two runs -- the
+expected statistical noise would overwhelm the signal as this is a
+second moment/cumulant effect, a susceptibility if you like, and hence
+VERY difficult to resolve.
+
+What we in fact must do is (I'm pretty sure) compute c[][] analytically,
+(which I have done) and then simulate the SAME c[][] directly from the
+data.  Then difference them, which should make the components of
+c_exp[][] - c_exact[][] presented as vector a zero mean chisq
+distributed object with N! - (N-1)! DoF or something like that -- 120-24
+= 96 for N = 5?  Here I'll defer to experts, eventually.
+
+
+------------------------------------------------------------------------
+r342 | rgb | 2007-06-16 01:11:57 -0400 (Sat, 16 Jun 2007) | 2 lines
+
+Hopefully this has all the files needed for rgb_operm() checked in.
+
+------------------------------------------------------------------------
+r341 | rgb | 2007-06-16 01:09:13 -0400 (Sat, 16 Jun 2007) | 2 lines
+
+This actually builds.  Let's see if the new test shows up...
+
+------------------------------------------------------------------------
+r340 | rgb | 2007-06-15 20:12:58 -0400 (Fri, 15 Jun 2007) | 23 lines
+
+Checking in several things.  rgb_operm.c is a template for my eventual
+replacement for operm5.  I have about concluded that operm5 is basically
+a joke -- it is conceptually incorrect.  The correct statistic should be
+the overlapping permutations covariance matrix itself.  This test just
+counts the occurrence of permutations -- the "overlap" part is
+completely irrelevant in this context.  It returns an aggregate count
+vector whose mean is 1/120 (obviously, permutations of 5 objects = 5! =
+120).  It makes NO DIFFERENCE AT ALL if this vector is evaluated from
+overlapping samples or from independent samples -- the mean will be the
+same.  All that MIGHT change is the variance -- since the samples are
+drawn from an overlapping population, one would expect that their
+variance would be strictly less than one would expect from truly
+independent samples.
+
+In a minute I'll verify this with the overlap flag and a couple of runs
+with mt, but I now understand why the test fails.  It remains to figure
+out how to build a CORRECT overlapping permutations test that uses the
+COVARIANCE of overlapping samples as a statistic.  I actually think that
+this will be pretty easy, but I do have to also understand why the
+definition in the nilpotent markov chains paper doesn't (I think) lead
+to the numbers that they publish there.  Or rather, why my MUCH SIMPLER
+algorithm doesn't lead to the same numbers they get.
+
+------------------------------------------------------------------------
+r333 | rgb | 2007-06-14 14:54:23 -0400 (Thu, 14 Jun 2007) | 2 lines
+
+This should have no operm in it.
+
+------------------------------------------------------------------------
+r332 | rgb | 2007-06-14 14:36:51 -0400 (Thu, 14 Jun 2007) | 2 lines
+
+Probably a good time to update to lucifer, since it is actually up...
+
+------------------------------------------------------------------------
+r331 | rgb | 2007-06-08 10:14:04 -0400 (Fri, 08 Jun 2007) | 3 lines
+
+OK, NOW let's actually try to get rng_uvag in, THEN we'll try to
+increase its speed...
+
+------------------------------------------------------------------------
+r330 | rgb | 2007-05-24 13:35:50 -0400 (Thu, 24 May 2007) | 4 lines
+
+I'm gradually refining the bitstream variance -- 290 is from over
+260000 samples.  I'm shooting for a s.d. of a couple of tenths, although
+honestly it is overkill.
+
+------------------------------------------------------------------------
+r329 | rgb | 2007-05-23 01:02:21 -0400 (Wed, 23 May 2007) | 12 lines
+
+OK, this is a major enough checkin.  I have at long last fixed
+bitstream.c.  Marsaglia's published value of sigma is off by close to a
+factor of two.  sigma is in fact 288.6.  I have verified this by
+simulation with very excellent RNGs, e.g. MT or gfsr4 AND with HARDWARE
+generators (which were failing bitstream before).
+
+Marsaglia couldn't resolve the error (which could just have been due to
+a typo at some point that was perpetuated) because his test didn't run
+enough times or plot the pvalues in a histogram, but if you plot the
+obtained means in a histogram and fit a normal to them, there is
+absolutely no doubt.
+
+------------------------------------------------------------------------
+r328 | rgb | 2007-05-23 00:35:33 -0400 (Wed, 23 May 2007) | 2 lines
+
+Forgot to check this one in...
+
+------------------------------------------------------------------------
+r327 | rgb | 2007-05-23 00:31:03 -0400 (Wed, 23 May 2007) | 2 lines
+
+OK, this is one of two ways to get things to metatron to run faster.
+
+------------------------------------------------------------------------
+r326 | rgb | 2007-05-22 21:12:07 -0400 (Tue, 22 May 2007) | 3 lines
+
+This fixes several problems, and is working its way towards a new
+release.
+
+------------------------------------------------------------------------
+r325 | rgb | 2007-05-22 10:04:12 -0400 (Tue, 22 May 2007) | 2 lines
+
+Silly checkin, as I dropped a file here that goes below.
+
+------------------------------------------------------------------------
+r324 | rgb | 2007-05-21 19:46:44 -0400 (Mon, 21 May 2007) | 5 lines
+
+Well, we're making LOTS of little changes here.  We're splitting off
+Exit() into its own file so it can be shred, we're moving
+db_gnu_r_rngs.c to gnu_r_rngs.c, we're adding prototypes and changing
+the namespace for RDH.  All at once.
+
+------------------------------------------------------------------------
+r323 | rgb | 2007-05-21 18:14:19 -0400 (Mon, 21 May 2007) | 3 lines
+
+Fixed small problem in makefile.  Otherwise I'm not sure why these files
+are changing -- they really shouldn't.
+
+------------------------------------------------------------------------
+r322 | rgb | 2007-05-21 15:04:01 -0400 (Mon, 21 May 2007) | 3 lines
+
+I do believe that this now is ready to rock and roll.  AFAICT, it "just
+works".
+
+------------------------------------------------------------------------
+r321 | rgb | 2007-05-21 14:39:08 -0400 (Mon, 21 May 2007) | 6 lines
+
+This is checking in dieharder WITH RDieHarder included and under version
+control.  RDieHarder now depends on dieharder sources.  I still haven't
+got the Makefile, with dependencies, built into the existing Makefile
+but I will.  Basically, I plan three new targets:  rdhprep, rdhlib (as
+root only) and rdhtgz (to make a "package" out of it).
+
+------------------------------------------------------------------------
+r320 | rgb | 2007-05-21 09:34:44 -0400 (Mon, 21 May 2007) | 10 lines
+
+Well, we've been working hard here.  Let me try to summarize.  I've
+instrumented the code to make it "easy" to move it to RDieHarder.  Dirk
+doesn't understand, quite, how I plan to make RDH a "part of" the
+dieharder source tree, but he will when I'm done as it will then be
+really easy to prep his cran/debian package.  I think, I hope.
+
+I think that I'm going to need to pursue dieharder this summer pretty
+aggressively in addition to working on axioms and other books.  I should
+probably look hard at getting money to support it, as well.
+
+------------------------------------------------------------------------
+r319 | rgb | 2007-05-19 08:14:56 -0400 (Sat, 19 May 2007) | 3 lines
+
+We've got to get this to lucifer and then try to unpack it on
+metatron...
+
+------------------------------------------------------------------------
+r318 | rgb | 2007-04-29 14:06:32 -0400 (Sun, 29 Apr 2007) | 2 lines
+
+This too has to go to lucifer...
+
+------------------------------------------------------------------------
+r317 | rgb | 2007-03-12 09:50:39 -0400 (Mon, 12 Mar 2007) | 4 lines
+
+This is the last set of changes associated with 2.24.3 -- which is
+hopefully getting really, really close to a release I can live with.
+I suppose I should fix the man pages, at least to some extent.
+
+------------------------------------------------------------------------
+r316 | rgb | 2007-03-05 10:35:05 -0500 (Mon, 05 Mar 2007) | 6 lines
+
+This looks like it successfully splits off the manual so it is no longer
+autobuilt and is not in the rpms.
+
+From here out the manual will be a SEPARATE project aimed square at lulu
+publication as a book I might even make money from.
+
+------------------------------------------------------------------------
+r315 | rgb | 2007-03-05 10:32:43 -0500 (Mon, 05 Mar 2007) | 2 lines
+
+We'll work our way there by hook or by crook.
+
+------------------------------------------------------------------------
+r314 | rgb | 2007-03-05 10:32:03 -0500 (Mon, 05 Mar 2007) | 2 lines
+
+Grrr.  I just lost a whole bunch of work...
+
+------------------------------------------------------------------------
+r313 | rgb | 2007-03-01 20:00:11 -0500 (Thu, 01 Mar 2007) | 11 lines
+
+This has now been fixed, a la Charles Karney's suggestion and Janusz's
+paper demonstrates, to use overlapping samples by default.  Some tests
+it really DOES matter, if those tests are valid at all (operm5 being a
+classic example).  I still doubt the bitstream-dna test series -- I
+think that there is NO difference between overlapping and
+non-overlapping samples there, or at most a tiny shrinking of the
+distribution variance in the end, as they don't measure "overlap", only
+a CLT-limited mean.  Overlapping 20 bit samples should make a tiny shift
+in the sample standard deviation and have no other effect in these
+tests.
+
+------------------------------------------------------------------------
+r312 | rgb | 2007-03-01 19:38:44 -0500 (Thu, 01 Mar 2007) | 4 lines
+
+This fixes the Bug reported by Brian J. Wong, making bl and bu of a
+function in bits.c static uint (preserved between calls) instead of
+dynamic.  Probably my bad...
+
+------------------------------------------------------------------------
+r309 | rgb | 2007-02-28 10:39:58 -0500 (Wed, 28 Feb 2007) | 2 lines
+
+Sending this into SVN on general principles.
+
+------------------------------------------------------------------------
+r308 | rgb | 2007-02-27 22:38:22 -0500 (Tue, 27 Feb 2007) | 10 lines
+
+This actually seems to work.  So we now have 66 random number generators
+to test.  Tony Pasqualoni's Cellular Automaton rng isn't anywhere NEARLY
+as fast as he alleges compared to the GSL routines inside identical
+packaging -- in fact it is about par for the course -- but so far it
+seems to be 1 bit and 2 bit random, and we're working on a -a run that
+will expose it to the latest/greatest operm5.  It remains to be seen
+whether or not K. Janusz's paper contains algorithms that will let me
+check and/or correct Marsaglia's operm5, or perhaps extend the operm5
+into a RANGE of tests like rgb_bitdist.
+
+------------------------------------------------------------------------
+r307 | rgb | 2007-02-27 22:19:36 -0500 (Tue, 27 Feb 2007) | 6 lines
+
+This is a very first cut of Tony Pasqualoni's Cellular Automaton
+random number generator, ported into a gsl standard wrapper.  This will
+let me test Tony's assertion that this is a good, very fast rng in
+exactly the same wrapper that one can study the other "good" (but
+slower) rng's.
+
+------------------------------------------------------------------------
+r306 | rgb | 2007-02-27 02:10:12 -0500 (Tue, 27 Feb 2007) | 2 lines
+
+This is a really modest checkin, but we'll see if it can manage...
+
+------------------------------------------------------------------------
+r305 | rgb | 2007-02-27 02:04:24 -0500 (Tue, 27 Feb 2007) | 13 lines
+
+TAG 2.24.2
+
+I fixed the -q(uiet) flag so that it works, and decided to bundle all of
+the above bugfixes and feature shifts into a new minor minor bump.  This
+is the "official" GBT build, if Dirk concurs when he tries it.
+
+As far as I know, we're at least back where we were when we started
+implementing GBT and then some.
+
+Now, if only I could figure out the trunk thing.  Maybe I'll try doing a
+checkout and build without the trunk movement...
+
+
+------------------------------------------------------------------------
+r304 | rgb | 2007-02-27 01:31:45 -0500 (Tue, 27 Feb 2007) | 5 lines
+
+TAG 2.24.1-2
+
+Fixed documentation and added a hard record of Janusz's bug in operm5.
+
+
+------------------------------------------------------------------------
+r303 | rgb | 2007-02-27 01:06:25 -0500 (Tue, 27 Feb 2007) | 2 lines
+
+Sending this to Duke, at least...
+
+------------------------------------------------------------------------
+r302 | rgb | 2007-02-27 01:06:09 -0500 (Tue, 27 Feb 2007) | 47 lines
+
+This contains a change suggested by the following:
+
+%<snip snip -----
+From: Janusz Kawczak <jkawczak@gmail.com>
+To: Robert G. Brown <rgb@phy.duke.edu>
+Cc: Dirk Eddelbuettel <edd@debian.org>
+Subject: Re: Random R-Package
+
+Hello, without going to much into peculiarities (for now, at least) of
+the rngs and numbers coming from Marsaglia and you (Robert), I would
+like to give the result from our paper that is directly applicable to
+the operm5 header you cited below:
+
+"...(with # rank 99)..." - this is the point I questioned in our paper.
+I asked Marsaglia how he got this rank, but I never received the reply
+from him. I can only presume that he either guessed this number or
+estimated it (somehow). It remains a mystery to me; like a Marsaglia's
+voodoo step. The answer should be 96=5!-4!. It is not a big deal
+of a difference in this case, however, the theorem we proved allows one
+to consider cased of perm6, perm7 ... and higher with the exact number
+of degree of freedom calculations. Thus, exact and not guessed results.
+
+It is my opinion that the operm-type test is very powerful for detecting
+local correlations (dependencies) and it should be used for such
+purpose. So, any algorithmic PRNG will suffer and most likely do not
+dwell well when exposed to this test. I have not had a chance to do
+serious experiments on the "natural-random" generators, e.g.
+alpha-particle counting, radio noise signals and many others. But, I
+suspect that the operm-type test should do well in this situation.
+
+I cannot promise at this time much, but I am going to look at the issues
+you addressed in your e-mail. However, the questions you've raised are a
+bit different animals to deal with.
+
+In summary, it would be useful, once and for all, to correct 99 degrees
+to 96 in the operm5 Marsaglia's header file. Maybe, one day, this will
+happen :-)
+%<snip snip -----
+
+I've implemented this change -- 99 to 96 -- although I welcome any
+comments.  The test still fails the big four -- gsfr4, taus2, ranlxd2,
+and mt19937 -- nearly all the time, overlapping or not.  I still suspect
+either errors in r and s or (quite possibly) programming errors, but it
+ALMOST works and lacking a gold standard rng it is difficult to resolve
+the question numerically.
+
+
+------------------------------------------------------------------------
+r301 | rgb | 2007-02-27 00:16:46 -0500 (Tue, 27 Feb 2007) | 4 lines
+
+This is an important change -- I fixed an annoyance (if not worse) with
+the libdieharder setting of the major revision number.  I may need to
+propagate the expr back to the toplevel Make.
+
+------------------------------------------------------------------------
+r300 | rgb | 2007-02-26 23:39:47 -0500 (Mon, 26 Feb 2007) | 7 lines
+
+Dirk found that I was still screwing up the PREFIX thing by stubbornly
+refusing to use (lower case) prefix, libdir, and includedir in my make
+install target.  I think I've stripped out my own versions of these
+completely so that they can a) be set by configure and run with "just"
+make install or b) overridden on the make line, e.g make prefix=/tmp/usr
+install (as apparently he likes to do to make debian packages).
+
+------------------------------------------------------------------------
+r299 | rgb | 2007-02-25 14:42:52 -0500 (Sun, 25 Feb 2007) | 3 lines
+
+This is definitely experimental, trying to write a web installer
+modification that I cannot test until I get back the net.
+
+------------------------------------------------------------------------
+r298 | rgb | 2007-02-25 14:32:05 -0500 (Sun, 25 Feb 2007) | 4 lines
+
+Ok, this is TAG=2.24.1, the first Gnu Build Tools release that builds
+rpms clean from (we hope) SVN.  I do need to validate this with one
+last SVN checkout, but I'm pretty sure it is the case...
+
+------------------------------------------------------------------------
+r297 | rgb | 2007-02-25 13:35:17 -0500 (Sun, 25 Feb 2007) | 2 lines
+
+Well, a time to check in.  We're about to see if an rpm build works...
+
+------------------------------------------------------------------------
+r296 | rgb | 2007-02-25 13:15:29 -0500 (Sun, 25 Feb 2007) | 6 lines
+
+This may be a really nice advance.  The dieharder build now uses
+../include and ../libdieharder as -I and -L respectively, and plain old
+"make" in both cases should work, from a clean checkout.  I'm guessing
+that I can add a simple Makefile.am to include to do the actual install
+of the include files.
+
+------------------------------------------------------------------------
+r295 | rgb | 2007-02-25 12:47:10 -0500 (Sun, 25 Feb 2007) | 4 lines
+
+This should be REALLY REALLY close.  We'll checkin, do a full checkout,
+and try building.  If/when we get there, we'll work strictly from build
+to build once again.
+
+------------------------------------------------------------------------
+r294 | rgb | 2007-02-25 12:27:25 -0500 (Sun, 25 Feb 2007) | 4 lines
+
+OK, this is one whole cut closer, and ALMOST works, but we're definitely
+going to have to try this one more time...  We also need at some point
+to stop svn control of Makefiles and maintain only Makefile.ams
+
+------------------------------------------------------------------------
+r293 | rgb | 2007-02-25 12:17:22 -0500 (Sun, 25 Feb 2007) | 3 lines
+
+Adding what MAY be all the things needed to enable full automated Gnu
+style builds from the autogen.sh script.
+
+------------------------------------------------------------------------
+r292 | rgb | 2007-02-25 12:16:05 -0500 (Sun, 25 Feb 2007) | 4 lines
+
+Finished a first cut at adding GBT support.  Need to check in the .in
+files and configure.ac files one level down, and do a full checkout to
+see if it autobuilds from an svn checkout.
+
+------------------------------------------------------------------------
+r291 | rgb | 2007-02-19 09:23:15 -0500 (Mon, 19 Feb 2007) | 3 lines
+
+This dumps buildroot.  We don't need or want this in the tarball or rpm
+sources.
+
+------------------------------------------------------------------------
+r290 | rgb | 2007-02-19 03:47:31 -0500 (Mon, 19 Feb 2007) | 4 lines
+
+We are working quite hard on getting the ChangeLog to be automagically
+registered.  I'm guessing it should just go into %doc and we should
+pretty much forget the tag otherwise.
+
+------------------------------------------------------------------------
+r289 | rgb | 2007-02-19 03:05:19 -0500 (Mon, 19 Feb 2007) | 5 lines
+
+This fixes a variety of problems with using shared libraries correctly,
+and moves the project much closer to where it could e.g. be included in
+FC extras.  The library builds nicely now, for example.  However, I do
+need to switch to using autoconf, however much I generally dislike it.
+
+------------------------------------------------------------------------
+r288 | rgb | 2007-02-19 01:32:29 -0500 (Mon, 19 Feb 2007) | 2 lines
+
+OK, this fixes some serious uglyness.  Let's see if the rpm builds...
+
+------------------------------------------------------------------------
+r287 | rgb | 2007-02-18 16:49:23 -0500 (Sun, 18 Feb 2007) | 3 lines
+
+Updating the svn tree and sync'ing, perhaps for the last time.  Will
+this now reside on code.google.com?  We'll see.
+
+------------------------------------------------------------------------
+r286 | rgb | 2007-02-18 08:37:35 -0500 (Sun, 18 Feb 2007) | 3 lines
+
+Let's call this TAG=2.5.24 -- bumping the first minor to announce that 
+we've cleaned up several bugs and repackaged.
+
+------------------------------------------------------------------------
+r285 | rgb | 2007-02-15 13:55:48 -0500 (Thu, 15 Feb 2007) | 28 lines
+
+This fixes a bug reported by Matthias Braeunig <mb.atelier@web.de>, who
+was running the test on a file of data just one time per test using more
+or less this line:
+
+for t in $(echo "-d"{1..19} "-r"{1..4} "-s"{1..2}); do ./dieharder -q -t9375 -p1 $t;done > results
+
+He noted that kstest_kuiper returned 2.0 for input single pvalues of
+0.0, and that the test overall returned a pass even if p=1.0 exactly
+(which it also should not do for single pvalues).
+
+I made the following changes.  kstest_kuiper now returns a single input
+pvalue as its output pvalue -- clearly that's all one can do and the
+right thing to do.  The test.c assessment that prints out the results
+also no longer calls the return a KStest result, and reports failure
+a bit differently, flagging the high-p failures as well as the low p
+failures, and adjusting the reported failure range accordingly.
+
+To do this I had to use -static in the Makefile to work in the
+development tree.  I'm guessing that I need to add LDFLAG = -dynamic to
+the build make line in the specfile and should LEAVE it -static in the
+actual tree so people don't get stymied if they download and build in
+the tarball directory ("people" including me) while rpm's will still
+autobuild dynamic correctly.
+
+Finally, Matthias reported that the -q flag doesn't work. He's right,
+but I'm not sure I'm going to fix that.  Rather I should probably just
+kill it and let people filter the output results by hand...
+
+------------------------------------------------------------------------
+r284 | rgb | 2007-02-05 23:42:45 -0500 (Mon, 05 Feb 2007) | 4 lines
+
+I've just fired this up to the web.  I deem it finished enough.
+Now to backport the library fix to wulfware, and call it a night, very
+much a night.
+
+------------------------------------------------------------------------
+r283 | rgb | 2007-02-05 22:06:02 -0500 (Mon, 05 Feb 2007) | 5 lines
+
+OK, it installs and builds PERFECTLY, and THIS time it almost certainly
+is dynamically linking to libdieharder.so, as it linked without the .a
+library present at all.  I'll now have to go retrofit this to wulfware,
+as it is not building correctly.
+
+------------------------------------------------------------------------
+r282 | rgb | 2007-02-05 21:39:00 -0500 (Mon, 05 Feb 2007) | 3 lines
+
+This actually rand and built!  Now to try to rebuild it WITHOUT the .a
+library installed...
+
+------------------------------------------------------------------------
+r281 | rgb | 2007-02-05 21:30:42 -0500 (Mon, 05 Feb 2007) | 3 lines
+
+Just in case I drop something, I finally seem to have "fixed" the
+libdieharder makefile.  On to fame and glory.
+
+------------------------------------------------------------------------
+r280 | rgb | 2007-02-05 15:06:05 -0500 (Mon, 05 Feb 2007) | 2 lines
+
+OK, this is crawling on closer to ready to go...
+
+------------------------------------------------------------------------
+r279 | rgb | 2007-02-05 14:51:33 -0500 (Mon, 05 Feb 2007) | 2 lines
+
+Make this go away, please.
+
+------------------------------------------------------------------------
+r277 | rgb | 2007-01-28 10:58:14 -0500 (Sun, 28 Jan 2007) | 6 lines
+
+This has a brand new ultra-cool target, "installrepo" that makes the
+rpms and installs them in the repo, from when yum can install them.
+
+BTW, I think I forgot the "requires" tag in the dieharder sources,
+partly because it seems that it isn't, in fact, required.  Hmmm.
+
+------------------------------------------------------------------------
+r276 | rgb | 2007-01-27 19:11:19 -0500 (Sat, 27 Jan 2007) | 2 lines
+
+This works!
+
+------------------------------------------------------------------------
+r275 | rgb | 2007-01-27 17:39:42 -0500 (Sat, 27 Jan 2007) | 2 lines
+
+This is getting really close, worth checking in...
+
+------------------------------------------------------------------------
+r274 | rgb | 2007-01-27 13:27:14 -0500 (Sat, 27 Jan 2007) | 4 lines
+
+This now builds a perfectly rebuildable tarball.  We can think about
+just what else we'd like to add to that tarball in a moment, but first
+we need to FINALLY get the rpm to build, maybe.
+
+------------------------------------------------------------------------
+r273 | rgb | 2007-01-27 12:59:42 -0500 (Sat, 27 Jan 2007) | 2 lines
+
+This updates the abstract.
+
+------------------------------------------------------------------------
+r272 | rgb | 2007-01-27 12:50:16 -0500 (Sat, 27 Jan 2007) | 3 lines
+
+OK, this just maybe is working now with a target that rebuilds
+both specfiles and Makefiles when the toplevel Makefile is altered.
+
+------------------------------------------------------------------------
+r271 | rgb | 2007-01-27 11:57:23 -0500 (Sat, 27 Jan 2007) | 8 lines
+
+This is just peachy.  make and make install targets work for BOTH
+dieharder_src and libdieharder directories, which is pretty cool,
+really.  The remaining problem will be how to force a rebuild
+of the library in such a way that it works when we're developing but
+doesn't barf when we're rpm-ifying.
+
+At this point in time it is high time to try the rpm build.
+
+------------------------------------------------------------------------
+r270 | rgb | 2007-01-27 11:41:39 -0500 (Sat, 27 Jan 2007) | 3 lines
+
+OK, this is making progress.  Time to go back to libdieharder and get
+a build to work there...
+
+------------------------------------------------------------------------
+r269 | rgb | 2007-01-27 11:13:18 -0500 (Sat, 27 Jan 2007) | 3 lines
+
+Just making sure this is all ready to run when I start to edit
+the Makefile in libdieharder.
+
+------------------------------------------------------------------------
+r268 | rgb | 2007-01-27 11:08:45 -0500 (Sat, 27 Jan 2007) | 11 lines
+
+OK, this is a very painful move.  We will, of course, mothball and
+preserve libdieharder's original svn tree, but now that we're figuring
+out how to do one specfile, many packages from a single toplevel
+source tree we no longer wish to maintain libdieharder in a separate
+subversion project.  So we're checking it into this one.  All the
+change history is preserved, but in pieces -- CVSROOT first,
+subversion's libdieharder second, and from now on, here in the one
+true dieharder tree and its subversion controlled project.
+
+Next we have to get this so that a make install does the right thing.
+
+------------------------------------------------------------------------
+r267 | rgb | 2007-01-27 10:53:36 -0500 (Sat, 27 Jan 2007) | 7 lines
+
+This is a first cut at making dieharder actually build, after
+libdieharder is built and installed.  From now on BOTH will use ONLY
+the include files that are stored in ./include, which will actually
+simplify life tremendously.  I may symlink them through to the 
+source directory(s) and may even svn control the symlinks, if svn can
+manage them.  CVS couldn't...
+
+------------------------------------------------------------------------
+r266 | rgb | 2007-01-27 10:31:10 -0500 (Sat, 27 Jan 2007) | 5 lines
+
+OK, we are within a single step (removing or moving some include files)
+of being cleaned up and ready to proceed.  I'll probably copy at least
+part of the sm Makefile to get the hang of looping a make through source
+directories in order to achieve the make install in the right sequence.
+
+------------------------------------------------------------------------
+r145 | rgb | 2005-03-14 08:57:05 -0500 (Mon, 14 Mar 2005) | 5 lines
+
+This sends in parse.c.  Y'know, I'll bet that this is what breaks
+Dan's access.  Shit, looks like I'll have to kiss "make sync" goodbye...
+or give him an "account" locally with the same uid/gid -- nope that
+won't work either.  Sigh.
+
+------------------------------------------------------------------------
+r144 | rgb | 2005-03-10 22:42:00 -0500 (Thu, 10 Mar 2005) | 2 lines
+
+This goes home and into laptop...
+
+------------------------------------------------------------------------
+r143 | rgb | 2005-03-10 22:05:41 -0500 (Thu, 10 Mar 2005) | 2 lines
+
+Sending this all home, so I can make it on metatron?
+
+------------------------------------------------------------------------
+r141 | rgb | 2004-11-30 09:14:46 -0500 (Tue, 30 Nov 2004) | 5 lines
+
+I think we'll add this to the repository as the "reference run" against
+the default generator, dieharder -a > dieharder.all.  If we update this
+at the end of every new addition, we'll be able to advance to toolset
+in a fairly systematic (but generally reliable) way.
+
+------------------------------------------------------------------------
+r140 | rgb | 2004-11-29 16:36:23 -0500 (Mon, 29 Nov 2004) | 2 lines
+
+This looks like it ran nicely.
+
+------------------------------------------------------------------------
+r139 | rgb | 2004-11-29 14:30:09 -0500 (Mon, 29 Nov 2004) | 3 lines
+
+This MIGHT just be a reference run followed by tag bump and checkin.
+Looks pretty nifty, right up to a first draft of histogram.
+
+------------------------------------------------------------------------
+r138 | rgb | 2004-11-29 14:03:49 -0500 (Mon, 29 Nov 2004) | 4 lines
+
+Adding the published diehard F90 source code to the tree for
+porting convenience, although we will not use any of it verbatim,
+obviously, in a c port.
+
+------------------------------------------------------------------------
+r137 | rgb | 2004-11-29 12:18:04 -0500 (Mon, 29 Nov 2004) | 3 lines
+
+I'm hoping that this is the needed binary rank program that analyzes
+binary (bitlevel) matrices for the diehard binary rank tests.
+
+------------------------------------------------------------------------
+r136 | rgb | 2004-11-24 01:14:41 -0500 (Wed, 24 Nov 2004) | 5 lines
+
+This seems to "work", although it is consistently producing an overall
+p-value that is in the .9 range and hence "too high".  I'm going to
+start up a full run of 100 x 40000 in a second to see if I get a
+"normal" pvalue.
+
+------------------------------------------------------------------------
+r135 | rgb | 2004-11-24 01:00:50 -0500 (Wed, 24 Nov 2004) | 2 lines
+
+Well, not JUST that.  I suppose that next we'll have to actually debug.
+
+------------------------------------------------------------------------
+r134 | rgb | 2004-11-24 00:58:30 -0500 (Wed, 24 Nov 2004) | 6 lines
+
+This is ALMOST working.  I'd say the binary rank part is working, hence
+the checkin.  It is the rank_32x32 part that isn't, but I'll work on it.
+
+I suspect something really simple, like needing to normalize y by
+tsamples...
+
+------------------------------------------------------------------------
+r133 | rgb | 2004-11-22 15:08:03 -0500 (Mon, 22 Nov 2004) | 4 lines
+
+This is simply lovely, simply lovely, with a good start on adding
+Diehard's Binary Rank test.  All I need is a suitably scaled matrix
+and a few zillion rands...
+
+------------------------------------------------------------------------
+r132 | rgb | 2004-11-22 14:23:11 -0500 (Mon, 22 Nov 2004) | 2 lines
+
+Why didn't these make it to Duke?
+
+------------------------------------------------------------------------
+r131 | rgb | 2004-11-22 03:35:19 -0500 (Mon, 22 Nov 2004) | 6 lines
+
+This is 0.5.8 stable, I hope.  Time to go beddy-bye, hoping that this is
+now ready for real development and grantseeking work.  I should be
+able to add a couple more diehard tests "easily" at this point, I think.
+
+   rgb
+
+------------------------------------------------------------------------
+r129 | rgb | 2004-11-22 01:47:07 -0500 (Mon, 22 Nov 2004) | 5 lines
+
+This is VERY VERY close to being a fairly serious tagged checkin.
+We've resolved the problem of multiline strings in gcc, snagged a
+C tutorial for gcc, completely fixed the documentation -- this is
+all pretty awesomely ready for a brave new release.
+
+------------------------------------------------------------------------
+r128 | rgb | 2004-11-21 23:24:18 -0500 (Sun, 21 Nov 2004) | 11 lines
+
+This is really close to working with all the changes in the command
+line options and associated global variables.  In fact, it might BE
+working.
+
+Two things that I really really need are a routine that can take a
+data object that is one big string and display it to the screen
+(something gcc refuses to do any more, which sucks big time) and a 20x
+histogram of p-values.  Let's see if I can find them on the web before
+tackling them -- in particular the former seems like it must have been
+written by somebody...
+
+------------------------------------------------------------------------
+r127 | rgb | 2004-11-20 13:17:55 -0500 (Sat, 20 Nov 2004) | 6 lines
+
+This is now really truly ready to go, EXCEPT that NOW I have to alter
+all sorts of command options according to the latest prescriptions in
+the checkin logs and abstract/web page.  And get it "working perfectly"
+once again.  I might even finish this this weekend, if I really hammer
+at it.
+
+------------------------------------------------------------------------
+r126 | rgb | 2004-11-20 10:55:07 -0500 (Sat, 20 Nov 2004) | 3 lines
+
+This is the REALLY final checkin of rand_rate, I think, before we clone
+it into dieharder.
+
+------------------------------------------------------------------------
+r125 | rgb | 2004-11-20 10:50:28 -0500 (Sat, 20 Nov 2004) | 87 lines
+
+This is the last checkin of rand_rate AS rand_rate.  I'm going to change
+the name of this suite to dieharder.  I'm also going to change the
+test numbering schema and option naming so that e.g.
+
+  -d diehard test number
+  -r rgb test number
+  -s sts test number
+
+where -1 runs all tests of a given kind, 0 lists a description of all
+tests in the suite, -2 runs all tests of a given kind EXACTLY as they
+are run in the original code, if possible -- I'm not sure I'm going to
+test overlapping bit strings drawn from a single int just to bump the
+count of "random numbers" unless the test explicitly calls for it and it
+makes sense, as there is this thing about each sample being
+"independent" that worries me with overlapping draws.
+
+  -p number of p-values in final KS (and possibly other) test(s).  This
+is the number of times each "test" is run with independent random number
+seeds (as the DEFAULT from now on).  This defaults to 100, which is
+actually a lot and very reasonable but which can be increased if one is
+in doubt about whether the distribution of p returned by "the test" is
+in fact uniform.
+
+  -t number of test samples that go into making up a single test.  This
+is NOT always a free parameter -- in many of the diehard tests
+especially, the number of e.g. points drawn from a 2d or 3d volume in
+the minimum distance tests is fixed, and varying it would vary the
+target distribution and test statistic.  Although this is a bit
+unfortunate, since varying the number of test samples is an excellent
+way to make marginal failures in the distribution of p resolve into
+clear failures, we either live with it or derive general forms for the
+asymptotic target distributions as a function of the number of samples
+or do simulations and empirically deduce forms ditto (as Marsaglia and
+others appear to have done).  For the moment we'll live with it.
+
+  -b bitstring width.  Some tests are applied only to samples that are
+"bitstrings" (as opposed to e.g. lists of unsigned integers) of
+user-specifiable length.  One reason to limit the tests in this way is
+to avoid numerical difficulties in e.g. evaluating P_binomial(k,p,n),
+where one can easily under or overflow and end up with garbage or a gsl
+fault.  Another is to "free" some of the existing tests that have a very
+specific size of bitstring that they look at so that this can be varied
+when the target distribution can still be computed as a function of
+bitstring size.  This will be overridden as necessary, like -t, for
+tests that really do require a fixed bitstring size to approach the
+known target distribution.
+
+  -n ntuple or window width.  A number of tests look at bit ntuples.  An
+ntuple is a set of n consecutive bits drawn from a bitstring (possibly
+of -b specified width) or vector of random uints (possibly of -t
+specified length).  ntuples are always drawn relative to a bit offset
+specified from the right (least significant) with 0 being the rightmost
+bit, with cyclic boundary conditions on the entire bitstring >>or<<
+sample uint vector, so drawing an ntuple cannot fail for any offset
+within the number of significant bits returned by the generator (which
+MAY NOT BE 32, or even 31 -- some generators return as few as 16
+significant bits!).
+
+For example, an 8-bit bitstring might be:
+
+  01100111
+
+and all the 3-tuples drawn from it are given by
+
+  offset    3-tuple
+=====================
+    0        111
+    1        011
+    2        001
+    3        100
+    4        110
+    5        011
+    6        101  <- Note wrap around!
+    7        110  <- Ditto!
+
+A general purpose
+
+  get_bit_ntuple(*bitstring,bitstring size,ntuple size,offset)
+
+routine is provided that is used by many tests to get ntuples from a
+uint *bitstring of given >>uint vector length<< (not bitstring length).
+
+Other test controls may be added as well, but these are what I'm going
+to document right now.  Mostly I'm checking in all the placeholders
+required for the rest of the diehard tests so I can start to knock them
+off systematically.  Sure hope I'm past major rewrites!
+
+------------------------------------------------------------------------
+r124 | rgb | 2004-11-20 03:07:19 -0500 (Sat, 20 Nov 2004) | 2 lines
+
+Fixed silly spelling error (sigh).
+
+------------------------------------------------------------------------
+r123 | rgb | 2004-11-20 02:50:00 -0500 (Sat, 20 Nov 2004) | 3 lines
+
+Well, that was quick.  A nasty (but easy) little bug in diehard_runs
+squashed (size -> tsamples).
+
+------------------------------------------------------------------------
+r122 | rgb | 2004-11-20 02:47:34 -0500 (Sat, 20 Nov 2004) | 14 lines
+
+This should/maybe be a serious v 0.5.3 checkin.  We are about to try
+-v -1.  If it works, it will cycle through all of the working tests
+(and all the tests are working).  All the tests are now written in
+a way that they can use sample and kstest_kuiper() to do the validation
+of the p-values obtained from running a possibly size-variable test
+on bits or frequencies or runs or whatever.
+
+If this test works, it is off to the website, I'm off to bed, and next
+we go back to moving in new diehard tests.  With the magical sliding
+bitwindow (which really does seem to work pretty well:-) implementing
+at least the n-tuple diehard tests should now be pretty easy, and I
+can probably do a more rigorous job than GM did because I don't have
+to scrimp on rands.
+
+------------------------------------------------------------------------
+r120 | rgb | 2004-11-20 02:34:39 -0500 (Sat, 20 Nov 2004) | 2 lines
+
+Try again (network down).
+
+------------------------------------------------------------------------
+r119 | rgb | 2004-11-20 02:34:07 -0500 (Sat, 20 Nov 2004) | 4 lines
+
+This clears diehard_birthdays AND diehard_2dsphere.  Only one diehard
+to go and we'll have EVERYTHING running with sample and the new test
+format (but of course rgb_persist, which doesn't count).
+
+------------------------------------------------------------------------
+r118 | rgb | 2004-11-19 22:11:12 -0500 (Fri, 19 Nov 2004) | 2 lines
+
+Fixed up diehard_runs so it uses the new test format.  Works charmlike.
+
+------------------------------------------------------------------------
+r117 | rgb | 2004-11-19 18:38:19 -0500 (Fri, 19 Nov 2004) | 5 lines
+
+This is v 0.5.1, which is nicely fixed for BOTH sts_monobit AND
+sts_runs, both in the new format, with a consistent Xtest_eval()
+routine.  This fixes lots of things -- both tests are very likely
+to be "good".
+
+------------------------------------------------------------------------
+r115 | rgb | 2004-11-19 18:34:38 -0500 (Fri, 19 Nov 2004) | 7 lines
+
+OK, this looks like sts_runs is now "good" in the new format.  However,
+it may have broken sts_monobit.  The problem is, is there or is there
+not a sqrt(2.0) in the erfc relative to sigma, and if there is is
+there an EXTRA one in sts_runs vs sts_monobit.  Need to clear this up
+and either always put it into Xtest or always put it into xtest.sigma,
+but not both.
+
+------------------------------------------------------------------------
+r114 | rgb | 2004-11-19 16:06:34 -0500 (Fri, 19 Nov 2004) | 2 lines
+
+Sending this home, I hope.
+
+------------------------------------------------------------------------
+r113 | rgb | 2004-11-19 15:09:15 -0500 (Fri, 19 Nov 2004) | 8 lines
+
+This is now squeaky clean for rgb_bitdist and sts_monobit, and we're
+working on sts_runs.  Then a quick dash through the diehards and we'll
+be back to where we were but a bit cleaner.
+
+I still MIGHT try to get cleaner still.  I'm not at all convinced
+that I need the test structs, for example, although perhaps they
+allow some encapsulation that is useful.
+
+------------------------------------------------------------------------
+r112 | rgb | 2004-11-19 13:55:01 -0500 (Fri, 19 Nov 2004) | 3 lines
+
+This is a checkin to Duke of the nifty neato cool new improved
+version.  It may be time to change the name and everything.
+
+------------------------------------------------------------------------
+r111 | rgb | 2004-11-19 12:35:19 -0500 (Fri, 19 Nov 2004) | 4 lines
+
+OK so there was one more teeny bug in rgb_bitdist() -- wrong order in
+the final output statement.  Fixed.  I also added a feature, reseeding
+the rng in sample on an -i flag.
+
+------------------------------------------------------------------------
+r110 | rgb | 2004-11-19 12:28:09 -0500 (Fri, 19 Nov 2004) | 4 lines
+
+This is just ensuring that the tag for version 0.5.0 is noted.  This
+version works through rgb_bitdist, which I'll bet a nickel is a very
+powerful test indeed.
+
+------------------------------------------------------------------------
+r108 | rgb | 2004-11-19 12:26:42 -0500 (Fri, 19 Nov 2004) | 4 lines
+
+This is a "permanent" checkin.  I think that this fixes rgb_bitdist
+nicely to use sample() and provides a prototype for doing other
+tests.
+
+------------------------------------------------------------------------
+r106 | rgb | 2004-11-18 21:09:25 -0500 (Thu, 18 Nov 2004) | 11 lines
+
+This is a fairly major fix -- I was truncating blen in bits.c at
+the sizeof(uint), not 8*sizeof(uint).  One lesson is that this
+truncation isn't right anyway.  We rather need to just punt/die.
+
+I'm wondering now if the apparent failure that is still present
+(although not nearly as bad) for the larger ntuples is because fewer
+bins pass the cutoff in the formation of the primary sample pvalue(s).
+
+We might just try lowering this cutoff a bit.  I don't know exactly what
+a "degree of freedom" is, but we do need to be pretty careful with it.
+
+------------------------------------------------------------------------
+r105 | rgb | 2004-11-18 18:43:21 -0500 (Thu, 18 Nov 2004) | 6 lines
+
+Now it REALLY looks like it works, and even the best rng's look like
+they FAIL the test in fairly short order.  Now we're cookin' with gas,
+although I've got to see the details of the failure soon enough.
+
+Hmmm, maybe I need to have a lot more bins...
+
+------------------------------------------------------------------------
+r104 | rgb | 2004-11-18 18:25:52 -0500 (Thu, 18 Nov 2004) | 3 lines
+
+Just to verify that it APPEARS to work to quite high precision through
+triplets.  We could just keep adding things, I suppose...
+
+------------------------------------------------------------------------
+r103 | rgb | 2004-11-18 18:17:39 -0500 (Thu, 18 Nov 2004) | 22 lines
+
+This is now working.  Working amazingly well, actually.  Well enough
+to double the size of the bits in rgb_bitdist_test().
+
+The one MAJOR remaining problem is that I cannot use samples for tests
+that return a vector of pvalues.  Oh, and it is fairly difficult to
+pass arguments to the testing function in when it is an argument TO
+samples().
+
+This means that I have two itty bitty problems to solve -- one is to
+pass in parameters (possibly by making them global variables).  This
+makes sense IF I want to be able to control them from the command line
+anyway.  The other is to return a vector of pvalues.  The only way I
+can think of doing this is to make pvalues[] a global vector as well
+of length (say) 1K.  This puts an upper bound on the number of pvalues
+that can be returned by a test, but that SHOULDN'T be much of a problem,
+as it is really a question of what granularity one wishes to evaluate p
+at.
+
+Anyway, just a BIT more work and rgb_bitdist should be production ready,
+AND I should be perfectly ready to clean up p-sampling and testing as
+separate entities in the other tests.
+
+------------------------------------------------------------------------
+r102 | rgb | 2004-11-18 17:28:50 -0500 (Thu, 18 Nov 2004) | 2 lines
+
+This MIGHT be working.
+
+------------------------------------------------------------------------
+r101 | rgb | 2004-11-18 15:42:41 -0500 (Thu, 18 Nov 2004) | 2 lines
+
+I sent this home, I did, I did.
+
+------------------------------------------------------------------------
+r100 | rgb | 2004-11-18 15:08:32 -0500 (Thu, 18 Nov 2004) | 14 lines
+
+This is still fairly screwed up, at least in the sense that
+it doesn't look like rgb_bitdist works.  Curiously, it LOOKS like
+it WORKS -- walking through the code, it looks VERY much like it
+is collecting two bits at a time and correctly incrementing the
+correct bit count in the correct vector.
+
+The final histogram, however, comes out wrong, wrong, wrong.
+
+I may have to make this simpler.  Or maybe I'm doing something else
+wrong -- come to think of it, the totals in the histograms shouldn't
+equal the number of samples for EACH value of the ntuple, only the
+total should sum to the number of samples.  Maybe this is what is
+wrong...
+
+------------------------------------------------------------------------
+r99 | rgb | 2004-11-18 11:27:27 -0500 (Thu, 18 Nov 2004) | 13 lines
+
+We have to go into Duke, but we are very much ready to finish off bits.c
+and rgb_bitdist.c to where we can eliminate BOTH rgb_binomial AND
+rgb_bit2.c AND at least one, maybe 3-4 diehard tests AND a couple or
+three sts tests as being equivalent to this test, for particular call
+values.  I have great hope that this rgb_bitdist will become "the" bit
+frequency test for all random bit sequences.  There may still be a point
+to tests that look at intervals >>between<< bit sequences thought.
+
+In fact, I suspect that the best way to proceed with the latter is to
+test lagged correlation for arbitrary lags in a long bitstring.  This
+SAME TEST applied with arbitrary displacements between samples might be
+revealing...
+
+------------------------------------------------------------------------
+r98 | rgb | 2004-11-17 14:57:04 -0500 (Wed, 17 Nov 2004) | 5 lines
+
+This is HIGHLY BROKEN but is absolutely necessary.  We have to break
+this code up to unify the replicated pieces and streamline the
+testing processes now that we know how a test "works" in the
+abstract.
+
+------------------------------------------------------------------------
+r97 | rgb | 2004-11-16 22:40:28 -0500 (Tue, 16 Nov 2004) | 16 lines
+
+A bugfix commit.  The sanity check in get_bit() is broken and is
+commented out -- if I'm going to allocate rand_int[] vectors other than
+size in length, I cannot test on a global size to see if get_bit() is
+out of bounds.  This is STILL broken in that there is a risk with no
+warning, but there is also functionality for the moment (and I have
+to write a bunch of new bitlevel functions and can rewrite get_bits
+at the same time).
+
+More important, I found a real bug in Btest where I was initializing
+btest->chisq to zero before accumulation but was accumulating in chisq.
+Curiously, it worked a lot of the time the old way, but only for certain
+rng's.  I may have memory management problem, which isn't surprising
+given the slovenliness of the code at this moment...;-)
+
+   rgb
+
+------------------------------------------------------------------------
+r96 | rgb | 2004-11-16 18:46:17 -0500 (Tue, 16 Nov 2004) | 2 lines
+
+This is a tagged checkin, about to push.
+
+------------------------------------------------------------------------
+r94 | rgb | 2004-11-16 18:45:43 -0500 (Tue, 16 Nov 2004) | 2 lines
+
+This appears ready for a checkin.
+
+------------------------------------------------------------------------
+r93 | rgb | 2004-11-16 18:19:54 -0500 (Tue, 16 Nov 2004) | 4 lines
+
+This appears to FINALLY fix rgb_binomial so that it reliably works.
+It remains to be seen whether or not it is any more senstitive than e.g.
+sts_monobit.
+
+------------------------------------------------------------------------
+r92 | rgb | 2004-11-16 15:11:18 -0500 (Tue, 16 Nov 2004) | 3 lines
+
+This is STILL broken as far as the Ntests are concerned.  I've really
+got to figure this out...
+
+------------------------------------------------------------------------
+r91 | rgb | 2004-11-16 10:51:23 -0500 (Tue, 16 Nov 2004) | 2 lines
+
+Send this to Duke to finish this morning.
+
+------------------------------------------------------------------------
+r90 | rgb | 2004-11-14 12:40:14 -0500 (Sun, 14 Nov 2004) | 61 lines
+
+This is a pretty serious bugfix -- probably need to update the website.
+Basically, my kstest was simply wrong last night; now it is working,
+I've also added the Kuiper form of the KS test, and will program
+Anderson and Darling's version (the one used, apparently, in Diehard)
+when I get around to it.  However, for tests involving more than a very
+few p-values in a vector, it shouldn't really matter -- Kuiper KS and the
+regular KS and Anderson-Davis KS should all GENERALLY generate similar
+p-distributions -- different perhaps where they don't matter, but very
+similar at the ends.  The key question is just whether one has a
+tendency to pass a vector of p-values where the other would consistently
+fail it.  So far it looks like USUALLY if one fails the other fails.
+
+I think I'm still going to want to do a histogram picture of binned
+pvalues and do a Pearson chisq p-test on the result.  This should really
+be pretty easy... maybe today, maybe not.
+
+We're getting close to being ready to go BACK and mess with the Ntest
+and Xtest stuff.  I think that now that I understand Pearson vs the
+alternatives, I can PROBABLY arrange things so that I can use a single
+set of common tools to do all the test assessment.
+
+One thing, for example, would be to make each test return a p-value,
+period, and put the samples loop in rand_rate_work, to ALWAYS fill a
+vector of p-values and ALWAYS do KS tests, confidence interval tests,
+and histogram tests.  This would have a number of advantages -- being
+able to produce a really pretty, really standardized picture of results
+for one.
+
+A second thing that would make this tool relatively interesting to the
+mass unwashed would be to put a nice little GUI onto it.  There are two
+generic ways to do this.  One is to leave it a command line tool but
+REALLY clean up the output result so that it is just a single line
+per test with ks test scores for the various forms of test with three
+lines of # delimited frame, period.  Then I can make a perl-Gtk app to
+call the binary, parse the result, and (e.g.) plot histograms or do
+other nifty graphical things.  The other is to use Gtk directly, but
+perhaps have the GUI only come up if there is an appropriate command
+line flag (or not).
+
+A third thing to work on is clearly going to be splitting the source
+into distinct components in distinct directories.  We will need a common
+library containing the kstest, chisq, Ntest, Xtest etc code, the input,
+the output, etc.  We will need a directory containing extensions to the
+GSL random number library, e.g. /dev/random, /dev/urandom, empty, and
+shuffled because the one thing that is absolutely true is that we need
+to add a shuffling/mixing random number generator, one that permits us
+to set up a shuffling list and refill it from a secondary LIST of rng's!
+
+A fourth thing (noted already elsewhere) is to do the simplest of tests
+-- apply a KS test to the GSL distribution-specific generators
+themselves.  If a "test" is generically generating a known distribution
+presuming randomness and then seeing if the result is indeed the
+targeted distribution, then EVERY distribution generator in the GSL can
+simultaneously be the target of a test for algorithmic purposes AND a
+test component for the GSL rng's.
+
+Beyond that, I need to implement spectral tests and tests for
+hyperplanes in N dimensions and uniformity tests.  Sigh.  I think that I
+DO need to write a grant proposal for this -- I think there is enough
+work to justify it.
+
+------------------------------------------------------------------------
+r89 | rgb | 2004-11-14 04:38:33 -0500 (Sun, 14 Nov 2004) | 3 lines
+
+Tagged and on the repository as 0.4.3, with diehard 3d spheres and a
+MAYBE working KS test.
+
+------------------------------------------------------------------------
+r87 | rgb | 2004-11-14 04:37:35 -0500 (Sun, 14 Nov 2004) | 2 lines
+
+Sort of playing with KS -- I'm not done here yet...
+
+------------------------------------------------------------------------
+r86 | rgb | 2004-11-14 03:04:37 -0500 (Sun, 14 Nov 2004) | 8 lines
+
+OK, found my REALLY stupid bug.  I was computing the absolute
+length of r from the origin, not the distance between point pairs.
+No, I wasn't even doing that well -- I was computing the dot product
+of the random vectors.  Now things look nearly correct.
+
+All I need is a KS test and life would be, if not complete, well, worth
+living.
+
+------------------------------------------------------------------------
+r85 | rgb | 2004-11-14 02:22:29 -0500 (Sun, 14 Nov 2004) | 5 lines
+
+This "works".  Except that it doesn't.  It's very odd, but although
+it works perfectly as far as I can tell by any measure, r is simply not
+as small as it should be in order to make the pvalue come out between
+0 and 1.
+
+------------------------------------------------------------------------
+r84 | rgb | 2004-11-13 20:19:53 -0500 (Sat, 13 Nov 2004) | 2 lines
+
+THis is on the way to being another test.
+
+------------------------------------------------------------------------
+r83 | rgb | 2004-11-13 17:19:55 -0500 (Sat, 13 Nov 2004) | 2 lines
+
+This is hopefully a tagged snapshot with a new test!
+
+------------------------------------------------------------------------
+r81 | rgb | 2004-11-13 16:50:54 -0500 (Sat, 13 Nov 2004) | 8 lines
+
+OK, time to bump the revision number, as birthdays is home and even
+works tolerably, as far as I can tell.
+
+SOON I'm going to do the KS test on vectors of p's.  SOON I'm going to
+really clean up the code so that chisq -> p is consistently computed,
+and so that a set of p's is consistently evaluated for the
+random/nonrandom decision.
+
+------------------------------------------------------------------------
+r80 | rgb | 2004-11-13 12:17:57 -0500 (Sat, 13 Nov 2004) | 2 lines
+
+This is it, ready to proceed.
+
+------------------------------------------------------------------------
+r79 | rgb | 2004-11-13 12:12:24 -0500 (Sat, 13 Nov 2004) | 3 lines
+
+This checks in a placeholder for a Kolmogorov-Smirnov test, likely to
+be applied to a vector of p-values.
+
+------------------------------------------------------------------------
+r78 | rgb | 2004-11-13 12:06:36 -0500 (Sat, 13 Nov 2004) | 10 lines
+
+We'll commit this for the moment.  I think the sensible thing to do is
+to create as general as possible a tool for generating Pearson's chisq
+for discretely binned data, in particular and immediately for the
+Poissonian birthday histogram but also for other purposes.  Note that
+these routines should not only generate chisq, but when possible go
+ahead and compute goodness of fit p-values, ideally in a vector
+associated with independent trials.  This vector of p-values can itself
+then be subjected to a kolmogorov-smirnov analysis and transformed into
+a conclusion for the generator being tested.
+
+------------------------------------------------------------------------
+r77 | rgb | 2004-11-13 04:34:29 -0500 (Sat, 13 Nov 2004) | 3 lines
+
+Just added output of lambda, which is indeed 2 with the parameters
+given...
+
+------------------------------------------------------------------------
+r76 | rgb | 2004-11-13 04:32:46 -0500 (Sat, 13 Nov 2004) | 7 lines
+
+This is REALLY CLOSE to having diehard birthdays finished.  We just
+need to add a chisq test for Poisson distributions sampled samples times
+with known (per sample) lambda, and a loop to convert a table of chisq into
+a table of p-values.  I'm tempted to bump minor and tag, but I shouldn't
+need to -- I've been really careful and things really look like they're
+working so far.
+
+------------------------------------------------------------------------
+r75 | rgb | 2004-11-12 21:02:55 -0500 (Fri, 12 Nov 2004) | 2 lines
+
+This is a simple checkin prior to doing diehard birthdays test.
+
+------------------------------------------------------------------------
+r74 | rgb | 2004-11-12 20:32:58 -0500 (Fri, 12 Nov 2004) | 2 lines
+
+This splits off the confidence interval test from STS docs.
+
+------------------------------------------------------------------------
+r73 | rgb | 2004-11-12 20:28:07 -0500 (Fri, 12 Nov 2004) | 3 lines
+
+This is a small adjustment (still in 0.4.1 I guess).  Let's try another
+diehard, I think.
+
+------------------------------------------------------------------------
+r72 | rgb | 2004-11-12 20:16:48 -0500 (Fri, 12 Nov 2004) | 10 lines
+
+This is actually a fairly functional diehard test!
+
+I think that we can actually implement a test for the uniformity of
+p-values as suggested by NIST to run on TOP of the existing confidence
+interval test.  This would actually break the p-distribution down by
+interval and return a p-value of its own computed against the assumption
+of uniformity.  Or I could get fancier and try kolmogorov-smirnov, if
+GSL doesn't have one and I work hard enough to program one.  If this is
+really distinct -- it isn't clear that it is.
+
+------------------------------------------------------------------------
+r70 | rgb | 2004-11-12 17:32:03 -0500 (Fri, 12 Nov 2004) | 4 lines
+
+This is actually sort of semi-functional.  What I >>really<< need now
+is canned Kolmogorov-Smirnov code.  Could it be that this is in the
+GSL already?  I'll be it is...
+
+------------------------------------------------------------------------
+r69 | rgb | 2004-11-11 10:59:28 -0500 (Thu, 11 Nov 2004) | 2 lines
+
+Continuing to hack this up.
+
+------------------------------------------------------------------------
+r68 | rgb | 2004-11-10 17:19:21 -0500 (Wed, 10 Nov 2004) | 3 lines
+
+This is a nearly functional diehard_runs -- I just need to figure out
+what the expected values and sigmas are...
+
+------------------------------------------------------------------------
+r67 | rgb | 2004-11-10 00:32:44 -0500 (Wed, 10 Nov 2004) | 4 lines
+
+This is simply lovely.  A nice litte addition to the Makefile that
+automatically indicates the current version in the abstract.  I actually
+have things fairly distributable!
+
+------------------------------------------------------------------------
+r66 | rgb | 2004-11-10 00:24:18 -0500 (Wed, 10 Nov 2004) | 10 lines
+
+OK, added a few minor changes to manage the bits issue yet another way.
+
+Really, I'm going to have to figure out a consistent way of indicating
+whether a test can have size OR bits OR both OR neither specified.
+
+Also, it would be really lovely to have another outer loop and to
+present the lowest p in a set of (say) ten runs of a test combo.
+Although in many cases running with -s 10x larger should do the same
+thing, really.
+
+------------------------------------------------------------------------
+r65 | rgb | 2004-11-09 23:53:49 -0500 (Tue, 09 Nov 2004) | 2 lines
+
+This is it and running, version 0.4.0 as published.  Seems to work.
+
+------------------------------------------------------------------------
+r63 | rgb | 2004-11-09 23:53:15 -0500 (Tue, 09 Nov 2004) | 2 lines
+
+One last checkin, then a tag, then a checkin as published.
+
+------------------------------------------------------------------------
+r61 | rgb | 2004-11-09 20:43:14 -0500 (Tue, 09 Nov 2004) | 3 lines
+
+This is a tagged release, mostly bugfixes.  At the moment it all looks
+like it works.
+
+------------------------------------------------------------------------
+r59 | rgb | 2004-11-09 20:37:58 -0500 (Tue, 09 Nov 2004) | 9 lines
+
+This seems to work perfectly, for the very short moment.  It is by no
+means perfect or mutually exclusive.  We very definitely need to
+generalize the bitdist test to handle bit ntuples of arbitrary length,
+where the length is a variable.
+
+I think I'll retag this.  It is also probably time to think about
+putting this up on the website, especially if I'm going to write a
+proposal on it.
+
+------------------------------------------------------------------------
+r58 | rgb | 2004-11-09 17:14:57 -0500 (Tue, 09 Nov 2004) | 2 lines
+
+Because it wasn't checked in!
+
+------------------------------------------------------------------------
+r57 | rgb | 2004-11-09 17:14:36 -0500 (Tue, 09 Nov 2004) | 2 lines
+
+Why didn't bit2.c go home?
+
+------------------------------------------------------------------------
+r56 | rgb | 2004-11-09 15:09:36 -0500 (Tue, 09 Nov 2004) | 3 lines
+
+This is going home with a split out routine and some nice changes that
+will make it easier to add new tests with arbitrary numbers.
+
+------------------------------------------------------------------------
+r55 | rgb | 2004-11-09 14:30:32 -0500 (Tue, 09 Nov 2004) | 2 lines
+
+Just checking repository Root.
+
+------------------------------------------------------------------------
+r54 | rgb | 2004-11-09 14:30:05 -0500 (Tue, 09 Nov 2004) | 2 lines
+
+Let's send this home...
+
+------------------------------------------------------------------------
+r53 | rgb | 2004-11-09 09:51:31 -0500 (Tue, 09 Nov 2004) | 7 lines
+
+OK, fixing Makefile to actually get this home, AND adding the URL
+of the web reference from the last checkin:
+
+  http://world.std.com/~franl/crypto/random-numbers.html
+
+(we need to implement some of its hyperplane tests).
+
+------------------------------------------------------------------------
+r52 | rgb | 2004-11-09 09:48:40 -0500 (Tue, 09 Nov 2004) | 5 lines
+
+We're actually working on this once again.  I need to get my own "runs"
+test working, as it will replace a whole RANGE of STS, and I need to
+implement a spectral distribution test with bins as is done in the
+nice web reference I found.
+
+------------------------------------------------------------------------
+r51 | rgb | 2004-11-08 09:52:52 -0500 (Mon, 08 Nov 2004) | 2 lines
+
+This adds yet another built-in device to GSL.
+
+------------------------------------------------------------------------
+r50 | rgb | 2003-06-10 11:21:15 -0400 (Tue, 10 Jun 2003) | 3 lines
+
+This adds an "empty" generator to help us determine gsl call overhead
+separately.
+
+------------------------------------------------------------------------
+r49 | rgb | 2003-01-30 17:16:15 -0500 (Thu, 30 Jan 2003) | 4 lines
+
+This is broken as shit.  I see what I did -- I made the ntest evaluation
+and presentation routines use n+1 bits (because in rgb_binomial I needed
+to do the end of the binomial).  However, I have to fix it later...
+
+------------------------------------------------------------------------
+r48 | rgb | 2003-01-30 15:12:20 -0500 (Thu, 30 Jan 2003) | 2 lines
+
+Forgot to send this...
+
+------------------------------------------------------------------------
+r47 | rgb | 2003-01-29 14:19:55 -0500 (Wed, 29 Jan 2003) | 4 lines
+
+Not obviously broken, and time to add bitpair counters.  Should be
+really easy -- left-shift in two bits at a time to creat the int index
+of the counter, then increment it.
+
+------------------------------------------------------------------------
+r46 | rgb | 2003-01-29 09:27:09 -0500 (Wed, 29 Jan 2003) | 2 lines
+
+Some NOTES on future work.
+
+------------------------------------------------------------------------
+r45 | rgb | 2003-01-29 09:14:38 -0500 (Wed, 29 Jan 2003) | 8 lines
+
+This checks in a whole new test, which should probably be combined with
+ sts_monobit (it generates monobit stats as it goes)
+ rgb_persist (one can easily generate a bitmask as one goes)
+ rgb_binomial (one can generate binomial stats on top of monobit as one
+             goes).
+
+ and possibly with more tests.
+
+------------------------------------------------------------------------
+r44 | rgb | 2003-01-26 02:54:43 -0500 (Sun, 26 Jan 2003) | 7 lines
+
+This last little pair of changes causes measure_rate to use its own,
+fixed, number of samples ("more than enough").  It also installs a
+"summary report" mode that isn't horribly useful because of conflict
+between e.g. -b, -n, -s definitions here and there.  Also, different
+tests need to be run in different ways to demonstrate failure (or a
+lack thereof).
+
+------------------------------------------------------------------------
+r43 | rgb | 2003-01-26 02:23:28 -0500 (Sun, 26 Jan 2003) | 9 lines
+
+OK, we haven't done TOO much, but we have definitely learned that
+all the rng's that are weak in rgb_persist will definitely fail the
+monobit test (for obvious reasons).  Furthermore, when a generator
+is weak in certain bits and we evaluate the bits from the other end
+(whichever end that might be!) it can often PASS the monobit test.
+
+Bits that repeat, random_max's that aren't powers of two-1 (and probably
+EVEN powers of two at that) are going to be trouble!
+
+------------------------------------------------------------------------
+r42 | rgb | 2003-01-26 00:00:04 -0500 (Sun, 26 Jan 2003) | 4 lines
+
+This is a VERY IMPORTANT new test, rgb_persist(), and a very useful
+new routine, dumpbits().  Read NOTES (and inline comments and output)
+to see a bit of what it does and why it is important.
+
+------------------------------------------------------------------------
+r41 | rgb | 2003-01-25 16:55:32 -0500 (Sat, 25 Jan 2003) | 3 lines
+
+This actually works.  In fact, it works fabulously.  I can directly
+and fairly powerfully look for bitlevel correlations in the output.
+
+------------------------------------------------------------------------
+r40 | rgb | 2003-01-25 15:53:55 -0500 (Sat, 25 Jan 2003) | 16 lines
+
+OK, we've learned the hard way that some bits in e.g. boroshi don't
+change AT ALL, EVER.  Which makes it pretty hard to be random, of
+course.
+
+So we're going to invent a new tool -- rgb_persist(), which doesn't
+(yet) to a formal statistical test.  It just is going to dump successive
+unsigned ints from the rng (bitwise) AND maybe run a string of &'s on
+the string of ints returned.  If they share any 1 bits, the successive
+&'s will preserve them a LOT longer than permitted by binary flips on
+the slots.
+
+This could be made into a fairly powerful bitlevel sequential
+correlation test in several ways.  We'll investigate them as we go, but
+one reason to write this now is that I'm not quite convinced that what
+I'm seeing isn't some sort of bug in the get_bit() routine or the like.
+
+------------------------------------------------------------------------
+r39 | rgb | 2003-01-25 10:54:02 -0500 (Sat, 25 Jan 2003) | 3 lines
+
+This is well on the way to being MUCH better, and ready to
+systematically extend.
+
+------------------------------------------------------------------------
+r38 | rgb | 2003-01-24 19:50:32 -0500 (Fri, 24 Jan 2003) | 2 lines
+
+And now we send the tagged package to Duke.
+
+------------------------------------------------------------------------
+r36 | rgb | 2003-01-24 19:50:07 -0500 (Fri, 24 Jan 2003) | 2 lines
+
+Checking in the notes.
+
+------------------------------------------------------------------------
+r35 | rgb | 2003-01-24 17:52:03 -0500 (Fri, 24 Jan 2003) | 20 lines
+
+This is worth a minor bump.  First, we fixed get_bit().  Second, we
+completed sts_runs (for what it is worth, which isn't a whole lot as
+nearly everything that fails it also fails monobit and binomial as
+expected).  However, working through it suggests how to make binomial
+work better.
+
+Next (to make it easier to check results relative to the sts documents)
+I need to implement -b (get_bit(0 permits this pretty much
+transparently, at least in the sts routines) and implement a -f filename
+filled with e.g. raw bitstrings or ascii floats or binary numbers
+in xmlish wrappers that indicate the storage mechanism?  Thus I can test
+explicit short bitstrings against the explicit sts numbers to be sure
+that my erfc and conversions (and sometimes slightly different
+implementation) yield the same answers as theirs, except where I don't
+care because I think theirs are (basically) wrong.
+
+See also NOTES (about to be checked in) for a fairly detailed beginning
+critique of sts, which I don't think is particularly strong or useful,
+really.
+
+------------------------------------------------------------------------
+r34 | rgb | 2003-01-24 16:43:14 -0500 (Fri, 24 Jan 2003) | 6 lines
+
+This is my home-grown version of sts_runs.  It is no better than the
+actual sts version, really, but the sts version is not terribly good.
+I'm going to add a (hopefully vastly improved) binomial version of the
+test to rgb_binomial, where I can do all the tests at once with a
+single set of code and multiple trials (random number seeds).
+
+------------------------------------------------------------------------
+r33 | rgb | 2003-01-23 00:51:56 -0500 (Thu, 23 Jan 2003) | 3 lines
+
+Just adding some notes, and preparing to add the next sts test,
+TOMORROW.
+
+------------------------------------------------------------------------
+r32 | rgb | 2003-01-22 23:52:47 -0500 (Wed, 22 Jan 2003) | 2 lines
+
+I have no idea why the tag went down into fitany...
+
+------------------------------------------------------------------------
+r30 | rgb | 2003-01-22 23:52:07 -0500 (Wed, 22 Jan 2003) | 14 lines
+
+This ups the minor revision number to 0.3.0.  Worthwhile because now I
+have BOTH an erfc AND a Q evaluation of p-value.  I could certainly
+prettify sts_monobit, but since I generally think that it isn't that
+great a test (although it does indicate how starkly many rng's FAIL to
+be even this random) I won't do so right away.
+
+Next (after tagging and resync'ing) is going to be adding more tests.
+At this point adding a test should be pretty easy, given the hopefully
+reusable routines I have written to do the pre- and post- processing.
+All I really have to do is input the expected values, write a loop to
+generate the "experimental" statistic, and pass everything on to a
+standard set of tools for outputting the results and deciding on the
+quality of the results.
+
+------------------------------------------------------------------------
+r29 | rgb | 2003-01-22 23:46:08 -0500 (Wed, 22 Jan 2003) | 7 lines
+
+All right, this LOOKS like it correctly implements the STS monobit
+frequency test.  I would still claim that anything that fails this test
+will also fail the binomial test, and that in addition things that pass it
+(e.g. the vax rng) FAIL the binomial test, so the monobit test is
+a waste of time and more prone to error.  However, mine is not to reason
+why...
+
+------------------------------------------------------------------------
+r28 | rgb | 2003-01-22 13:04:47 -0500 (Wed, 22 Jan 2003) | 7 lines
+
+This is working incredibly well, and I've split off nearly everything
+required to make further n-point chisq tests trivial to implement and
+assess.  All that remains is to do a 1-point (normal) test such as the
+sts_monobit test (which should really be done internal to the
+rgb_binomial test and may one day be, but for the moment we'll just do
+it directly).
+
+------------------------------------------------------------------------
+r27 | rgb | 2003-01-22 08:33:21 -0500 (Wed, 22 Jan 2003) | 2 lines
+
+Just making SURE this is at Duke...
+
+------------------------------------------------------------------------
+r26 | rgb | 2003-01-21 18:56:15 -0500 (Tue, 21 Jan 2003) | 18 lines
+
+This works just lovely!
+
+HOWEVER, it is also clear that running it once, twice, three times,
+for EACH generator looking for good ones is a PITA.  We'll have to
+eventually rearrange this so that there is a "search mode" that runs
+a loop through all known generators, identifying the ones that pass at
+least at the 1% or higher level.
+
+BTW, I'm now prepared to bet a nickel that the rgb binomial test has a
+great deal of sensitivity, since it fails all but literally three or
+four of the available RNG's for absurdly short data strings.  As in they
+aren't even APPROXIMATELY random...NONE of them.  If one used them to
+generate a humble binomial distribution numerically it would be in
+significant error.
+
+I do need to alter this test so that I can run it for arbitrary bit
+string lengths, but for the moment I'm not going to worry about it.
+
+------------------------------------------------------------------------
+r25 | rgb | 2003-01-21 16:40:07 -0500 (Tue, 21 Jan 2003) | 3 lines
+
+This is now VERY CLOSE.  I should be able to determine chisq in a matter
+of minutes when I return...
+
+------------------------------------------------------------------------
+r24 | rgb | 2003-01-21 14:05:50 -0500 (Tue, 21 Jan 2003) | 2 lines
+
+This is considerably cleaner and more decrufted...
+
+------------------------------------------------------------------------
+r23 | rgb | 2003-01-21 13:35:01 -0500 (Tue, 21 Jan 2003) | 3 lines
+
+This finishes the split off of list_rand and list_rngs from the code.
+I do need to "fix" the Usage() routine to reflect the change.
+
+------------------------------------------------------------------------
+r22 | rgb | 2003-01-21 13:08:34 -0500 (Tue, 21 Jan 2003) | 3 lines
+
+Breaking things up into subroutines a bit better to clarify the program
+structure.
+
+------------------------------------------------------------------------
+r21 | rgb | 2003-01-17 15:37:14 -0500 (Fri, 17 Jan 2003) | 7 lines
+
+This is coming along, although I'm silly for not just finishing the
+monobit test before introducing a binomial test.  Still, all very
+instructive.
+
+I need to get all this on my laptop and take it with me, along with the
+notebook.
+
+------------------------------------------------------------------------
+r20 | rgb | 2003-01-17 14:28:36 -0500 (Fri, 17 Jan 2003) | 10 lines
+
+Fixes a nasty bug in sts_monobit, which I think I'm gonna rename
+rgb_binomial (and screw sts's monobit test, which is immensely sloppy
+compared to actually systematically exploring the binomial distribution
+of 1's and 0's in the overall bit strings generated by different seeds.
+
+Actually, a better thing still is to leave sts_monobit, but add
+rgb_binomial and document that it is more sensitive (in particular, that
+e.g. alternating series that easily pass monobit fail binomial, and that
+NOTHING that fails monobit will PASS binomial).
+
+------------------------------------------------------------------------
+r19 | rgb | 2003-01-17 01:06:32 -0500 (Fri, 17 Jan 2003) | 2 lines
+
+Sending off the tag
+
+------------------------------------------------------------------------
+r17 | rgb | 2003-01-17 01:06:16 -0500 (Fri, 17 Jan 2003) | 8 lines
+
+OK, this is good for a full minor number bump to 0.2.0.  We have
+basically installed the guts of the STS monobit test.  All that we
+lack is the computation of the statistics and p-value, which should be
+fairly straightforward, especially with the gsl handy.  I SHOULD be
+able to just cumulate the one-count (e.g.) in a vector and hand it to
+the gsl stats routines and have mean, stddev, skew, kurtosis, and
+anything else I might like just handed back to me...
+
+------------------------------------------------------------------------
+r16 | rgb | 2003-01-17 00:16:59 -0500 (Fri, 17 Jan 2003) | 4 lines
+
+Just a bit of cleanup, and some moderately important additions.
+
+Now we REALLY need to think about tests.
+
+------------------------------------------------------------------------
+r15 | rgb | 2003-01-16 23:23:32 -0500 (Thu, 16 Jan 2003) | 2 lines
+
+Tagged.
+
+------------------------------------------------------------------------
+r13 | rgb | 2003-01-16 23:23:04 -0500 (Thu, 16 Jan 2003) | 7 lines
+
+This is about ready for a semipermanent snapshot, so I bumped the
+minor version number.  I'd say that we are now "good" with the ability
+to add sw rng's, including interfaces to hw rng's square within the gsl
+format.
+
+Now to give de old tests a try...
+
+------------------------------------------------------------------------
+r12 | rgb | 2003-01-16 22:54:25 -0500 (Thu, 16 Jan 2003) | 6 lines
+
+Hot diggity dawg!  It works!  However, I don't need types.c.  All I
+need is to follow the dev_random.c template and call a routine
+add_my_rngs() (to be defined) before working with gsl's rng's, and
+keep track (crudely) of which ones are which.  So this can be decrufted
+a bit and then reorganized now that I know how it works.
+
+------------------------------------------------------------------------
+r11 | rgb | 2003-01-16 21:54:49 -0500 (Thu, 16 Jan 2003) | 4 lines
+
+We'll try these as the basic wrappers required.  With luck we'll
+override the types subroutine in gsl itself, although I do have my
+doubts...
+
+------------------------------------------------------------------------
+r10 | rgb | 2003-01-16 21:38:52 -0500 (Thu, 16 Jan 2003) | 6 lines
+
+This significantly improves the Usage and cl parsing, and pre-structures
+it for addition of sts/diehard tests.
+
+We still need to see if we can gsl-wrap our own tests without a full
+gsl recompile.
+
+------------------------------------------------------------------------
+r9 | rgb | 2003-01-16 15:40:56 -0500 (Thu, 16 Jan 2003) | 2 lines
+
+Sending the tagged copy home...
+
+------------------------------------------------------------------------
+r7 | rgb | 2003-01-16 15:40:38 -0500 (Thu, 16 Jan 2003) | 2 lines
+
+This is now going to be v_0_1_0.
+
+------------------------------------------------------------------------
+r6 | rgb | 2003-01-16 15:39:55 -0500 (Thu, 16 Jan 2003) | 15 lines
+
+This is now functional UP TO all the gsl rngs, not any of the add-ons.
+
+Which is fine, as we'll probably completely change how the add-ons work.
+
+Next, we need to do all of the following, in some order:
+
+ a) figure out how to wrap up new gsl_rngs, preferrably without
+recompiling the whole damn library.
+ b) decruft all the command line options and no-longer-used variables.
+ c) add back command line options for doing quality tests.  Start with
+the very simplest test -- something from diehard or the bits test from
+sts.
+ d) In the meantime, increment revision, tag, and consider "publishing"
+as we go.
+
+------------------------------------------------------------------------
+r5 | rgb | 2003-01-16 15:14:54 -0500 (Thu, 16 Jan 2003) | 3 lines
+
+This SHOULD split rand_rate off so it has its own CVS tree outside of
+the "random" project overall, which I think is for the best.
+
+------------------------------------------------------------------------
+r4 | rgb | 2003-01-16 15:13:05 -0500 (Thu, 16 Jan 2003) | 4 lines
+
+This actually works, and needs to be saved in snapshot form.  I'm not
+at ALL certain that I'm getting accurate measurements in terms of the
+number of rands per second I can generate, but this too, we shall see...
+
+------------------------------------------------------------------------
+r3 | rgb | 2003-01-13 17:12:27 -0500 (Mon, 13 Jan 2003) | 2 lines
+
+This is a fair amount of progress to having something working...
+
+------------------------------------------------------------------------
+r2 | rgb | 2003-01-11 19:07:56 -0500 (Sat, 11 Jan 2003) | 4 lines
+
+This is basically the original checkin for my lookin-major random number
+project.  By the time this is done, I'd doggone better have a paper or
+two out of it, if not more.
+
+------------------------------------------------------------------------

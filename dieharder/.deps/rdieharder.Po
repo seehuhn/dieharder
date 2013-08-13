@@ -1,0 +1,1 @@
+rdieharder.o: rdieharder.c

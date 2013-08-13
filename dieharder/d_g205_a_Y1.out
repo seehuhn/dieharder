@@ -1,0 +1,104 @@
+#=============================================================================#
+#          dieharder version 3.29.5beta Copyright 2003 Robert G. Brown        #
+#=============================================================================#
+   rng_name    |rands/second|   Seed   |
+        AES_OFB|  2.71e+07  | 205224670|
+#=============================================================================#
+        test_name   |ntup| tsamples |psamples|  p-value |Assessment
+#=============================================================================#
+   diehard_birthdays|   0|       100|     100|0.80893239|  PASSED  
+      diehard_operm5|   5|   1000000|     100|0.03763324|  PASSED  
+  diehard_rank_32x32|   0|     40000|     100|0.78446160|  PASSED  
+    diehard_rank_6x8|   0|    100000|     100|0.09165899|  PASSED  
+   diehard_bitstream|   0|   2097152|     100|0.14251957|  PASSED  
+        diehard_opso|   0|   2097152|     100|0.01305680|  PASSED  
+        diehard_oqso|   0|   2097152|     100|0.59191187|  PASSED  
+         diehard_dna|   0|   2097152|     100|0.59854505|  PASSED  
+diehard_count_1s_str|   0|    256000|     100|0.80330619|  PASSED  
+diehard_count_1s_byt|   0|    256000|     100|0.03433692|  PASSED  
+ diehard_parking_lot|   0|     12000|     100|0.18394907|  PASSED  
+    diehard_2dsphere|   2|      8000|     100|0.15467172|  PASSED  
+    diehard_3dsphere|   3|      4000|     100|0.65668025|  PASSED  
+     diehard_squeeze|   0|    100000|     100|0.39930786|  PASSED  
+        diehard_sums|   0|       100|     100|0.00000442|   WEAK   
+        diehard_sums|   0|       100|     200|0.00000000|  FAILED  
+        diehard_runs|   0|    100000|     100|0.87452751|  PASSED  
+        diehard_runs|   0|    100000|     100|0.22703133|  PASSED  
+       diehard_craps|   0|    200000|     100|0.89850268|  PASSED  
+       diehard_craps|   0|    200000|     100|0.47807319|  PASSED  
+ marsaglia_tsang_gcd|   0|  10000000|     100|0.43232221|  PASSED  
+ marsaglia_tsang_gcd|   0|  10000000|     100|0.98981745|  PASSED  
+         sts_monobit|   1|    100000|     100|0.20410180|  PASSED  
+            sts_runs|   2|    100000|     100|0.74924962|  PASSED  
+          sts_serial|   1|    100000|     100|0.52813587|  PASSED  
+          sts_serial|   2|    100000|     100|0.88950288|  PASSED  
+          sts_serial|   3|    100000|     100|0.45554029|  PASSED  
+          sts_serial|   3|    100000|     100|0.06177226|  PASSED  
+          sts_serial|   4|    100000|     100|0.77261687|  PASSED  
+          sts_serial|   4|    100000|     100|0.96868101|  PASSED  
+          sts_serial|   5|    100000|     100|0.52826957|  PASSED  
+          sts_serial|   5|    100000|     100|0.55064818|  PASSED  
+          sts_serial|   6|    100000|     100|0.16308263|  PASSED  
+          sts_serial|   6|    100000|     100|0.48583093|  PASSED  
+          sts_serial|   7|    100000|     100|0.37336499|  PASSED  
+          sts_serial|   7|    100000|     100|0.11355964|  PASSED  
+          sts_serial|   8|    100000|     100|0.60728845|  PASSED  
+          sts_serial|   8|    100000|     100|0.60047138|  PASSED  
+          sts_serial|   9|    100000|     100|0.80854994|  PASSED  
+          sts_serial|   9|    100000|     100|0.23436521|  PASSED  
+          sts_serial|  10|    100000|     100|0.82996938|  PASSED  
+          sts_serial|  10|    100000|     100|0.79358125|  PASSED  
+          sts_serial|  11|    100000|     100|0.63553918|  PASSED  
+          sts_serial|  11|    100000|     100|0.09717073|  PASSED  
+          sts_serial|  12|    100000|     100|0.90647799|  PASSED  
+          sts_serial|  12|    100000|     100|0.49372803|  PASSED  
+          sts_serial|  13|    100000|     100|0.46884148|  PASSED  
+          sts_serial|  13|    100000|     100|0.72605403|  PASSED  
+          sts_serial|  14|    100000|     100|0.98221431|  PASSED  
+          sts_serial|  14|    100000|     100|0.54461529|  PASSED  
+          sts_serial|  15|    100000|     100|0.91821655|  PASSED  
+          sts_serial|  15|    100000|     100|0.63199701|  PASSED  
+          sts_serial|  16|    100000|     100|0.90319118|  PASSED  
+          sts_serial|  16|    100000|     100|0.76445167|  PASSED  
+         rgb_bitdist|   1|    100000|     100|0.45228413|  PASSED  
+         rgb_bitdist|   2|    100000|     100|0.85610223|  PASSED  
+         rgb_bitdist|   3|    100000|     100|0.87142384|  PASSED  
+         rgb_bitdist|   4|    100000|     100|0.31740404|  PASSED  
+         rgb_bitdist|   5|    100000|     100|0.56087192|  PASSED  
+         rgb_bitdist|   6|    100000|     100|0.04147357|  PASSED  
+         rgb_bitdist|   7|    100000|     100|0.14730994|  PASSED  
+         rgb_bitdist|   8|    100000|     100|0.14969864|  PASSED  
+         rgb_bitdist|   9|    100000|     100|0.88626300|  PASSED  
+         rgb_bitdist|  10|    100000|     100|0.29670081|  PASSED  
+         rgb_bitdist|  11|    100000|     100|0.63721491|  PASSED  
+         rgb_bitdist|  12|    100000|     100|0.83849303|  PASSED  
+rgb_minimum_distance|   2|     10000|    1000|0.22411219|  PASSED  
+rgb_minimum_distance|   3|     10000|    1000|0.84397896|  PASSED  
+rgb_minimum_distance|   4|     10000|    1000|0.42496024|  PASSED  
+rgb_minimum_distance|   5|     10000|    1000|0.50141324|  PASSED  
+    rgb_permutations|   2|    100000|     100|0.34574320|  PASSED  
+    rgb_permutations|   3|    100000|     100|0.50528580|  PASSED  
+    rgb_permutations|   4|    100000|     100|0.83518676|  PASSED  
+    rgb_permutations|   5|    100000|     100|0.66628557|  PASSED  
+      rgb_lagged_sum|   0|   1000000|     100|0.91541406|  PASSED  
+      rgb_lagged_sum|   1|   1000000|     100|0.80422646|  PASSED  
+      rgb_lagged_sum|   2|   1000000|     100|0.41420626|  PASSED  
+      rgb_lagged_sum|   3|   1000000|     100|0.20285035|  PASSED  
+      rgb_lagged_sum|   4|   1000000|     100|0.09220408|  PASSED  
+      rgb_lagged_sum|   5|   1000000|     100|0.50140977|  PASSED  
+      rgb_lagged_sum|   6|   1000000|     100|0.58959027|  PASSED  
+      rgb_lagged_sum|   7|   1000000|     100|0.25103273|  PASSED  
+      rgb_lagged_sum|   8|   1000000|     100|0.87733026|  PASSED  
+      rgb_lagged_sum|   9|   1000000|     100|0.10291000|  PASSED  
+      rgb_lagged_sum|  10|   1000000|     100|0.62433480|  PASSED  
+      rgb_lagged_sum|  11|   1000000|     100|0.68107432|  PASSED  
+      rgb_lagged_sum|  12|   1000000|     100|0.41339988|  PASSED  
+      rgb_lagged_sum|  13|   1000000|     100|0.61450241|  PASSED  
+      rgb_lagged_sum|  14|   1000000|     100|0.09202318|  PASSED  
+      rgb_lagged_sum|  15|   1000000|     100|0.84818307|  PASSED  
+      rgb_lagged_sum|  16|   1000000|     100|0.80746762|  PASSED  
+      rgb_lagged_sum|  17|   1000000|     100|0.85949236|  PASSED  
+      rgb_lagged_sum|  18|   1000000|     100|0.20730715|  PASSED  
+      rgb_lagged_sum|  19|   1000000|     100|0.39538782|  PASSED  
+      rgb_lagged_sum|  20|   1000000|     100|0.72738308|  PASSED  
+      rgb_lagged_sum|  21|   1000000|     100|0.35581586|  PASSED  

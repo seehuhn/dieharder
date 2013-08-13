@@ -1,0 +1,23 @@
+Robert G. Brown <rgb@phy.duke.edu>
+  Primary author and maintainer of RPM versions and original sources.
+
+Dirk Eddelbuettel <edd@debian.org>
+  Maintainer of Debian versions and contributor of the R interface.
+
+David Bauer <astgtciv@gatech.edu>
+  Debugger and fixer extraordinaire, contributor of the aes and
+threefish "gold standard" rngs and major factor in the fixing of kstest
+so that it is now "exact".
+
+Many other individuals have contributed to dieharder at this point by
+pointing out bugs or probable errors, by contributing improved
+statistical targets or fragments of code or random number generators to
+add.  I do not include a full list of their names here to protect them
+from the responsibilities of maintaining the code and their privacy, but
+I do try to acknowledge them in the actual code source that they've most
+affected.  Please feel free to join the dieharder development mailing
+list at
+
+  https://lists.phy.duke.edu/mailman/listinfo/dieharder-devel
+
+and participate.

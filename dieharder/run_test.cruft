@@ -1,0 +1,167 @@
+/*
+ *========================================================================
+ * See copyright in copyright.h and the accompanying file COPYING
+ *========================================================================
+ */
+
+#include "dieharder.h"
+
+void run_test()
+{
+
+ int i;
+
+ /*
+  * ========================================================================
+  * This is where I'm installing the new dh_test_types[].
+  * ========================================================================
+  */
+ if(dtest_num < 0){
+   /* printf("dtest_name = %s\n",dtest_name); */
+   for(i=0;i<MAXTESTS;i++){
+     if(dh_test_types[i]){
+       /* printf("Trying %s\n",dh_test_types[i]->sname); */
+       if(strncmp(dh_test_types[i]->sname,dtest_name,128)==0){
+         dtest_num = i;
+	 break;
+       }
+     }
+   }
+ }
+ if(dtest_num >= 0){
+   execute_test(dtest_num);
+ } else {
+   fprintf(stderr,"Error:  dtest_num = %d.  No test found.\n",dtest_num);
+   exit(1);
+ }
+  
+}
+
+
+int execute_test(int dtest_num)
+{
+
+ int i,j,k;
+ uint need_more_p;
+ double smallest_p;
+ /*
+  * Declare the results struct.
+  */
+ Test **dieharder_test;
+
+ /*
+  * Here we have to look at strategy FIRST.  If strategy is not zero,
+  * we have to reseed either randomly or from the value of nonzero Seed.
+  */
+ if(strategy){
+   if(Seed == 0){
+     seed = random_seed();
+     MYDEBUG(D_SEED){
+       fprintf(stdout,"# execute_test(): Generating random seed %u\n",seed);
+     }
+   } else {
+     seed = Seed;
+     MYDEBUG(D_SEED){
+       fprintf(stdout,"# execute_test(): Setting fixed seed %u\n",seed);
+     }
+   }
+   gsl_rng_set(rng,seed);
+
+ }
+
+ /* printf("Test number %d: execute_test(%s) being run.\n",dtest_num,dh_test_types[dtest_num]->sname);*/
+
+ /*
+  * First we create the test (to set some values displayed in test header
+  * correctly).
+  */
+ dieharder_test = create_test(dh_test_types[dtest_num],tsamples,psamples);
+
+ /*
+  * We now have to implement Xtrategy.  The way it works is that we ALWAYS
+  * execute a single std_test() to initialize the process.  Then we add
+  * more tests with add_2_test().  At the moment we will output at the
+  * end of each add_2_tests() call, but this can be made an output option.
+  * We must do all checking for being done etc HERE; the std_test() routines
+  * do not do it (although you cannot overrun add_2_test(), you can get
+  * in an infinite loop if you try to force going past Xoff psamples).
+  */
+ std_test(dh_test_types[dtest_num],dieharder_test);
+ output(dh_test_types[dtest_num],dieharder_test);
+
+ /*
+  * If Xtrategy is 0 we are done.
+  */
+ if(Xtrategy == 0){
+   /*
+    * Destroy the test and free all dynamic memory it used.
+    */
+   destroy_test(dh_test_types[dtest_num],dieharder_test);
+   return;
+ }
+
+ /*
+  * If any test[i]->ks_pvalue is less than Xtreme, we are done.
+  */
+ for(i = 0; i < dh_test_types[dtest_num]->nkps ; i++){
+   if(dieharder_test[i]->ks_pvalue < Xfail){
+     /*
+      * Destroy the test and free all dynamic memory it used.
+      */
+     destroy_test(dh_test_types[dtest_num],dieharder_test);
+     return;
+   }
+ }
+
+ /*
+  * If we get to here, the test returned a non-Xtreme) value.  Now we have
+  * to act according to the Xtrategy.  So we just do the two cases.  There
+  * is clear room for more Xtrategies (that can just be experimental variants
+  * of these two).
+  *
+  * Xstep can be set here (overriding its default value of 100)
+  * OR one can add additional modes down below that do complex things to
+  * scale Xstep up nonlinearly.  If you use the latter, please create
+  * a save_Xstep variable and put Xstep back when you are done, or you will
+  * potentially break a UI that permits e.g. tests to be created and run
+  * by hand with different strategies in a single program instance.
+  */
+ /* Xstep = whatever; */
+ switch(Xtrategy){
+   default:
+   case 1:
+     need_more_p = YES;
+     while(need_more_p){
+       smallest_p = 1.0;
+       for(i = 0; i < dh_test_types[dtest_num]->nkps ; i++){
+         if(dieharder_test[i]->ks_pvalue < smallest_p) smallest_p = dieharder_test[i]->ks_pvalue;
+       }
+       if(smallest_p < Xfail) need_more_p = NO;
+       if(smallest_p >= Xweak) need_more_p = NO;
+       if(dieharder_test[0]->psamples >= Xoff) need_more_p = NO;
+       if(need_more_p){
+         std_test(dh_test_types[dtest_num],dieharder_test);
+         output(dh_test_types[dtest_num],dieharder_test);
+       }
+     }
+     break;
+   case 2:
+     need_more_p = YES;
+     while(need_more_p){
+       smallest_p = 1.0;
+       for(i = 0; i < dh_test_types[dtest_num]->nkps ; i++){
+         if(dieharder_test[i]->ks_pvalue < smallest_p) smallest_p = dieharder_test[i]->ks_pvalue;
+       }
+       if(smallest_p < Xfail) need_more_p = NO;
+       if(dieharder_test[0]->psamples >= Xoff) need_more_p = NO;
+       if(need_more_p){
+         std_test(dh_test_types[dtest_num],dieharder_test);
+         output(dh_test_types[dtest_num],dieharder_test);
+       }
+     }
+     break;
+ }
+   
+ destroy_test(dh_test_types[dtest_num],dieharder_test);
+
+}

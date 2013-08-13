@@ -1,0 +1,191 @@
+.\" Copyright (c) 1999 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111,
+.\" USA.
+.\"
+.TH libdieharder 3 "Copyright 2006 Robert G. Brown" "libdieharder"
+.SH NAME
+libdieharder \- A testing and benchmarking library for random number
+generators
+
+.SH SYNOPSIS
+.B #include "dieharder.h"
+.sp
+.B void run_user_template()
+.br
+.B {
+
+.B "Test **user_template_test;"
+.br
+.B "/*"
+.br
+.B " * Create the test"
+.br
+.B " */"
+.br
+.B "user_template_test = create_test(&user_template_dtest,tsamples,psamples,&user_template);"
+.sp
+.B "/*"
+.br
+.B " * Set any GLOBAL data used by the test."
+.br
+.B " */"
+.br
+.B "user_template_lag = (int)x_user;"
+.sp
+.B "/*"
+.br
+.B " * Show the standard test header"
+.br
+.B " */"
+.br
+.B "show_test_header(&user_template_dtest,user_template_test);"
+.sp
+.B "/*"
+.br
+.B " * Call the test"
+.br
+.B " */"
+.br
+.B "std_test(&user_template_dtest,user_template_test);"
+.sp
+.B "/*"
+.br
+.B " * This almost certainly belongs in the show_test_results section,"
+.br
+.B " * possibly with additional conditionals rejecting test results involving"
+.br
+.B " * rewinds, period."
+.br
+.B " */"
+.br
+.B "if(strncmp(\"file_input\",gsl_rng_name(rng),10) == 0){"
+.br
+.B "  printf("# %u rands were used in this test\n",file_input_get_rtot(rng));"
+.br
+.B "  printf("# The file %s was rewound %u times\n",gsl_rng_name(rng),file_input_get_rewind_cnt(rng));"
+.br
+.B "}"
+.sp
+.B "/*"
+.br
+.B " * Show standard test results"
+.br
+.B " */".
+.br
+.B "show_test_results(&user_template_dtest,user_template_test);"
+.sp
+.B "}"
+
+
+.SH DESCRIPTION
+.B libdieharder
+
+The libdieharder library provides an API to user interface programs
+wishing to call dieharder tests.  Commands are defined for creating
+tests, initializing the tests and running the tests.  Showing the
+results is of course the responsibility of the UI.
+
+libdieharder also wraps certain additional random number generators so
+that they can be tested.  libdieharder can be default test all the
+random number generators in the Gnu Scientific Library plus these
+additional generators (which include "generators" for reading in numbers
+from a file).
+
+libdieharder is extensible.  It is fairly easy to add additional test
+"objects" or random number generators using existing sources as
+templates.
+
+The API will be documented in more detail as the project approaches
+completion.  In the meantime, it is strongly recommended that users
+wishing to call the library use the source of the dieharder tty UI as a
+template and list of all currently supported objects, as this is the
+primary libdieharder debugging vehicle in addition to being the current
+"standard" application of the library.
+
+.SH PUBLICATION RULES
+.B libdieharder
+is entirely original code and can be modified and used at will by any 
+user, provided that:
+
+  a) The original copyright notices are maintained and that the source,
+including all modifications, is made publically available at the time of
+any derived publication.  This is open source software according to the
+precepts and spirit of the Gnu Public License.  See the accompanying
+file COPYING, which also must accompany any redistribution.
+
+  b) The author of the code (Robert G. Brown) is appropriately
+acknowledged and referenced in any derived publication.  It is strongly
+suggested that George Marsaglia and the Diehard suite and the various 
+authors of the Statistical Test Suite be similarly acknowledged, although 
+this suite shares no actual code with these random number test suites.
+
+  c) Full responsibility for the accuracy, suitability, and
+effectiveness of the program rests with the users and/or modifiers.  As
+is clearly stated in the accompanying copyright.h:
+
+THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
+SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
+RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
+CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+.SH ACKNOWLEDGEMENTS
+The author of this suite gratefully acknowledges George Marsaglia (the
+author of the diehard test suite) and the various authors of NIST
+Special Publication 800-22 (which describes the Statistical Test Suite
+for testing pseudorandom number generators for cryptographic
+applications), for excellent descriptions of the tests therein.  These
+descriptions enabled this suite to be developed with a clean copyright,
+licensable under the GPL.
+
+The author also wishes to reiterate that the academic correctness and 
+accuracy of the implementation of these tests is his sole responsibility 
+and not that of the authors of the Diehard or STS suites.  This is
+especially true where he has seen fit to modify those tests from their
+strict original descriptions.
+
+.SH COPYRIGHT
+GPL 2b; see the file COPYING that accompanies the source of this
+program.  This is the "standard Gnu General Public License version 2 or
+any later version", with the one minor (humorous) "Beverage"
+modification listed below.  Note that this modification is probably not
+legally defensible and can be followed really pretty much according to
+the honor rule.
+
+As to my personal preferences in beverages, red wine is great, beer is
+delightful, and Coca Cola or coffee or tea or even milk acceptable to
+those who for religious or personal reasons wish to avoid stressing my
+liver.
+
+.B The "Beverage" Modification to the GPL:
+
+Any satisfied user of this software shall, upon meeting the primary
+author(s) of this software for the first time under the appropriate
+circumstances, offer to buy him or her or them a beverage.  This
+beverage may or may not be alcoholic, depending on the personal ethical
+and moral views of the offerer.  The beverage cost need not exceed one
+U.S. dollar (although it certainly may at the whim of the offerer:-) and
+may be accepted or declined with no further obligation on the part of
+the offerer.  It is not necessary to repeat the offer after the first
+meeting, but it can't hurt...
+

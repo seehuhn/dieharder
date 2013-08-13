@@ -1,0 +1,303 @@
+%========================================================================
+% These are some macros I find useful doing e.g. physics textbooks.  
+% Some just shorten typing -- it is much easier to
+% type \be than \begin{equation}.  Others encapsulate complex commands,
+% such as commands that add dynamic links to wikipedia content (which is
+% VERY USEFUL for online content!  I'm quite proud of my "\wikinote{}"
+% below, as it is nearly a one-stop-shop for references these days.
+%========================================================================
+\newcommand{\mb}[1]{\mbox{\boldmath $#1$}}
+\ifx \Vec \undefined
+\newcommand{\Vec}[1]{\mbox{\boldmath $\vec{#1}$}}
+\else
+\renewcommand{\Vec}[1]{\mbox{\boldmath $\vec{#1}$}}
+\fi
+\newcommand{\sVec}[1]{\mbox{\scriptsize \boldmath $#1$}}
+\newcommand{\Mat}[1]{\stackrel{\Leftrightarrow}{\mbox{\boldmath $#1$}}}
+\ifx \Hat \undefined
+\newcommand{\Hat}[1]{\mbox{\boldmath $\hat{#1}$}}
+\else
+\renewcommand{\Hat}[1]{\mbox{\boldmath $\hat{#1}$}}
+\fi
+\newcommand{\sHat}[1]{\hat{\mbox{\scriptsize \boldmath $#1$}}}
+\newcommand{\deriv}[2]{\frac{d #1}{d #2}}
+\newcommand{\ddt}[1]{\frac{d #1}{dt}}
+\newcommand{\dderiv}[2]{\frac{d^2 #1}{d #2^2}}
+\newcommand{\ddtsq}[1]{\frac{d^2 #1}{d t^2}}
+\newcommand{\partialdiv}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\ppartialdiv}[2]{\frac{\partial^2 #1}{\partial #2^2}}
+\newcommand{\del}{\Vec{\nabla}}
+\newcommand{\grad}{\Vec{\nabla}}
+\newcommand{\deldot}{\del \cdot}
+\newcommand{\curl}{\del \times}
+\newcommand{\lapl}{\nabla^2}
+\newcommand{\vsh}[2]{\Vec{Y}_{#1}^{#2}}
+\newcommand{\abs}[1]{\left| #1 \right|}
+\newcommand{\RE}{\rm I \hspace{-.180em} R}
+
+\newcommand{\be}{ \begin{equation} }
+\newcommand{\ee}{ \end{equation} }
+
+\newcommand{\bea}{ \begin{eqnarray} }
+\newcommand{\eea}{ \end{eqnarray} }
+
+\newcommand{\ba}{\begin{array}}
+\newcommand{\ea}{\end{array}}
+
+\newcommand{\ben}{ \begin{enumerate} }
+\newcommand{\een}{ \end{enumerate} }
+
+\newcommand{\bit}{ \begin{itemize} }
+\newcommand{\eit}{ \end{itemize} }
+
+\newcommand{\bv}{ \begin{verbatim} }
+% one cannot end verbatim with a macro, as the macro
+% is interpreted as verbatim text, duh...
+
+% Here's a useful one for the Dieharder book:
+\newcommand{\die}{\emph{Dieharder}\ }
+
+\newcommand{\spade}{\framebox{$\spadesuit$}}
+\newcommand{\heart}{\framebox{$\heartsuit$}}
+\renewcommand{\diamond}{\framebox{$\diamondsuit$}}
+\newcommand{\club}{\framebox{$\clubsuit$}}
+\newcommand{\notrump}{\framebox{\rule[2.75mm]{0cm}{0cm}\rule[-0.5mm]{0cm}{0cm}\ \ }}
+\newcommand{\half}{\frac{1}{2}}
+\newcommand{\tot}{ {\rm tot} }
+
+\newcommand{\link}[2]{\htmladdnormallink{#1}{#2}}
+\newcommand{\wikilink}[1]{Wikipedia: \htmladdnormallink{http://www.wikipedia.org/wiki/#1}{http://www.wikipedia.org/wiki/#1}}
+\newcommand{\GIYF}{ \htmladdnormallink{GIYF}{http://www.google.com} }
+\newcommand{\WIYF}{\htmladdnormallink{WIYF}{http://www.wikipedia.org} }
+\newcommand{\MWIYF}{\htmladdnormallink{MWIYF}{http://mathworld.wolfram.com}}
+\newcommand{\webnote}[2]{\footnote{Internet: \htmladdnormallink{#1 }{#1 } #2}}
+\newcommand{\wikinote}[2]{\footnote{Wikipedia: \htmladdnormallink{http://www.wikipedia.org/wiki/#1.}{http://www.wikipedia.org/wiki/#1} #2} }
+\newcommand{\googlenote}[2]{\footnote{GIYF: \htmladdnormallink{#1 }{http://www.google.com/search?hl=en&lr=&q=#1&btnG=Search} #2} }
+
+% Really I should just go ahead and define a bloody alphabet of the
+% defs below...
+\newcommand{\vbeta}{\Vec{\beta}}
+\newcommand{\vA}{\Vec{A}}
+\newcommand{\vB}{\Vec{B}}
+\newcommand{\vC}{\Vec{C}}
+\newcommand{\vD}{\Vec{D}}
+\newcommand{\vE}{\Vec{E}}
+\newcommand{\vF}{\Vec{F}}
+\newcommand{\vG}{\Vec{G}}
+\newcommand{\vH}{\Vec{H}}
+\newcommand{\vI}{\Vec{I}}
+\newcommand{\vJ}{\Vec{J}}
+\newcommand{\vL}{\Vec{L}}
+\newcommand{\vM}{\Vec{M}}
+\newcommand{\vN}{\Vec{N}}
+\newcommand{\vO}{\Vec{O}}
+\newcommand{\vP}{\Vec{P}}
+\newcommand{\vQ}{\Vec{Q}}
+\newcommand{\vR}{\Vec{R}}
+\newcommand{\vS}{\Vec{S}}
+\newcommand{\vT}{\Vec{T}}
+\newcommand{\vU}{\Vec{U}}
+\newcommand{\vV}{\Vec{V}}
+\newcommand{\vW}{\Vec{W}}
+\newcommand{\vX}{\Vec{X}}
+\newcommand{\vY}{\Vec{Y}}
+\newcommand{\vZ}{\Vec{Y}}
+
+\newcommand{\va}{\Vec{a}}
+\newcommand{\vb}{\Vec{b}}
+\newcommand{\vc}{\Vec{c}}
+\newcommand{\vd}{\Vec{d}}
+\newcommand{\ve}{\Vec{e}}
+\newcommand{\vf}{\Vec{f}}
+\newcommand{\vg}{\Vec{g}}
+\newcommand{\vh}{\Vec{h}}
+\newcommand{\vi}{\Vec{i}}
+\newcommand{\vj}{\Vec{j}}
+\newcommand{\vk}{\Vec{k}}
+\newcommand{\vl}{\Vec{l}}
+\newcommand{\vm}{\Vec{m}}
+\newcommand{\vn}{\Vec{n}}
+\newcommand{\vo}{\Vec{o}}
+\newcommand{\vp}{\Vec{p}}
+\newcommand{\vq}{\Vec{q}}
+\newcommand{\vr}{\Vec{r}}
+\newcommand{\vs}{\Vec{s}}
+\newcommand{\vt}{\Vec{t}}
+\newcommand{\vu}{\Vec{u}}
+\newcommand{\vv}{\Vec{v}}
+\newcommand{\vx}{\Vec{x}}
+\newcommand{\vy}{\Vec{y}}
+\newcommand{\vz}{\Vec{z}}
+
+\newcommand{\vell}{\Vec{\ell}}
+\newcommand{\valpha}{\Vec{\alpha}}
+\newcommand{\vtau}{\Vec{\tau}}
+\newcommand{\vomega}{\Vec{\omega}}
+\newcommand{\vOmega}{\Vec{\Omega}}
+
+\newcommand{\ha}{\Hat{a}}
+\newcommand{\hb}{\Hat{b}}
+\newcommand{\hc}{\Hat{c}}
+\newcommand{\hd}{\Hat{d}}
+% \newcommand{\he}{\Hat{e}}
+\newcommand{\hf}{\Hat{f}}
+\newcommand{\hg}{\Hat{g}}
+\newcommand{\hh}{\Hat{h}}
+\newcommand{\hi}{\Hat{i}}
+\newcommand{\hj}{\Hat{j}}
+\newcommand{\hk}{\Hat{k}}
+\newcommand{\hl}{\Hat{l}}
+\newcommand{\hm}{\Hat{m}}
+\newcommand{\hn}{\Hat{n}}
+\newcommand{\ho}{\Hat{o}}
+\newcommand{\hp}{\Hat{p}}
+\newcommand{\hq}{\Hat{q}}
+\newcommand{\hr}{\Hat{r}}
+\newcommand{\hs}{\Hat{s}}
+\newcommand{\hT}{\Hat{t}}
+\newcommand{\hu}{\Hat{u}}
+\newcommand{\hv}{\Hat{v}}
+\newcommand{\hw}{\Hat{w}}
+\newcommand{\hx}{\Hat{x}}
+\newcommand{\hy}{\Hat{y}}
+\newcommand{\hz}{\Hat{z}}
+
+\newcommand{\he}{\Hat{\epsilon}}
+\newcommand{\htheta}{\Hat{\Theta}}
+\newcommand{\hphi}{\Hat{\phi}}
+
+\newcommand{\bx}{\bar{x}}
+
+\newcommand{\Z}{\sqrt{ \frac{\mu_0}{\epsilon_0} }}
+\newcommand{\Ylm}{Y_{\ell m}}
+\newcommand{\YL}{Y_L}
+
+\newcounter{short}
+\newcommand{\shortproblem}[1]{
+
+ \stepcounter{short}
+ % \addcontentsline{toc}{subsection}{Short Problem \arabic{short}}
+ \vspace{1cm}
+ {\noindent \bf Short Problem \arabic{short}.}
+ \vspace{0.2cm}
+\\
+ {\noindent #1}
+
+}
+
+\newcounter{true}
+\newcommand{\truefact}[1]{
+
+ \stepcounter{true}
+ % \addcontentsline{toc}{subsection}{True Fact \arabic{true}}
+ \vspace{1cm}
+ {\noindent \bf True Fact \arabic{true}.}
+ \vspace{0.2cm}
+\\
+ {\noindent #1}
+
+}
+
+% OLD shortproblem with minipage, which seems to block putting
+% figures inside...
+% \newcommand{\shortproblem}[1]{
+% 
+%  \stepcounter{short}
+%  \addcontentsline{toc}{subsection}{Short Problem \arabic{short}}
+%  \vfill
+%  \noindent
+%  \begin{minipage}[c]{6in}
+%    \vspace{0.2cm}
+%    {\noindent \bf Short Problem \arabic{short}.}
+%    \vspace{0.2cm}
+% 
+%   \noindent {#1}
+%  \end{minipage}
+%  \vfill
+% 
+% }
+
+\newcounter{hwcnt}
+\newcommand{\homework}[1]{
+
+ \stepcounter{hwcnt}
+ \vspace{1.0cm}
+ {\noindent \bf Problem \arabic{hwcnt}.}
+ \vspace{0.2cm}
+
+ \noindent {#1}
+
+}
+
+\newcounter{probcnt}
+\newcommand{\problem}[1]{
+
+ \stepcounter{probcnt}
+ \vspace{1.0cm}
+ {\noindent \bf Problem \arabic{probcnt}.}
+ \vspace{0.2cm}
+
+ \noindent {#1}
+
+}
+
+\newcounter{quescnt}
+\newcommand{\question}[1]{
+
+ \stepcounter{quescnt}
+ \vspace{1.0cm}
+ {\noindent \bf Question \arabic{quescnt}.}
+ \vspace{0.2cm}
+
+ \noindent {#1}
+
+}
+
+\newcounter{testprobcnt}
+\newcommand{\testproblem}[2]{
+
+ \stepcounter{testprobcnt}
+ \vspace{1.0cm}
+ \noindent \textbf{Problem \arabic{testprobcnt}.}\quad({#1} points)
+ \vspace{0.2cm}
+
+ \noindent {#2}
+
+}
+
+\newcommand{\ahomework}[1]{
+
+ \stepcounter{hwcnt}
+ \vspace{1.0cm}
+ {\noindent \bf * Problem \arabic{hwcnt}.}
+ \vspace{0.2cm}
+
+ \noindent {#1}
+
+}
+
+\newcounter{hardcnt}
+\newcommand{\hardproblem}[1]{
+
+ \stepcounter{hardcnt}
+ \addcontentsline{toc}{subsection}{Essential Problem \arabic{week}.\arabic{hardcnt}}
+ \vspace{1.0cm}
+ {\noindent \bf Essential Problem \arabic{week}.\arabic{hardcnt}.}
+ \vspace{0.2cm}
+
+ \noindent {#1}
+ \newpage
+
+}
+
+
+\newcommand{\week}[1]{
+
+ \stepcounter{chapter}
+ \addcontentsline{toc}{chapter}{Week \arabic{chapter}: #1}
+ \markboth{Week \arabic{chapter}: #1}{Week \arabic{chapter}: #1}
+ \chapter*{Week \arabic{chapter}: #1}
+
+}
+
+

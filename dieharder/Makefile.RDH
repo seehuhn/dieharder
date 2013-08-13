@@ -1,0 +1,15 @@
+
+PKG_CFLAGS = 	-g -W -I. -DRDIEHARDER
+PKG_LIBS =	-ldieharder -lgsl -lgslcblas -lm
+
+sources := 	$(wildcard *.c)
+
+objects :=	$(sources:%.c=%.o)
+
+all :		RDieHarder.so
+
+RDieHarder.so :	$(objects)
+		$(CC) -shared -o $@ $(objects) $(PKG_LIBS) 
+
+clean :
+		rm $(objects) RDieHarder.so 

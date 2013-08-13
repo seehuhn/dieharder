@@ -1,0 +1,24 @@
+libdieharder_la-rijndael-alg-fst.lo: rijndael-alg-fst.c \
+ /usr/include/assert.h /usr/include/features.h /usr/include/sys/cdefs.h \
+ /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
+ /usr/include/gnu/stubs-64.h /usr/include/stdlib.h \
+ /usr/lib/gcc/x86_64-redhat-linux/4.5.1/include/stddef.h \
+ ../include/dieharder/rijndael-alg-fst.h
+
+/usr/include/assert.h:
+
+/usr/include/features.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/gnu/stubs-64.h:
+
+/usr/include/stdlib.h:
+
+/usr/lib/gcc/x86_64-redhat-linux/4.5.1/include/stddef.h:
+
+../include/dieharder/rijndael-alg-fst.h:

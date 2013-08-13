@@ -1,0 +1,1175 @@
+These are some simple design notes to document this program and to guide
+further work.
+
+This program is designed to do the following:
+
+  a) Encapsulate every RNG known to humans for testing.  We will use the
+GSL both for its rich supply of ready-to-test RNG's and for its
+relatively simple and consistent encapsulation of any new RNG's we add
+-- /dev/random is already encapsulated and can serve as a template for
+future work. [1/16/03 rgb]
+
+  b) test speed of the available RNG's.  Both:
+     i) In "native/standard" subroutine calls (with the subroutine call
+        overhead included).  [This is done, 1/16/03, rgb]
+    ii) In a custom "vector" form, where a whole block of dedicated
+        memory is filled in one pass from a given algorithm, and
+        subsequently accessed via a macro that only calls for a refill
+        when the vector is exhausted.
+
+  c) test quality of the available RNG's.  There are at least three
+primary sources of tests that will be used in this tool.  
+
+     i) RGB tests.  These are the tests I myself have implemented.  To
+        the best of my knowledge these are new, although of course
+        my knowledge is far from complete.
+
+    ii) DIEHARD, by Dr. George Marsaglia of FSU.  This is a well-known
+        and venerable "battery of tests" of RNG's.
+
+   iii) NIST STS/FIPS (NIST special publication 800-22, revised
+        5/15/2001).  This is also a suite of RNG tests, with some
+        overlap with DIEHARD.  I will probably implement only selected
+        tests from this suite at least at first, as some of them
+        appear to be relatively weak compared to e.g. rgb_binomial
+        and to test basically the same thing.
+
+    iv) Additional tests that are to be found on the web and in the
+        literature, where they appear to test things not
+        well-represented in tests already implemented in one suite
+        or another.
+
+  d) test quality of any input set of "random" data according to i-iv in
+c).  This will let us test arbitrary RNG's via their data, including and
+especially hardware generators.  Note that hardware generators available
+as "devices" will be interfaced via a).  This step will only be
+implemented when enough tests to make it worthwhile are already
+implemented.
+
+
+         Addendum and explanation of copyright issues.
+
+The STS was written by a variety of authors:
+
+  Andrew Rukhin, Juan Soto, James Nechvatal, Miles Smid, Elaine Barker,
+  Stefan Leigh, Mark Levenson, Mark Vangel, David Banks, Alan Heckert,
+  James Dray, San Vo.
+
+None of the actual code in the STS suite has been used in this tool --
+all testing routines have been written using only the STS published
+document as an excellent reference.  GSL routines have been used
+throughout, where possible, for computing things such as erfc or Q.
+Since I am not using their code, I am omitting their copyright notice,
+but wish to acknowledge their documentation of the selected tests
+anyway.  All the code in dieharder is GPL open source in any event, but
+academic credit matters.
+
+Similarly, DIEHARD is the work of George Marsaglia.  Dr. Marsaglia
+doen't have any written copyright notice or license terms that I could
+find in the sources provided on the website where he openly distributes
+source for his own suite, but in keeping with a minor design goal of
+completely original GPL code, all the DIEHARD algorithms have also been
+completely rewritten without directly utilizing any of the actual
+diehard code.  Fortunately, Dr.  Marsaglia also provides clear
+documentation for his test suite, making it a fairly simple matter to
+implement the tests.  Source code WAS examined (but not copied) to
+clarify places where the documentation of the tests was openly erroneous
+(as in the parking lot test) or unclear but dieharder code is completely
+original and its development thoroughly documented in CVS and (later)
+SVN tree form, checkin by checkin.
+
+The relatively few tests I have added are motivated by a desire to get a
+less ambiguous answer than many of these tests provide.  In many cases
+it is not (or should not) be correct to say that one "accepts" a
+generator as being a good one just because a test run of the generator
+has a p-value significantly greater than 0.  A few moment's
+experimentation, especially with relatively small data sets, should
+convince one that even "bad" RNG's can sometimes, or even frequently,
+return an "acceptable" p-value.  Only when the size of the test is
+increased, or the test is repeatedly run with different seeds, does it
+become apparent that although it sometimes performs acceptably (the
+result of a run isn't inconsistent with the generator producing "real"
+random numbers) it sometimes performs so poorly that the result can
+>>never<< be explained or believed for a true random number generator.
+
+That is, while a really poor p-value allows us to reject the hypothesis
+that the tested generator is random, acceptable p-values, even a fair
+number of them in repeated tests, do not usually support accepting the
+hypothesis -- at best they don't support rejection.
+
+Running a test repeatedly to generate a full distribution of results and
+then directly comparing the entire distribution with theory appears to
+provide greater sensitivity and accuracy in the rejection process than
+"simple" tests that generate only a single quantity.  This motivated the
+rgb_binomial test, which has proven very good at rejecting "bad" rng's.
+
+Similarily, it may prove useful to directly generate an empirical
+distribution of p-values themselves (repeating a test many times with
+different seeds and binning the p-values) and compare it to the expected
+distribution (which might work for erfc-based p-values, although not so
+well for Q-based p-values).  This can replace running a test many times
+looking for an anomalous number of "poor" p-values mixed in with ones
+that are not so poor as to lead to immediate rejection.
+
+Contributions of rng's (consistently GSL-wrapped as e.g. dev_random.c
+demonstrates) and/or additional tests would be most welcome.
+
+     rgb
+
+
+                     STS Critique, By Statistic
+
+                       The Monobit Statistic
+
+The monobit statistic checks to make sure that the raw number of 1's and
+0's approximately balance in a given bitstring.  This is actually a
+decent thing to test, but there is a better way to test it.  Given a
+relatively short bitstring (e.g. n<=160 bits), the probability that it
+will have k bits according to the null hypothesis is p(n,k,1/2) (the
+binomial distribution of outcomes over n independent trials, each with
+p=1/2).  If one runs m runs of n independent trials each, and
+accumulates X[k] (the count histogram for each possible value of output
+k in [0,n]) then one has X[k], the expected value histogram Y(k) =
+m*p(n,k,1/2), and sigma(k) = sqrt(m)*p(n,k,1/2).  From this it is simple
+to compute a p-value from an incomplete gamma function for the
+>>details<< of the distribution of 1's.  One can even do it two ways --
+with an independent random number seed for each of the m samples, or
+by simply running the rng with its original seed long enough to produce
+m*n bits.
+
+This binomial test is stronger than the monobit test.  Any result
+histogram that passes it necessarily passes the monobit test for the
+aggregate distribution with m*n bits (as I hope is obvious -- passing it
+means that the distribution is binomial in detail, not just uniformly
+balanced.  However, it is simple enough to compute the monobit result
+more or less in passing in the binomial test by simply summing the count
+histogram at the end or aggregating a total 1-bit count as one goes.  In
+that case one can generate two p-values -- a p-value for the monobit
+test and one for the binomial -- in one pass for the same data.  I would
+predict that the binomial p-value is strictly less than the monobit
+p-value, and that there exist rng's that pass the monobit that
+explicitly fail the binomial, but we can determine that empirically.
+
+This chisq-based binomial test methodology can be used to improve nearly
+any single test statistic in sts.  Instead of looking at the expected
+value of the statistic itself, frame its generation as a Bernoulli trial
+with a known percentage, compute the expected binomial distribution and
+its error, generate the result histogram as the test statistic, and use
+chisq and the complementary incomplete gamma function Q(a,x) to generate
+a p-value over many smaller "independent" trials instead of one long
+one.
+
+This suggests ways of improving e.g. the runs and other tests as well,
+see below.
+
+                        The Runs Statistic
+
+For n bits, count the test statistic X as the number of (overlapping) 01
+and 10 pairs and add one.  Compute p_1 = (# ones)/n, p_0 = (1 - p_1)
+(and ensure that they are close enough to p_0 = p_1 = 0.5).  Compute the
+expected number of 01 and 10 pairs as Y = 2*n*p_1*p_0.  Compute the
+expected error in the number of 01 and 10 pairs as sigma =
+2*sqrt(2*n)*p_1*p_0.  Finally, compute the p-value as erfc(|X -
+Y|/sigma).
+
+This methodology seems questionable, at least to me.  
+
+First of all, it seems odd to use a p_0 and p_1 derived from the sample,
+given that the null hypothesis is p_0 = p_1 = 0.5 and independent.
+Ensuring that the sample passes monobit (in a slightly different
+formulation) to start means that one has conditionally >>accepted<< this
+null hypothesis for the rng before beginning the runs test, using
+different p's implies a different null hypothesis.
+
+In addition, given their prior assumption that p_1 = # ones/# bits,
+their computation of the probability of p_01 and p_10 (and hence Y) is
+erroneous.  The probability of 01 in a finite string of n bits, subject
+to constrained numbers of 0's and 1's needs to be computed WITHOUT
+replacement, just as one does with a deck of cards.  After shuffling a
+deck of cards known to contain four aces, the probability that the top
+two cards are aces is not (4/52)*(4/52), but rather (4/52)*(3/52) -- if
+the first card is an ace, it means there are fewer aces left in the deck
+for the second card.  To be consistent, they should compute the expected
+number of 01 strings in a 10-bit sequence containing 6 1's as
+(4/10)(6/9) and not (4/10)(6/10).  They need to choose between a null
+hypothesis of p_1 = p_0 = 0.5 (where they can presume successive bit
+probabilities to be independent) and a null hypothesis of p_1 = (#
+1's)/(# bits) and use "probability for a 1, given that the first draw is
+a 0".  This matters for short strings.
+
+Next, they don't wrap the n-value bitstring into a torus.  Consequently,
+there are only n-1 bitpairs examined, and thus the expected value should
+be Y = 2*(n-1)*p_1*p_0 and not 2*n*p_1*p_0.  For large n, of course, it
+won't matter (neither will the previous two problems, at least not
+much), but it is surprisingly sloppy mathematically.
+
+In addition there is no reason I can see to add a 1 to the test
+statistic of (# of 01 and 10 pairs in an overlapping scan of the
+string).  This is very difficult to understand, as it clearly breaks the
+symmetry of this test statistic with the complementary view where the
+test statistic X is (# of 00 or 11 pairs in an overlapping scan of the
+string) but Y and sigma are the same -- the sum of the Y's necessarily
+equals n (or n-1, if that is the number of examined pairs).  This leads
+to an obvious problem for short strings, e.g. n = 2, where the formula
+they give for the expected number of 01 or 10's measured is
+2*2*(1/2)*(1/2) = 1, but the statistic can only take on the values 1 or
+2, each with probability 1/2.  There is something odd here.
+
+Finally, it is more than a bit crazy to view this assessment as somehow
+a measure of excessive sequential correlation, as a measure of "runs".
+Let us reframe the test statistic (count of 01 and 10's) in terms of our
+null hypothesis.  Presuming random, equal probability 0's and 1's, we
+expect 25% each of 00 01 10 11.  Given an exemplary bit string of e.g.
+1001101011, it doesn't really matter if one examines disjoint bitpairs
+(10 01 10 10 11) (n/2 bitpairs for n even) or the overlapping bitpairs
+10 00 01 11 10 01 10 01 11 11 (wrapping the last pair around
+periodically to ensure symmetry and n pairs of bits, EACH pair is
+expected to occur with a frequency, in the limit of many bitpairs, of
+#bitpairs*(1/4).
+
+Furthermore, in an ensemble of measurements of bitpair frequencies, each
+distinct possibility is (for lots of identical bitsets) to be binomially
+distributed with respect to the rest (as in p_01 = 1/4, p_!01 = 3/4)
+regardless of whether or not sequential overlapping bitpairs are
+counted.  We can understand this by noting that our null hypothesis (a
+random generator producing pairs of bits) can be applied to any pair of
+bits in any string.
+
+Note also that in a given bitstring with periodic wraparound, the number
+of 01 (overlapping) pairs must equal the number of 10 pairs.  This can
+be proven with ease.  Every bit flipped can either change >>both<< the
+01 and 10 count by one (flipping a bit with two neighbors that are both
+0 or both 1) or it can leave them both the same (flipping a bit with a
+neighboring 0 AND a neighboring 1).  This wreaks a certain measure of
+havoc on the notion that each sequentially overlapping pair examined is
+an independent measurement -- measuring any pair of (01 or 10 count) and
+(00 or 11 count) suffices to determine the counts for all four possible
+bit pairs.
+
+The only question remaining is whether measuring the counts using
+overlapping bitpairs is more or less rigorous a test than measuring the
+counts using non-overlapping pairs.  That is, can a generator create a
+bitstring that is correctly pairwise distributed in both non-overlapping
+pair sequences but that is NOT correctly pairwise distributed in
+overlapping pair sequences or vice versa.  The answer is not terribly
+obvious, but if we make the very weak presumption that our test
+measurments do not depend, on average, on whether we begin them
+systematically at bit 0 or bit 1 (so that if we have a bad generator
+we'll eventually fail for either starting point with roughly equal
+frequency for different starting seeds and/or first-bit displacements),
+then measuring both possibilities for each string should (on average)
+produce results that are conservatively related to measuring one
+possibility on twice as many strings.  
+
+To put it another way, if a generator creates strings that >>fail<< the
+overlapping test, they would necessarily fail at least one of the two
+non-overlapping tests possible for the same bitstring, since the counts
+for the two non-overlapping tests add to produce the count for the
+non-overlapping test.  For this addition to push values out of
+acceptable ranges one would require two deviations from the expected
+value in the same direction.  If we only make the extremely weak
+assumption that failure of the non-overlapping tests is equally likely
+for both possible cyclic starting points, the 1/sqrt(2) scaling implicit
+in using both strings is thus conservative.
+
+However, we can easily average over this as well by simply randomly
+starting each non-overlapping run on bit 0 or bit 1.  This might
+actually simplify the code and provides an ADDITIONAL measure of
+randomness as the two results should themselves be binomially
+distributed, independently.
+
+The final problem with runs is that it is not easy to see how to extend
+it to a higher order.  For example, does 101 occur too often?  How about
+010?  Again, each bit pattern should occur at a rigorously predicted
+rate for p_0 = p_1 = 0.5 and independent bits, e.g. p_000 = p_001 =
+p_010 = ... = 1/8 for any distinct three-bit combination, p_0000... =
+1/16 for four-bit combinations, and so on.  EACH of these outcomes
+should occur with binomially distributed frequencies when measured as a
+bernoulli trial with p_xyz, (1 - p_xyz), making it easy to compute both
+Y and sigma.  This suggests that the correct generalization of monobit
+and runs (and probably more of the sts tests) is a test that (in one
+pass):
+
+   a) presumes a valid bitlevel rng so that p_0 = p_1 = 0.5 exactly, all
+bits independent (null hypothesis).
+
+   b) counts 1's (and infers 0's) for M sets of N bits, incrementing a
+histogram vector of the number of 1's observed accordingly.  This is
+rigorously compared for EACH possible value of the count to the expected
+binomial distribution of counts.
+
+   c) counts e.g. 00,01,10,11 overlapping pairs.  We showed above that
+the count of 01's exactly equals the count of 10's.  The count of 11
+pairs equals the total number of pairs less the count of 00's, 01's and
+10's (all known).  Even though these are not all independent, there is
+no harm and a small ease of coding advantage in binning all four counts
+in four result histograms, each to be compared to its binomial
+expectation.
+
+   d) counts e.g. 000, 001, 010... overlapping pairs.  Here we IGNORE
+possible count relationships for sure (as we won't stop with three
+bits:-).  Again, bin the outcome count frequencies and compare to their
+expected binomial distribution.
+
+This process can continue indefinitely, as long as we can accumulate
+enough counts in each pattern histogram to make aggregate statistics
+reliable.  For example, at 8 bits, one is basically ensuring that the
+distribution of ascii characters is BOTH overall uniform (has the
+correct mean number of letters) AND that the actual distribution of
+those letters in samples is correct from the point of view of Bernoulli
+trials.
+
+I think that this process is strengthened significantly by conducting it
+simultaneously for all the sequences.  The first measures "bit frequency
+and randomness".  The second measures "pairwise sequential
+correlations".  The third measure "three-bit sequential correlations"
+and so forth.  A sequence might pass the first and fail the second, pass
+the first two and fail the third, pass the first seven and fail the
+eighth, pass the first eight and fail the 32nd (so that floats formed
+from the inverse are not uniformly distributed).
+
+===============
+
+Addendum to previous note.  The insight has struck me that all that this
+does is give one the actual DISTRIBUTION of outcomes for any given
+experiment.  The distribution of sample means should be -- guess what --
+normal -- provided that there are enough elements in the sample itself.
+For small numbers of elements in the sample, they should be binomial if
+the experiment is framed as a bernoulli trial.  I'll bet that if I
+convert smoothly from binomial into normal as the number of outcome
+states exceeds the threshold where computing binomial probabilities is
+reasonably possible, I'll see no difference in an appropriately computed
+chisq!
+
+This is the solution to the problem of doing long strings.  If I counted
+e.g. bitpair combinations across a string of length 8, (for many
+samples) binomial is appropriate.  If I count bitpair combinations
+across a string of length 2^23 (8 million), I can't do binomial, but
+don't have to.  Outcomes will be normally distributed about the expected
+means.
+
+SO, this is the answer to the bigger problem of why one should ever
+trust "p-value" for a single sample, or even a dozen samples, of a
+random process.  Sure (to quote Marsaglia) "p happens", but it doesn't
+JUST happen, it happens according to a distribution.  Instead of
+wondering if THIS occurrence of p = 0.02 from a single mean value is
+reasonable or not, compute the p of an entire distribution of mean
+values compared to the appropriate normal or binomial distribution, and
+get a p-value one can really trust!
+
+=======================
+
+OK, so I'm stupid and I'm wrong.  sts_monobit is, in fact, more
+sensitive than rgb_binomial although rgb_binomial might yet pick up a
+generator that passes sts_monobit and fail it -- one that preserves the
+symmetry of its 0/1 distribution about the midpoint (so the mean number
+of 0's and 1's is correct) but has the >>wrong<< distribution, e.g. is
+not binomial.
+
+As it turns out, most distributions that fail rgb_binomial do not have
+symmetry about their midpoint and consequently fail sts_monobit "before"
+failing rgb_binomial.  If you like, rgb_binomial only becomes reliable
+when there is enough data to fill the primary non-zero bins near the
+middle, which takes a goodly chunk of data.  sts_monobit, in the
+meantime, just adds up the number of 0's and 1's while steadily chopping
+down sigma -- by the time one has sampled a few thousand bits a lot of
+rng's are already 0/1 asymmetric enough to fail monobit, but the bin
+sigma's are still large enough to forgive a lot of slop in any given
+bin.
+
+Interestingly, binomial can be applied to very small bitstrings -- in
+fact, to bitstrings of length 1 (I think).  At that point it should
+become equivalent to monobit, but in a somewhat different way,
+especially since rgb_binomial now evaluates monobit directly on the
+accumulated bit values.
+
+Looks like I >>do<< have some work to do to fully understand everything,
+I do I do...;-)
+
+==============
+
+Whoo, dawgies!  Out of a bit of insight, rgb_persist was born, and it
+explains why a LOT of rng's suck incredibly.  Lots of rng's quite
+literally never change the contents of certain bits (usually lower
+order bits).  One common symptom is for an rng to always return odd
+or even numbers.  Another common symptom is for a rng to fail a
+distributional test when the repeated bits are measured (as repeated 1's
+cause an excess of 1's, repeated 0's an excess of 0's, even repeated
+01's can cause runs/bitpair tests to fail).  Worse, rgb_persist clearly
+shows that MOST rng's that exhibit the problem at all exhibit it
+STRONGLY (LOTS of repeated lower order bits) for at least some seeds.
+Using them, one runs a significant (indeed, a near "sure thing") risk of
+encountering seeds such that as many as 18 bits out of 32 are repeated,
+leaving one with only a fraction of the variation you thought you
+had.
+
+At this point, I'd have to say that rgb_persist is one of the first
+tests to run on ANY rng, and any rng that fails it should probably
+just be rejected out of hand -- even if only the last (least
+significant) bit is repeated, it seems dangerous to use an rng that
+produces only even or only odd numbers from any given seed, even for
+games.
+
+Writing the dumpbits and rgb_persist routines also gave me insight into
+how rgb_binomial and even the sts routines might be failing relative to
+their design goals.  I've been processing bits least to most
+significant, and I've been ignoring random_max when doing so.  This is
+a capital mistake, as of course an rng will fail when it only returns
+e.g. 16 bits in a 32 bit slot (and the other bits are necessarily
+repeated).  I've probably been "passing" only rng's that return a full
+32 "random bits" (and of course don't fail e.g. rgb_persist()).
+
+SO, I need to rewrite sts_monobit, sts_runs, and rgb_binomial (last
+first) so that they only check bits in the valid part of each returned
+word.  This will be modestly annoying, but is of course absolutely
+necessary for the results to mean a damn thing.
+
+====================
+
+Note the new test rgb_bitdist, which is the BEST generalization of
+sts_monobit and perhaps better than rgb_binomial as well.  We need to
+merge sts_monobit, rgb_persist, and rgb_bitdist into a single test
+that measures the total/average bit number, the per-bit-slot
+total/average number, and derives the cumulative bitmask of repeated
+bits.
+
+Two additional directions to take this:
+
+First:
+
+   generate a set of Ntest variables for e.g.
+     1 bit
+     2 bit
+     3 bit
+     4 bit
+     ...
+     N bit
+
+combinations (one each).  For number of bits and bitpattern, sweep the
+bitstring and accumulate the frequency histogram (for each possible
+bitpattern in each string location)
+
+  ntest[no_of_bits].x[bit_pattern_slot]
+
+with periodic wraparound on the bitstring and so forth -- this is, in
+fact, sts_runs but for arbitrary numbers of bits and accumulating BOTH
+the totals AND the actual distribution, and check the chisq on the
+distribution and the pvalue of the total expected.
+
+Second:
+
+Here we look for subtle sequential bitlevel correlations.  We do the
+same test as before, except that the frequency histogram is LATERAL --
+doing each bit position in a sequential fashion.  This test should see a
+clear failure for bits that don't change (strong sequential correlation,
+that) but should ALSO discover individual bits that do things like:
+01010101 or 0011110000111100 or any other "balanced" repetition.
+
+In fact, we may eventually do a fft on the forward sequential bit
+sequences to see if there are even very weak sequential bit-level
+correlations like 001010100001100010 (where every sequential triplet has
+two 0's and one 1), even if the triplets themselves are "random".  A
+good frequency test on all 3-way bit patterns should catch this, of
+course, and the lovely thing about binary is that I can always use a
+suitably masked integer conversion of the bit pattern itself as the
+histogram index!  So it needn't be TOO horrible to encode.
+
+=====================================================
+
+Note on diehard parking lot test.  First of all, the documentation for
+the test is incorrect -- it tests for "crashes" (overlap) of SQUARE cars
+with sides of length 1, not ROUND cars of RADIUS one as Marsaglia's
+documentation and comments assert.  If round cars ("helicopters", to
+borrow Marsaglia's term) are used a different distribution is obtained
+with mean over 4000.
+
+Actually to me, round cars seems very very similar to one of Knuth's
+tests for hyperplanar distribution of random coordinates, which has a
+much more solid theoretical foundation; I suspect the tests are more or
+less equivalent in sensitivity and will yield identical success/failure
+patterns in 99% of all cases (maybe even 100%).  And the sensitivity of
+this test sucks -- it was very difficult for me to find a test that
+failed it out of the entire GSL collection (trying a half dozen
+known-weak generators or more in the process).  The one that finally DID
+fail it really, really sucked and failed all sorts of other tests.
+
+I'd be interested to see if this test deserves to live, in the long run.
+I rather suspect that Knuth tests in variable dimensions will yield a
+much more systematic view of RNG failure, just as rgb_bitdist does
+compared to e.g. runs tests.
+
+==================================================================
+07/11/06
+
+I've just finished testing Marsaglia's bitstream test, and it is (like
+rgb_bitdist) a test that nothing survives.  In fact, it is a dead
+certainty that rgb_bitdist is a better version of the same basic test,
+and that generators that fail rgb_bitdist at (say) 6 bits are going to
+fail Marsaglia's less sensitive 20-bit test.  What his test does that
+bitstream doesn't is use a single relatively coarse grained test
+statistic -- the expected number of missing 20 bit numbers out of 2
+million trials -- instead of doing what rgb_bitdist does, which is
+do a chisq test on the fractional occupancy of the entire VECTOR of 20
+bit numbers.
+
+Research question:  Which is more sensitive AT 20 bits?  It seems to me
+that the chisq vector test is clearly superior as it would catch many
+possible "bad" distributions that conserved the mean number of missing
+numbers at this sample size (however unlikely such special deviations
+might be in practice) but then there is the question of sensitivity
+given a fixed sample size.  SO FAR, however, rgb_bitdist continues to
+be the premier test for revealing failure, with nothing getting out
+alive past 6 bits, ASSUMING that I'm computing the vector chisq and
+p-value per run correctly and not just revealing that I'm using the
+wrong form as the number of bits goes up.
+
+Oh, and nothing survives diehard_bitdist EITHER, at least when one
+cranks the test up past Marsaglia's wimply 20 iterations to (say) 200.
+At that point the non-uniformity of the p-distribution is absolutely
+apparent -- it even has structure.  That is, some seeds lead to biased
+results that are TOO CLOSE to the mean value and not properly
+distributed... an interesting observation all by itself.
+
+   rgb
+
+==================================================================
+07/11/06 later that day...
+
+diehard_count_1s_stream() now WORKS!  What a PITA!  And (I suspect) how
+unnecessary all the complexity!  This test (as it turns out) computes
+chisq on what amounts to a strangely remapped rgb_bitdist test
+(precisely!) on four and five digit base 5 integers obtained by
+remapping bytes based on the number of 1's therein.
+
+That is, 256 possibilities are reduced to 5, each with a
+trivial-to-compute frequency/probability, the base 5 integer is left
+shifted (base 5!) and added to the next one to cumulate 4 or 5 digit
+numbers, those numbers are then counted, and the counts compared to the
+EXPECTED counts given the number of samples and turned into chisq (one
+each, for 4 and for 5 digit numbers).  Sigh.
+
+OK then, we COULD just print the p-value of those chisq's -- an
+absolutely straightforward process.  Alternatively, we could do what
+Marsaglia does -- compute the DIFFERENCE of the chisq's themselves,
+which of course are supposedly distributed around the number of degrees
+of freedom of each one separately, that is 3125 - 625 = 2500!  This is
+the mean value of the difference, with stddev = sqrt(2*2500).  This
+final result is turned into a p-value.
+
+This of course is wierd and wrong in so many ways.  For one, it is
+entirely possible for chisq_4 and chisq_5 to differ systematically from
+their expected values, and it is perfectly possible and likely that
+those deviations would occur in the same direction -- e.g. down -- so
+that the 4 byte and 5 byte streams BOTH have fewer degrees of freedom
+than expected.  Of course in this case part of the individual deviations
+CANCEL and is not visible in the final p-value!  
+
+Honestly, I can think of pretty much "no" reasonable ways that this
+final pvalue can fail where any/all of the p-values for the 4 or 5 (or 2
+or 3 or 1 or 17) digit distributions would not also fail, but I can (and
+just did) think of a way that the final p-value might MARGINALLY pass
+while the individual p-values fail.
+
+Although the general approach is a good one, what is clearly needed is a
+new test -- one that extends rgb_bitdist to multidigit strings of smaller
+base.  For example, right now rgb_bitdist tests the FREQUENCY of the
+occurrence of all 5 digit strings but not all 5 digit strings taken two
+at a time (32 x 32 = 1K possbilities).  Of course one REASON that I
+don't do that is that I >>already<< do e.g. 10 bit strings -- the DIRECT
+frequency distribution of those 1K possibilities, which obviously
+samples all the 5 bit combos taken two at a time!.  And besides, every
+rng I have tested fails at the level of what amounts to two digit octal
+numbers -- six bit strings.  So I'm cynical about this.
+
+I also don't think that this really counts 1's.  How is this one iota
+different from simply evaluating the distribution of bytes (8 bit
+randoms)?  If the complete distribution of 8 bit bytes (rgb_bitdist at 8
+bits) is random, ALL DERIVED DISTRIBUTIONS are random, with the only
+catchy part being temporal/sequential correlations that might be
+revealed from taking the strings four or five bytes at a time (at the
+expense of compressing the information tremendously).
+
+Once again, this test seems reduceable to but not as sensitive as
+rgb_bitdist at a given level, unfortunately a level far beyond where all
+known rng's fail anyway.  It is a MEASURE of the lack of sensitivity
+that this does does NOT fail for many of those rng's where rgb_bitdist
+does...
+
+   rgb
+
+==================================================================
+08/16/06
+
+OK, lots has happened.  First of all, I've discovered what I believe to
+be at least one, maybe two diehard data errors -- rngs consistently fail
+operm5 and bitstream that I (and everybody else) believe to be "good"
+ones insofar as such a thing exists.  Not surprising -- the data being
+used to compute the test statistics was simulated between 10 and 20
+years ago and this test routinely uses more random numbers from better
+generators in any given test than were likely used to simulate them in
+the first place.
+
+Second, dieharder is already in the process of developing quite a user
+base.  People have ported it to Windows, for example, and Dirk
+Eddelbuettel is interested in adding a native R interface to the tests
+(to be able to take advantage of several of the other facilities that R
+provides, a la octave/matlab/maple/mathematica as a programming UI).
+
+To facilitate both this latter project and the eventual creation of a
+true GTK-based GUI for dieharder, I've begun the fairly monumental task
+of splitting off all the tests, the add-on rng's that are intended to be
+part of the basic package, and all the intrinsic support functions into
+a standalone link library and associated set of include files.  I know
+from experience writing libwulf to support wulfware apps that this is a
+bit tricky, and I expect there to be deep bugs and places where the API
+and separation are not clean for quite some time now.  However, when I'm
+DONE it should be REALLY EASY to replace the front end UI.  In fact, if
+I clean up the UI itself while I'm at it to make it even more modular
+than it is, I should be able to add a GTK basic interface in a very
+short period of time.
+
+I'm also stripping down the actual source part of dieharder (the tty
+interface version) and putting most of the documentation and so on in
+with the LIBRARY, since that is where it will be needed.  Eventually I
+should need something like man pages and/or a manual for the
+libdieharder library, in addition to a much smaller set of toplevel
+dieharder documentation.  The application (in any UI version) should
+REALLY be fairly self-documenting as a design goal.
+
+To mark the advent of a version that appears to build on top of
+completely separated libdieharder.a, largely decrufted on both sides,
+I'm bumping the major number of dieharder even though this wasn't an
+original design goal.  It clearly merits a major version bump anyway.
+The minor.minor numbers will retain their original meaning (bugfix
+advances and number of tests supported) except that now I should
+probably reset bugfix to 0 in both libdieharder and dieharder.  I don't
+know what I'll do about synchronicity between the two -- really I should
+extract numbers from libdieharder to set dieharder version numbers, but
+parsing out all the screen-scraping macros gives me a headache so I'll
+await inspiration or need before messing with it.
+
+Note finally that doing this has put adding more e.g. marsaglia_tsang
+tests on hold.  I do have an extensive agenda here -- fixing up a
+"super" version of sts_serial, adding sts_serial itself (which should be
+more or less equivalent to rgb_bitdist, only the latter doesn't compute
+the correct statistic for a chisq, alas), figuring out what the RIGHT
+data is for diehard_operm5 and diehard_bitstream, completing the
+installation of 10^11 to 10^12 sample-based target data of my OWN for
+marsaglia_tsang_gcd, and so on.  However, clearly this needs to wait
+until the development environment is stable again, which could be days
+yet, or even longer depending on what else I have to do for Duke etc.
+
+I also haven't even looked at the WinXX patches -- I'll have to figure
+them out all over again after splitting off the library, I expect.
+
+Still, progress is being made.  I think that the application is
+definitely out there to where a) it could be announced more publically
+on e.g. the stats lists -- maybe when the libdieharder split has been in
+"alpha" for at least a while...;-) and b) it is time to look for grant
+support for this project to accomplish certain specific goals --
+supporting testing on a cluster (by the time we're done the
+sts_series/rgb_bitdist/rgb_lmn tests are going to be BIG CPU
+consumers:-), finishing off all the desired/required tests,
+re-simulating key target data for the brave new world of unlimited rands
+to test, and "getting the word out" via publication, travelling to
+learned meetings and presenting, and so on.  I'd guess that this will
+require a fairly serious grant for at least 3-5 years to do all that
+needs to be done that I know of already, and may need even more if (as I
+suspect) things are discovered that require significant new work to be
+done on testing algorithms themselves, e.g. "moment expansion" type
+tests, a connection between high-dimensional test failure and bit
+distribution tests.  
+
+I have high hopes for the lmn test, although it may prove only the first
+step in lmnop, lmnopqr, lmnopqrst, etc... -- sampling lagged correlation
+between l-bit number, m-bit gap, n-bit number, o-bit gap, p-bit
+number...etc.  MANY tests seem to be fancy ways of doing just this and
+nothing more, interestingly enough -- in some cases ways of examining
+only a projective subspace of the failures one might occur from a truly
+systematic test of this sort.  For example, a Knuth test that reveals
+hyperplanar clustering of rand triplets viewed as spatial coordinates is
+effectively observing non-uniformity of the random integers represented
+by the conjunction of the three bitstrings... but without attempting to
+validate true randomness on 96-bit integers!
+==================================================================
+
+10/10/06
+
+Well, many many more bugs were discovered (mostly by Charles Karney) and
+fixed and the tests are much improved as a result.  At this point "good"
+generators pass all but the operm5 and bitstream tests.  operm5 I
+STRONGLY suspect of containing a significant error.  bitstream the jury
+is still out on -- the whole series of n-bit monkey tests bothers me
+as they seem inevitably related to rgb_bitdist but less specific and
+sensitive.  They are, however, more asymptotic and I've got to really
+think about it before passing final judgement (hopefully buttressed by
+very specific examples of correlated failure according to specific
+patterns).
+
+I added a whole selection of bit manipulation tools.  I can now grab
+GUARANTEED sequential bits from the bitstream produced by any of the
+supported rngs (independent of rmax_bits).  I can easily generate a
+string of (precisely) uints with 32 supposedly random bits from this
+sequential stream.  I can rotate this uint in place and mask/select any
+of its bits.  I can grab arbitrary bit windows within a block of memory,
+and can grab arbitrary ntuples within a block of memory with periodic
+boundary conditions.  These routines (only) should be used to access the
+rngs in nearly all tests as they eliminate spurious effects from a rng
+returning only 31 bits on a test that de facto presumes 32, or 22 bits,
+or 16 bits.  They also permit true overlapping samples to be generated
+absolutely trivially on a given fixed buffer for overlapping sample
+tests in dieharder (where it is by no means obvious that overlapping
+matters in any significant way).
+
+It is time to create two new tests.  One of them generalizes rgb_bitdist
+so that the ntuples it samples can be created by more or less arbitrary
+sample patterns, e.g.
+
+stream: 0101010001111101010110101110100010101110101001011001110110110...
+        -------|(repeat)
+
+Get sequential 8-tuples e.g. 01010100 -- existing rgb_bitdist test for
+nbits = 8.
+
+
+stream: 0101010001111101010110101110100010101110101001011001110110110...
+        ----....---|(repeat)
+
+Get 4 bits, skip 4 bits, get 4 bits to make the 8-tuple 01010111, test
+stream of 8-tuples created with this repeating pattern with rgb_bitdist.
+This should reveal fourier-like correlations of certain kinds within 12
+bits, but is LESS sensitive than properly testing 12 bits directly.
+
+
+stream: 0101010001111101010110101110100010101110101001011001110110110...
+        --........--........--........-|(repeat)
+
+Get 2 bits, skip 8 bits, get 2 bits, skip 8, get 2, skip 8, get 2 to
+make the 8-tuple 01111000, test stream of 8-tuples created with this
+repeating pattern with rgb_bitdist.  Note that this test looks for
+relatively LONG range ntuplet correlations -- a fourier-like correlation
+over 32 bit cycles and embedded 8 bit cycles at the same time.
+
+stream: 0101010001111101010110101110100010101110101001011001110110110...
+        .....................................---|(repeat)
+
+Skip 37 bits, get 4, run rgb_bitdist on the stream of 4-tuplets produced
+e.g. 1101 etc.  Note well that 37 bits is odd and prime, as is 41!  This
+approach can look for trouble in difficult places that might well be
+missed by a binary-happy sampling of sequential uints.
+
+This method of sampling can also be run on a single large buffer with
+overlap.  In principle, one can construct a lagged test series that
+should reveal e.g. hyperplanar distributions very precisely.  However,
+it is still likely limited by the number of bits one can practically run
+rgb_bitdist on, which appears to be somewhere in the ballpark of 12 to
+16.  Nevertheless, it also allows one to sample and discover at least a
+large class of problems across a much larger number of bits.
+
+Note well that in principle ALL the tests in dieharder could run on
+random numbers (uints or whatever) that are generated by using a
+patterned, lagged selection of bits such as this.  We can therefore
+accomplish a huge amount of flexibility if we build still more routines
+into bits.c, e.g.
+
+ uint get_rand_pattern((void)*result,int rsize,int *pattern,gsl_rng *gsl_rng){}
+
+where pattern is a variable length vector such as:
+
+ pattern[0] = 2;
+ pattern[1] = -8;
+ pattern[2] = 2;
+ pattern[3] = -8;
+ pattern[4] = 2;
+ pattern[5] = -8;
+ pattern[6] = 2;
+ pattern[7] = 0;
+
+which can be parsed to build an arbitrary sized return very easily.
+Another routine might use pattern and a varying offset to generate the
+ten distinct samplings of the bitstream that use one or more of the
+skipped bits, or even the full 32 corresponding to all overlapping
+samples with an offset that runs from 0 to 31, pulled either from
+primary bitstream or from a large cyclic buffer.
+
+I'm moderately tempted to write the Master Bit Selector in this way, but
+the damnable bit selection routines are actually a real pain in the ass
+to write and especially debug, so I think I'll start with
+get_rand_pattern (an obvious generalization of get_rand_bits()) and go
+from there.
+
+Then the entire decision on what to run and test is on the calling
+program.  If I make int *pattern a global variable that can be
+allocated, set, used, and freed by the caller before calling any test
+and use only get_rand_pattern() to get ints for testing, ALL tests can
+be run on selected patterns.  Dieharder can then sweep over patterns and
+really test the hell out of rngs...
+
+There is a second kind of test that we must implement -- one that I'm
+very well qualified to write on the basis of published research.  The
+CLT is a very powerful thing.  It predicts BOTH the mean AND the
+variance of any normal sampling process (and probably higher order
+moments as well -- there should be a series of cumulants, really, that
+describe the distribution of means).
+
+This gives us the ability to write a very subtle and sensitive test for
+global autocorrelation over arbitrary internal scales.  This is a
+research question (for me, anyway) but it seems that if a system has
+internal correlations that prevent samples from being truly iid, this
+will show up as a variance that does not scale correctly with the number
+of samples.  By comparing the VARIANCES, not the means, one should be
+able to directly observe that a statistic has e.g. fewer samples in it
+than you think that it does because of correlations between samples,
+even correlations over a very long time scale.  
+
+A classic example is a sample stream with true periodicity -- you think
+that you've accumulated M samples with a variance that scales like
+1/sqrt{M} but really you've gotten the same P samples (each with
+variance that scales like 1/sqrt{P}).  The observed variance is
+therefore going to be much smaller than the expected variance for M
+samples, off by a factor of sqrt{M/P}.  Similar considerations hold for
+e.g. overlapping bit pattern selection where there is an
+"autocorrelation time" associated with the overlap.
+
+Here we might have a string like:
+
+ 11010111010101000101010...
+
+generating:
+
+ 11 01 01 11 01 01 01 00 01 01 01 0...
+
+and
+
+ .1 10 10 11 10 10 10 10 00 10 10 10...
+
+EACH of these strings can be tested with e.g. rgb_bitdist to see if the
+patterns are correctly distributed to yield a p-value.  If the generator
+passes two bit tests independent of the offset, the distribution of p
+will of course be correct for either sequence.  What of the "mixed"
+(interleaved) sequence:
+
+  11    01    01    11    01    01    01 ...
+
++    10    10    11    10    10    10    10 ...
+
+= 11 10 01 10 01 11 11 10 01 10 01 10 01 10 ... ?
+
+Well, it is pretty much guaranteed to have the right number of 00's,
+01's, 10's and 11's overall.  However, we can make an even stronger
+statement.  Suppose that we know that the original bit sequence passes
+the >>3<<-tuple rgb_bitdist test.  Then in fact we know that it has the
+right mean distribution of 000 001 010 011 100 101 110 111's.  In that
+case as we parse these combinations into the two overlapping duplets, we
+get:
+ 
+ P(000) = 1/8 => 00 00
+ P(001) = 1/8 => 00 01
+ P(010) = 1/8 => 01 10
+ P(011) = 1/8 => 01 11
+ P(100) = 1/8 => 10 00
+ P(101) = 1/8 => 10 01
+ P(110) = 1/8 => 11 10
+ P(111) = 1/8 => 11 11
+
+If we see 00, then (as we will with probability 1/4, inherited from the
+triplet probability table and validated by the passing of rgb_bitdist
+for the two independent bit sequences separately), we know that it must
+be followed by 00 or 01.  
+
+Suppose there were a surplus of 00s relative to 01s.  Then there would
+be more than 1/8 000s and less than 1/8 001s and we could not have
+passed the rgb_bitdist test for triplets.  This idea is obviously
+extensible for arbitrary ntuplets -- if one passes rgb_bitdist without
+overlap for n bits, one is guaranteed to pass with overlap at n-1 bits.
+
+Consequently there is really >>no point<< in running rgb_bitdist on a
+series of ntuplets.  If one observes the correct (binomial) probability
+distribution for the duplets 00, 01, 10, 11 over many samples, then one
+cannot help but have the correct probability distribution for the monets
+0 and 1 separately.  If one has the the correct binomial distribution of
+triplets, one cannot help but have the right distribution of duplets and
+monets, and so on, whether or not overlapping samples are used.
+
+This last example is an excellent case of conditional probability at
+work.  If we shift our sample window by one bit from a window that
+yields a valid distribution, {\em all that matters} is whether or not
+that additional bit is a 0 or 1 with the correct frequency.  There are
+always only {\em two} possibilities:
+
+  bbbb0 -> bbbb and bbb0
+  bbbb1 -> bbbb and bbb1
+
+If that bit is random with probability 0.5, then we should be able to
+use Bayes theorem to generate very simple proofs that everything stated
+above is correct.
+
+==================================================================
+01/29/07
+
+OK, just finished repackaging dieharder to use subpackages and a single
+source tree to build both libraries and the dieharder ui.  This will
+TREMENDOUSLY simplify both the semiseparate maintenance of the R UI as
+an RPM and the soon-come GUI built with Gtk/glade or the like.  In fact,
+any number of UI's can be added to this source tree, including ones
+under separate subversion trees.  I rather expect that even if I
+maintain a separate svn tree and a standalone RPM build/specfile for
+gdieharder, I'll probably keep the gdieharder development node here for
+convenience if nothing else.  It's either that or develop only on
+platforms where libdieharder is stable and installed.
+
+I've added a directory point for R, there is already a separate
+directory point for the manual (which will eventually get its own RPM).
+
+I'm wondering if I need to create a mailman list for dieharder.
+Probably really close.  Anyway, on to future plans, which is one thing
+the NOTES are for.  I still have several new RNGs to add, several tests
+to debug or re-engineer (they consistently fail "good" generators,
+suggesting "bad" tests).  I need to create a "standard dataset" and run
+the old fortran diehard against it to create a test reference, then see
+if I can reproduce the reference test values (within spitting distance)
+using the dieharder replacements.  That would help me resolve this
+question -- if I get the same numbers on a reference dataset then the
+new code is "good", so if that same code fails "good" rngs, the old code
+is probably bad.  Or something like that.
+
+I also need to add a still further improved reporting facility,
+especially for e.g the bitlevel tests.  One doesn't ONLY want to know if
+the rgb_bitdist 1's test fails, one wants to know if the sample had an
+excess of 0's or 1's, and by how many sigma, per run, in a table.
+Ditto the per run distribution of 00 01 10 11 in the 2's test, 000 001
+010... for the 3's test, at least out to maybe 8 bits (a table with 256
+entries is BARELY displayable, at least on a pixelized panel of lights
+display in a GUI).  Improved visualization is also important, for
+example to see hyperplane development for certain generators.
+
+I still need to work on the bits.c routines and at the very least get to
+where I can pack uints with arbitrary blocks of bits and holes.  This
+will permit me to work on fourier and lagged sample tests, ones that
+look for bitlevel correlations in samples pulled with (say) 23-bit holes
+between the end of one uint bitset and the next in an imagined
+continuous stream of random bits.
+
+I need to upload the new 2.x release to the website, and probably clean
+up the website.  Sigh.  LOTS to do, and so little time and
+competition...
+
+==================================================================
+02/27/07
+
+dieharder now builds with the usual ./configure;make sequence.  Gnu
+Build Tools Suck.  However, they are standard and expected, if
+infinitely painful.  Hopefully this will facilitate the debian build,
+though, and make rpm still works.
+
+May have fixed a minor bug in operm5, where it has been claimed that the
+correct number of degrees of freedom is 5!-4! = 96, not 99.  This makes
+at least some sense, so I implemented the change, but operm5 has MORE
+errors in either code or data, and I don't have time or knowledge to fix
+them...
+
+On to the next step -- putting the code on a truly public svn repo ---
+code.google.com.  This will take one little bit of work, as the svnsync
+didn't work the first times I tried it...
+
+==========================================================================
+03/09/08
+
+OK, so GBT don't suck, they are merely difficult.  I'm about to release
+a fairly major set of fixes and a new test or three, and one of the main
+focuses of this round of changes has been to make libtool and the GBT
+truly happy and dieharder perhaps more portable as a consequence.  This
+is still a process not without pain -- documentation is mediocre,
+undocumented features abound, rpath evil must be hand-repaired in order
+to facilitate rpm builds -- but it does look as if the GBT CAN be used
+to run major projects and automate a lot of the same stuff my original
+build automated, once you figure out how.
+
+As far as tests go, I've implemented a number of fixes and "new" tests
+since the last time around, and am about to get truly serious about a
+certain class of tests.
+
+The most important new test is sts_serial.  IMO this may prove to be the
+most useful of all rng tests save -- perhaps -- rgb_bitdist, which tests
+very much the same thing a very slightly different way.
+
+The most important planned addition is a "shuffler" that can be used to
+access the rng stream with lag, with or without loss.  In particular,
+I'd like to be able to generate a stream to sample with an adjustable
+lag in between samples, at the bit level, to be able to detect weakly
+correlated cycles in the bitstream.
+
+Most of the tests in dieharder are really only strongly sensitive to
+what I might call "first order" departure from randomness, first order
+decorrelation.  They measure statistics generated from sampling the rng
+stream in order, with each sample presumed to be independent.  They do
+not, for the most part (with certain exceptions, that is) detect whether
+any given rand is correlated with the rand that immediate follows it, or
+the one two rands downstream, or the one fifty rands downstream -- those
+are "second order" correlations.  
+
+Amazingly, there seems to be no test that simply and directly evaluates
+
+  A(d) = <(1.0-2.0*x_i) *(1.0-2.0*x_{i+d})>,
+
+the average autocorrelation of the floating point random number stream
+shifted so that the expected autocorrelation is zero for all
+displacements d.  However, this test really needs to be run in a variety
+of ways, as one can imagine bitlevel correlations that will show up
+strongly on bitlevel tests but weakly on floating point tests.
+
+Naturally, one can imagine looking at higher order moments as well.
+
+To facilitate tests of all of these sorts, I want to wrap the gsl
+generator in such a way that one can request:
+
+  n bits, skip m bits (throwing them away), to facilitate "direct"
+  searches for 
+
+and returning the n bits, or
+
+  a uint composed of the upper n bits, skip m uints, lower 32-n bits or
+  vice versa.  Nothing is thrown away.  
+
+Or
+
+  a bit stream returnable as n-bit window or uints made up of any
+  reasonable shuffling or displacements of components, with or without
+  interleaving (lossless) or loss.
+
+With such an interface, one could use ALL of the dieharder tests to
+check for the (mostly) first order randomness of streams generated from
+various interleaved displacements of any generator.  They would then all
+"magically" become second order (or higher order) tests!
+
+   rgb
+
+==========================================================================
+09/04/08
+
+I've made many changes and bugfixes -- one of which is to fix the
+run_test() routines so that they create, run, and destroy the tests, one
+at a time (which suggests that it may well be time to alter the way
+results are passed back or futher encapsulate tests to simplify
+dieharder's logic, even at the expense of having tests that "function
+like diehard's" did.  As in some diehard tests generate two statistics
+in one run; it may be time to separate them into two tests and run them
+independently with their own names and their own pvalue returns, even at
+the expense of efficiency.
+
+However, I'm writing to post this as my current design goal for -T(able)
+output with an optional flat to control just what is included in the
+table and header.  Here's the proposed "standard" table output:
+
+#========================================================================
+# Generator Tested: mt19937
+# Test Name              | n-bits | p-samples | t-samples | p-value(s)
+#========================================================================
+RGB Bit Distribution Test|      1 |       100 |    100000 | 0.55579848
+RGB Bit Distribution Test|      2 |       100 |    100000 | 0.69322169
+...
+
+Each field's presence or absence will be able to be turned on or off by
+means of a flag bit.  The presence of the header, and whether or not it
+contains e.g. the rng descriptors (name and/or filename) will be flag
+bit controlled as well, with -q basically setting the bits to suppress
+headers altogether.
+
+In this way, with suitable flag settings, one can "just" output pvalues,
+can output names and pvalues, can output just names and assessments,
+etc.
+
+I'm guessing that the following are all fields we want to be able to
+control with their own flag bits:
+
+THEADER
+TGEN
+TNAME
+TSNAME
+TNBITS
+TPSAMPLES
+TTSAMPLES
+TPVALUE
+TASSESSMENT
+
+Anyway, let's do it...
+
+9/19/08
+
+That worked really well.  However, I now have to handle some way of
+managing the tests that take ntuple as an argument for e.g. lag or
+ntuple size.  I >>think<< that the only correct way to manage this will
+be to move the loops to the run_all_tests() function, since that is ONLY
+a CLI feature, and call the execute_test within it as per usual.  That
+way run_test WITH a setting of ntuple will be entirely API driven and
+consistent.
+
+The other thing(s) I have to implement include:  Some sort of CLI flags
+or control variables to tell dieharder when and how to set a random
+number seed.  We have several possible seed strategies, you see:
+
+  a) Dieharder reseeds from /dev/random or clock one time at the time
+the rng is initialized, and then left alone (CLI) until the rng is freed
+(UI) or the program is ended (CLI).  The Rdh UI could in principle
+permit the seed to be interactively reset by the user at any time;
+that's up to Dirk.
+
+When dieharder outputs results, one of the output flags will indicate
+whether or not the rng seed should appear.  In general it probably
+should, but only the one seed randomly picked at the beginning.
+
+  b) Dieharder uses a seed entered by the user one time at the
+beginning.  This should clearly be able to perfectly reproduce any
+identical sequence of tests (including dieharder -a results) that began
+with just that seed, so this specific thing should be a possibility.
+
+  c) Dieharder uses a seed entered by the user at the beginning to set
+the seed at the beginning of each test.  This usage is primarily for
+validation purposes, since doing this makes results from "series" tests
+that run closely related tests on various ntuples or lags not
+independent.  For example, rgb_bitstream for an ntuple of 4 is obviously
+going to be strongly correlated with the results for an ntuple of 8
+STARTED FROM THE SAME SEED; the two half-bytes that make up each 8 were
+previously tested and the results of that test will clearly affect the
+results for 8.  The same problem exists for the closely related
+sts_serial, but it keeps track and attempts to correct for it.
+
+Still, entering a seed and having it used to reseed EACH test run means
+that dieharder -a -S 1 can EASILY generate an entire set of
+reference/validation results that can then be generated and compared one
+at a time in Rdh (which doesn't "do" a -a test).  If we seeded only at
+the beginning, any tiny variation in e.g. the number of rands called or
+test order would produce different downstream numbers and a failure to
+validate.
+
+Obviously this mode should not be used for testing, as one expects
+"failures" to cluster in linked tests because of the aforementioned
+non-independent of the results.  If 4 bit numbers lead to a "weak"
+pvalue, testing 8 bit numbers should also lead to a weak pvalue and/or
+vice versa.
+
+Our current difficulty is that we have THREE possibilities but only TWO
+CLI control states -- with -S whatever or without.  Without is fine --
+that can and should select random seeding.  With, however, requires a
+second CLI switch option to select between the two seeding strategies.
+
+There really isn't anything wrong with providing the fourth combination
+of two separate toggles as follows:
+
+
+   Strategy \ Seed|            0         |           1
+------------------------------------------------------------------
+         beginning|  random at beginning | from Seed at beginning
+         per test |  random per test     | from Seed per test
+
+SO, it looks like we need to introduce TWO variables.  -s sets the
+strategy.  -S sets the seed to the selected value, or left alone at 0,
+sets seed to a "random" choice.
+
+This works because -s is liberated now that we don't need to select sts
+tests that way.  So is -r and -d.  We should probably keep -d and use it
+for -d(ieharder test name/test number) the same way -g allows or will
+allow one to pick either one.  -r, well, we'll have to think about what
+to do with it, eventually.
+
+This is enough for now.

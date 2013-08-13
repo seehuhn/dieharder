@@ -1,0 +1,24 @@
+\BOOKMARK [0][-]{chapter.1}{Introduction}{}
+\BOOKMARK [0][-]{chapter.2}{Testing Random Number Generators}{}
+\BOOKMARK [0][-]{chapter.3}{Evaluating p-values}{}
+\BOOKMARK [1][-]{section.3.1}{Xtest -- A Single Expected Value}{chapter.3}
+\BOOKMARK [1][-]{section.3.2}{Vtest -- A Vector of Expected Values}{chapter.3}
+\BOOKMARK [2][-]{subsection.3.2.1}{Kolmogorov-Smirnov Test}{section.3.2}
+\BOOKMARK [1][-]{section.3.3}{The Test Histogram}{chapter.3}
+\BOOKMARK [0][-]{chapter.4}{Diehard}{}
+\BOOKMARK [1][-]{section.4.1}{The Original Diehard}{chapter.4}
+\BOOKMARK [1][-]{section.4.2}{The Dieharder Modifications}{chapter.4}
+\BOOKMARK [0][-]{chapter.5}{Dieharder's Modular Test Structure}{}
+\BOOKMARK [0][-]{chapter.6}{Dieharder Extensions}{}
+\BOOKMARK [1][-]{section.6.1}{STS Tests}{chapter.6}
+\BOOKMARK [1][-]{section.6.2}{New Tests}{chapter.6}
+\BOOKMARK [1][-]{section.6.3}{Future \(Proposed or Planned\) Tests}{chapter.6}
+\BOOKMARK [0][-]{chapter.7}{Results for Selected Generators}{}
+\BOOKMARK [1][-]{subsection.7.0.1}{A Good Generator: mt19937\1371999}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.0.2}{Comments}{subsection.7.0.1}
+\BOOKMARK [1][-]{section.7.1}{A Bad Generator: randu}{chapter.7}
+\BOOKMARK [1][-]{section.7.2}{An Ugly Generator: slatec}{chapter.7}
+\BOOKMARK [0][-]{chapter.8}{Conclusions}{}
+\BOOKMARK [0][-]{appendix.A}{License Terms}{}
+\BOOKMARK [1][-]{section.A.1}{General Terms}{appendix.A}
+\BOOKMARK [1][-]{section.A.2}{OPEN PUBLICATION LICENSE Draft v0.4, 8 June 1999}{appendix.A}

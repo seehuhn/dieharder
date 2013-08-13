@@ -1,0 +1,187 @@
+%define _unpackaged_files_terminate_build 0
+%define __arch_install_post /usr/lib/rpm/check-rpaths /usr/lib/rpm/check-buildroot
+
+
+Name: dieharder-src
+Summary: Dieharder is a random number generator tester and timer
+%define version @VERSION@
+%define release @RELEASE@
+Version: %{version}
+Release: %{release}
+License: Open Source (GPL)
+Group: Development/Tools
+Source: dieharder-%{version}.tgz
+URL: http://www.phy.duke.edu/~rgb/General/dieharder.php
+Requires: gsl
+BuildRequires: chrpath gsl-devel
+
+# Mandatory path for Fedora Core builds
+Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+%description 
+
+########################################################################
+# LIBRARY: This is the basic dieharder library
+########################################################################
+%package -n libdieharder
+Summary: A library of random number generator tests and timing routines
+Group: Development/Tools
+Provides: libdieharder.so
+%description -n libdieharder
+
+libdieharder is the core library of dieharder and friends, designed to
+be "the last suite of random number testers you'll ever wear".  It can
+test any of its many prebuilt and library linked generators (basically
+all of those in the Gnu Scientific Library plus a number of others from
+various sources) or a potentially random dataset in either an
+ascii-formatted or raw (presumed 32 bit uint) binary file.  It is fairly
+straightforward to wrap new software generators for testing, or to add
+hardware generators that have a software interface for testing, and the
+file input method permits pretty much any software or hardware RNG to be
+tested using libdieharder calls.
+
+libdieharder has as a design goal the full encapsulation in an
+extensible shell of basically all the random number tests I have been
+able to find -- George Marsaglia's "diehard" battery of tests, STS
+(v1.6) from NIST FIPS, Knuth's tests, and more.  Check in the man
+page(s) or /usr/share/dieharder*/dieharder.pdf for documentation.
+
+########################################################################
+# This is dieharder itself, the tty UI
+########################################################################
+%package -n dieharder
+Summary: dieharder is a random number generator tester and timer.
+Group: Development/Tools
+Requires: libdieharder = %{version}
+
+%description -n dieharder
+
+dieharder is a fairly involved random number/uniform deviate generator
+tester.  It can either test any of its many prebuilt and linked
+generators (basically all of those in the Gnu Scientific Library plus
+others I've added) or a potentially random dataset in a file.  With file
+input, it can manage either a variety of ascii-formatted input or a raw
+binary bitstring.  It is thus suitable for use in testing both software
+RNG's and hardware RNG's.
+
+dieharder does all of its work with a standalone, extensible library,
+libdieharder.  Its tests can therefore be integrated into other
+programs, subject to the requirements of the GPL (NOT, note, the LGPL as
+it uses the GSL which is full GSL, viral).
+
+dieharder encapsulates (or will eventually encapsulate) basically all
+the random number tests I have been able to find -- George Marsaglia's
+"diehard" battery of tests, STS (v1.5) from NIST FIPS, Knuth's tests,
+and more.  Check in the man page or /usr/share documentation for a
+complete list of the tests and references where possible.  It is
+intended to be the "swiss army knife of random number testers", or "the
+last suite of random number testers you'll ever wear".
+
+########################################################################
+# The main section common to all builds.
+########################################################################
+%prep
+%setup -q -n dieharder-%{version}
+./autogen.sh
+
+
+%configure
+sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
+sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
+
+%build
+./configure --prefix=$RPM_BUILD_ROOT%{_prefix} --libdir=$RPM_BUILD_ROOT%{_libdir}
+make
+
+# Note that multipackage sources with libraries are happier with
+# their own local buildroot to facilitate development without a
+# full install.
+%install
+rm -rf $RPM_BUILD_ROOT
+make prefix=$RPM_BUILD_ROOT%{_prefix} install
+chrpath --delete $RPM_BUILD_ROOT%{_bindir}/dieharder
+rm -rf $RPM_BUILD_ROOT%{_libdir}/libdieharder.a
+rm -rf $RPM_BUILD_ROOT%{_libdir}/libdieharder.la
+rm -rf $RPM_BUILD_ROOT%{_libdir}/libdieharder.so.?
+
+# make prefix=$RPM_BUILD_ROOT%{_prefix} bindir=$RPM_BUILD_ROOT%{_bindir} \
+#     mandir=$RPM_BUILD_ROOT%{_mandir} libdir=$RPM_BUILD_ROOT%{_libdir} \
+#     localstatedir=$RPM_BUILD_ROOT%{_localstatedir} \
+#     datadir=$RPM_BUILD_ROOT%{_datadir} \
+#     includedir=$RPM_BUILD_ROOT%{_includedir} \
+#     sysconfdir=$RPM_BUILD_ROOT%{_sysconfdir} install
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+########################################################################
+# Files in libdieharder
+########################################################################
+%files -n libdieharder
+
+%defattr(-,root,root)
+
+%dir %{_libdir}
+
+# The libdieharder library.  We ONLY install the primary
+# versioned library -- ldconfig and ln are used to finish off
+# later.
+# %{_libdir}/libdieharder.so.%{version}
+%{_libdir}/libdieharder.so.@DIEHARDER_LIB_VERSION@
+%{_libdir}/libdieharder.so
+
+# The libdieharder include files are under here
+%attr(644,root,root) /usr/include/dieharder
+
+# The libdieharder man page
+%attr(644,root,root) /usr/share/man/man3/libdieharder.3.gz
+
+# These are all pretty much standard.
+%doc ChangeLog Copyright README COPYING NOTES dieharder.html
+
+########################################################################
+# Files installed with the dieharder tty UI
+########################################################################
+%files -n dieharder
+%defattr(-,root,root)
+
+# The dieharder binary
+%attr(755,root,root) /usr/bin/dieharder
+
+# This is supposed to be installed by/for the GBT?
+%attr(755,root,root) /usr/bin/dieharder-config
+
+# The dieharder man page
+%attr(644,root,root) /usr/share/man/man1/dieharder.1.gz
+
+# These are all pretty much standard.
+%doc ChangeLog Copyright README COPYING NOTES dieharder.html
+
+########################################################################
+# Command to execute post install or uninstall of libdieharder
+########################################################################
+%post -n libdieharder
+
+if [ -d /usr/lib64 ]
+then
+  cd /usr/lib64
+  # ln -sf libdieharder.so.%{version} libdieharder.so
+  ldconfig -n .
+else
+  cd /usr/lib
+  # ln -sf libdieharder.so.%{version} libdieharder.so
+  ldconfig -n .
+fi
+
+%postun -n libdieharder
+
+if [ -d /usr/lib64 ]
+then
+  rm -f /usr/lib64/libdieharder.so
+  rm -f /usr/lib64/libdieharder.so.%{version}
+  ldconfig
+else
+  rm -f /usr/lib/libdieharder.so
+  rm -f /usr/lib/libdieharder.so.%{version}
+  ldconfig
+fi
