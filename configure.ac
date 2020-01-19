@@ -75,7 +75,6 @@ AC_PROG_LIBTOOL
 # Check compiler features
 #==================================================================
 AC_TYPE_SIZE_T
-# AC_C_CONST
 AC_C_VOLATILE
 AC_C_INLINE
 
