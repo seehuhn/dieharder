@@ -122,40 +122,38 @@ ca_get_double (void *vstate)
 static void
 ca_set (void *vstate, unsigned long int s) {
 
- /* Initialize automaton using specified seed. */
- ca_state_t *state __attribute__((unused)) = (ca_state_t *) vstate;
+  /* Initialize automaton using specified seed. */
+  ca_state_t *state __attribute__((unused)) = (ca_state_t *) vstate;
 
+  int i;
 
- int i;
+  /* clear cells */
+  for (i = 0; i < CA_WIDTH - 1; i++)
+    init_config[i] = 0;
 
- /* clear cells */
- for (i = 0; i < CA_WIDTH - 1; i++) 
+  /* set initial cell states using seed */
+  init_config[CA_WIDTH - 1] = (unsigned char)(seed);
+  init_config[CA_WIDTH - 2] = (unsigned char)(seed << 8);
+  init_config[CA_WIDTH - 3] = (unsigned char)(seed << 16);
+  init_config[CA_WIDTH - 4] = (unsigned char)(seed << 24);
+  if (seed != 0xFFFFFFFF)
+    seed++;
+  for (i = 0; i < CA_WIDTH - 4; i++) 
+    init_config[i] = (unsigned char) ( seed >> (i % 32) );
 
-   init_config[i] = 0;
+  /* define addresses of first_cell and last_cell */
+  first_cell = init_config;
+  last_cell = init_config + CA_WIDTH - 1;
 
-   /* set initial cell states using seed */
-   init_config[CA_WIDTH - 1] = (unsigned char)(seed);
-   init_config[CA_WIDTH - 2] = (unsigned char)(seed << 8);
-   init_config[CA_WIDTH - 3] = (unsigned char)(seed << 16);
-   init_config[CA_WIDTH - 4] = (unsigned char)(seed << 24);
-   if (seed != 0xFFFFFFFF)
-      seed++;
-   for (i = 0; i < CA_WIDTH - 4; i++) 
-     init_config[i] = (unsigned char) ( seed >> (i % 32) );
+  /*
+   * set address of current cell to last_cell (automaton is updated right
+   * to left)
+   */
+  cell_d = last_cell;
 
-   /* define addresses of first_cell and last_cell */
-   first_cell = init_config;
-   last_cell = init_config + CA_WIDTH - 1;
-
-   /*
-    * set address of current cell to last_cell (automaton is updated right
-    * to left)
-    */
-   cell_d = last_cell;
-
-   /* evolve automaton before returning integers */
-   for (i = 0 ; i < ( (CA_WIDTH * CA_WIDTH) / 4.0); i++) 
-      ca_get(vstate);
+  /* evolve automaton before returning integers */
+  for (i = 0 ; i < ( (CA_WIDTH * CA_WIDTH) / 4.0); i++) 
+    ca_get(vstate);
 
 }
 
