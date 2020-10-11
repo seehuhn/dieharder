@@ -10,7 +10,8 @@ case `uname` in
 esac
 $LIBTOOLIZE --copy
 
-autoheader
-aclocal
+#autoheader
+#aclocal
+autoreconf -fi
 automake --add-missing --copy --gnu
 autoconf

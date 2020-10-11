@@ -5,6 +5,7 @@ SUBDIRS = libdieharder dieharder include manual
 
 EXTRA_DIST = autogen.sh Copyright dieharder.abs
 
+ACLOCAL_AMFLAGS = -I m4 
 #========================================================================
 # This is the toplevel Makefile for the dieharder project.  It has
 # some specialized targets:

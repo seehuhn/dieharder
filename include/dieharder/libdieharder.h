@@ -16,11 +16,17 @@
 #include <string.h>
 #include <sys/time.h>
 
-/* This turns on uint macro in c99 */
+/* This turns on uint macro in c99 (but not MINGW32, see below) */
 #define __USE_MISC 1
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#ifdef __MINGW32__
+#ifndef Types_H
+#define Types_H
+typedef unsigned int            uint;
+#endif
+#endif
 
 /* This turns on M_PI in math.h */
 #define __USE_BSD 1
@@ -64,6 +70,11 @@
 #define PAGE    4096
 #define M       1048576
 #define M_2     2097152
+
+// cygwin newlib
+#ifndef M_PI
+  #define M_PI 3.14159265358979323846
+#endif
 /*
  * For reasons unknown and unknowable, free() doesn't null the pointer
  * it frees (possibly because it is called by value!)  Nor does it return
