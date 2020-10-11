@@ -24,6 +24,7 @@ A4PDF = $(SOURCE:.tex=.a4.pdf)
 HTMLDIR = $(SOURCE:.tex=)
 
 # Build targets (from rules)
+if HAVE_INSRCDIR
 all:	$(PDF)
 ps-local:  $(DVI) $(PS)
 pdf-local: $(DVI) $(PDF)
@@ -31,6 +32,7 @@ a4ps:	$(DVI) $(A4PS)
 a4pdf:	$(DVI) $(A4PS) $(A4PDF)
 tar:	$(TAR)
 tgz:	$(TGZ)
+endif
 
 # Clean up all the junk build files and output formats to save space.
 clean-local:

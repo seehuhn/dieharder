@@ -91,6 +91,7 @@ AC_SUBST(dieharder_CFLAGS)
 AC_SUBST(libdieharder_lo_CFLAGS)
 AC_SUBST(DIEHARDER_LIBS)
 AC_SUBST(ACLOCAL_AMFLAGS)
+AM_CONDITIONAL([HAVE_INSRCDIR], [test x"$srcdir" = x"."])
 
 #==================================================================
 # Checks for libraries, and headers.  Test for dependency libraries
