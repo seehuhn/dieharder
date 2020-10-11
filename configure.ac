@@ -9,7 +9,7 @@ AC_PREREQ(2.59)
 # Be sure to set DIEHARDER_LT_VERSION below at the same time
 # you change this:
 #==================================================================
-AC_INIT([dieharder], [3.31.1])
+AC_INIT([dieharder], [3.31.2])
 
 AM_INIT_AUTOMAKE([-Wall])
 AC_CONFIG_SRCDIR([dieharder.abs])
@@ -34,9 +34,9 @@ AC_CONFIG_MACRO_DIR([m4])
 AM_PROG_AR
 LT_INIT
 AC_SUBST([LIBTOOL_DEPS])
-DIEHARDER_LT_VERSION="3:31:1"
+DIEHARDER_LT_VERSION="3:31:2"
 AC_SUBST(DIEHARDER_LT_VERSION)
-DIEHARDER_LIB_VERSION=3.31.1
+DIEHARDER_LIB_VERSION=3.31.2
 AC_SUBST(DIEHARDER_LIB_VERSION)
 
 case "$VERSION" in

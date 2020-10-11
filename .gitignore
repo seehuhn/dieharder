@@ -17,6 +17,7 @@ config.h
 dieharder-config
 dieharder.html
 dieharder.spec
+dieharder.pc
 dieharder/.deps/
 dieharder/.libs/
 dieharder/dieharder
@@ -192,3 +193,6 @@ manual/dieharder.ps
 manual/dieharder.toc
 manual/macros.tex
 stamp-h1
+/.build
+/.build-*
+/.install

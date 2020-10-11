@@ -69,15 +69,15 @@ all: $(LIBTIME) $(PROGTIME) $(INCTIME)
 # lower level dependencies.  I'm leaving it in for the moment just
 # to have a default target at the toplevel that CAN be used to test.
 $(LIBTIME):
-	(cd $(LIBRARY); \
+	+(cd $(LIBRARY); \
 	make)
 
 $(INCTIME):
-	(cd include; \
+	+(cd include; \
 	make)
 
 $(PROGTIME):
-	(cd $(PROGRAM); \
+	+(cd $(PROGRAM); \
 	make)
 
 $(ABS): Makefile
