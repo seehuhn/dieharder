@@ -19,8 +19,8 @@ man3_MANS = libdieharder.3
 # Library definitions
 lib_LTLIBRARIES = libdieharder.la
 libdieharder_la_LIBADD = -lgsl -lgslcblas -lm
-libdieharder_la_LDFLAGS = -version-number @DIEHARDER_LT_VERSION@
-libdieharder_la_CFLAGS = -std=c99 -Wall -pedantic
+libdieharder_la_LDFLAGS = -no-undefined -version-number @DIEHARDER_LT_VERSION@
+libdieharder_la_CFLAGS = -std=gnu99 -Wall -pedantic
 
 # Sources
 # The shell script is the easy way to do this, by far.  But it may not

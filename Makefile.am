@@ -225,3 +225,8 @@ rdhprep:
 # This has to be run only as root, sorry.
 rdh:	$(RDHPKG)
 	R CMD INSTALL $(RDHPKG)
+
+doc_DATA = dieharder.html
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = $(PACKAGE).pc

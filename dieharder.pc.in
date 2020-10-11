@@ -1,0 +1,5 @@
+Name: dieharder
+Description: Random Number Test Suite
+Version: @VERSION@
+Libs: -L@libdir@ -ldieharder
+Cflags: -I@includedir@
