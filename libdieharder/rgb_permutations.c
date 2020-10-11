@@ -113,7 +113,7 @@ int rgb_permutations(Test **test,int irun)
 
    MYDEBUG(D_RGB_PERMUTATIONS){
      for(i=0;i<k;i++) {
-       printf("# rgb_permutations: ps[%u] = %lu\n",i,ps[i]);
+       printf("# rgb_permutations: ps[%u] = %lu\n",i,(unsigned long)ps[i]);
      }
    }
 

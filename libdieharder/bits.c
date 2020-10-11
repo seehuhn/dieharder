@@ -312,7 +312,7 @@ int get_int_bit(unsigned int i, unsigned int n)
   * Note
   */
  if(n < 0 || n > 8*sizeof(unsigned int)){
-   fprintf(stderr,"Error: bit offset %u exceeds length %lu of uint.\n",n,8*sizeof(unsigned int));
+   fprintf(stderr,"Error: bit offset %u exceeds length %lu of uint.\n",n,(unsigned long)(8*sizeof(unsigned int)));
    exit(0);
  }
 
@@ -1172,7 +1172,8 @@ void get_rand_bits(void *result,unsigned int rsize,unsigned int nbits,gsl_rng *g
  output = (char *)&bits_output[BRBUF]-rsize;
  resultp = (char *)result;
  MYDEBUG(D_BITS) {
-   printf("rsize = %d  output address = %p result address = %p\n",rsize,output,resultp);
+   printf("rsize = %d  output address = %p result address = %p\n",rsize,
+          (void*)output,(void*)resultp);
  }
 
  /* copy them over characterwise */
@@ -1208,6 +1209,7 @@ void mybitadd(char *dst, int doffset, char *src, int soffset, int slen)
  unsigned int tmp;
  char *btmp;
 
+ // TODO silence -Warray-bounds or use a proper union
  btmp = (char *)(&tmp + 2);  /* we only need the last two bytes of tmp */
 
  sindex = soffset/CHAR_BIT;  /* index of first source byte */

@@ -71,7 +71,7 @@ int sts_monobit(Test **test, int irun)
   * that if -b bits is specified, size will be "more than enough".
   */
  MYDEBUG(D_STS_MONOBIT) {
-   printf("# rgb_bitdist(): Generating %lu bits in bitstring",test[0]->tsamples*sizeof(uint)*8);
+   printf("# rgb_bitdist(): Generating %lu bits in bitstring",(unsigned long)(test[0]->tsamples*sizeof(uint)*8));
  }
  ptest.x = 0;
 

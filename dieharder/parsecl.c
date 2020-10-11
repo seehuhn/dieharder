@@ -126,7 +126,8 @@ void parsecl(int argc, char **argv)
        dtest_tmp =  strtol(optarg,&endptr,10);
        /* printf("optarg = %s, dtest_tmp = %d endptr = %s\n",optarg,dtest_tmp,endptr); */
        if(strncmp(optarg,endptr,1) == 0){
-         strncpy(dtest_name,optarg,128);
+         strncpy(dtest_name,optarg,127);
+         dtest_name[127] = '\0';
        } else {
          dtest_num = dtest_tmp;
        }
@@ -135,7 +136,8 @@ void parsecl(int argc, char **argv)
        show_flags = 1;
        break;
      case 'f':
-       strncpy(filename,optarg,128);
+       strncpy(filename,optarg,127);
+       filename[127] = '\0';
        fromfile = 1;
        break;
      /*
@@ -152,7 +154,8 @@ void parsecl(int argc, char **argv)
        gen_tmp =  strtol(optarg,&endptr,10);
        /* printf("optarg = %s, dtest_tmp = %d endptr = %s\n",optarg,dtest_tmp,endptr); */
        if(strncmp(optarg,endptr,1) == 0){
-         strncpy(gnames[gvcount],optarg,128);
+         strncpy(gnames[gvcount],optarg,127);
+         gnames[gvcount][127] = '\0';
        } else {
          gnumbs[gvcount] = gen_tmp;
        }

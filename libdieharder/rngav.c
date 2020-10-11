@@ -175,7 +175,7 @@ int main_rngav( int argc, char **argv)
 
   time(&z);
 
-  printf("number of seconds: %6lu\n", (size_t)(z-a));
+  printf("number of seconds: %6lu\n", (unsigned long)(z-a));
 
   return 0;
 
