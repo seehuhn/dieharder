@@ -1,0 +1,126 @@
+version: 3.31.2.{build}
+max_jobs: 4
+image: Visual Studio 2019
+environment:
+  matrix:
+    - name: mingw64
+      MINGW: 1
+      MSYS2_ARCH: x86_64
+      MSYSTEM: MINGW64
+      ARCH: win64
+      PLATFORM: x64
+    - name: mingw32
+      MINGW: 1
+      MSYS2_ARCH: i686
+      MSYSTEM: MINGW32
+      ARCH: win32
+      PLATFORM: x86
+    - name: cygwin64
+      CYGWIN: 1
+      PLATFORM: x64
+      ARCH: cygwin64
+      ISETUP: setup-x86_64
+    - name: cygwin32
+      CYGWIN: 1
+      PLATFORM: x86
+      ARCH: cygwin32
+      ISETUP: setup-x86
+  global:
+    CYG_MIRROR: http://mirrors.kernel.org/sourceware/cygwin/
+matrix:
+  allow_failures:
+    - name: cygwin32
+clone_depth: 1
+# we tag only already tested and deployed commits
+skip_tags: true
+branches:
+  only:
+    - master
+    - /^smoke/
+    - /^win-/
+
+init:
+  - git config --global core.autocrlf input
+  # Disable popups as they hang the build as there is nobody to click on the OK button...
+  # Hanging the build is a lot less user friendly than reporting a build failure.
+  #
+  # Disable of system hard error popup
+  # See: https://msdn.microsoft.com/en-us/library/bb513638%28VS.85%29.aspx
+  - reg add "HKLM\SYSTEM\CurrentControlSet\Control\Windows" /f /v ErrorMode /d 2
+  # Disable the following popup on program failure:
+  #     |       ** <program name> has stopped working **        |
+  #     | Windows can check online for a solution to the problem|
+  #     |  - Check online for a solution and close the program  |
+  #     |  - Close the program                                  |
+  # See: https://msdn.microsoft.com/en-us/library/bb513638%28VS.85%29.aspx
+  - reg add "HKLM\Software\Microsoft\Windows\Windows Error Reporting" /f /v DontShowUI /d 1  
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+  # git bash conflicts with MinGW makefiles, esp. the space in 'Program Files'
+  - set "PATH=%PATH:C:\Program Files\Git\usr\bin;=%"
+  - if "%MINGW%"=="1" set PROCESSOR_ARCHITECTURE=%PLATFORM%
+  - if "%PLATFORM%"=="x64" set PROCESSOR_ARCHITECTURE=AMD64
+  - set P=
+  - if "%PLATFORM%"=="x64" set P=64
+  - if "%CYGWIN%"=="1" set CYG_ROOT=c:\cygwin%P%
+  - if "%CYGWIN%"=="1" appveyor DownloadFile http://cygwin.com/%ISETUP%.exe -FileName %CYG_ROOT%\setup.exe
+  #- set CYG_PY=python27-devel,python27-libxml2,python36-devel,python36-libxml2
+  #- if "%PLATFORM%"=="x64" set CYG_PY=python36-devel,python36-libxml2
+  - if "%CYGWIN%"=="1" %CYG_ROOT%\setup.exe -qnNdO -R "%CYG_ROOT%" -s "%CYG_MIRROR%" -l "%CYG_ROOT%\var\cache\setup" -P libgsl-devel libgsl19
+
+build_script:
+  - if "%CYGWIN%"=="1" set PATH=%CYG_ROOT%\bin;c:\Windows\system32;c:\Windows;c:\Windows\system32\Wbem
+  - if "%CYGWIN%"=="1" %CYG_ROOT%\bin\sh -lc "cygcheck -dc cygwin"
+  #- if "%CYGWIN%"=="1" if "%PLATFORM%"=="x86" set CFG_ARG=--disable-python
+  #- if "%CYGWIN%"=="1" set CFG_ARG=--enable-python=python3.6m
+  #-bash -c "rm /usr/bin/python{,2,2.7.exe}; ls -al /usr/bin/python*"
+  - if "%MINGW%"=="1" call update-msys2.bat
+  - bash -c "sh ./autogen.sh"
+  - bash -c "./configure --disable-shared || cat config.log"
+  - bash -c "make"
+
+test_script:
+  - bash -c "make check"
+  - if "%MINGW%"=="1" call appveyor-deploy.bat
+
+artifacts:
+  # nightlies
+  - path: dieharder-$(APPVEYOR_BUILD_VERSION)-win32.zip
+    name: nightly-win32
+    type: zip
+  - path: dieharder-$(APPVEYOR_BUILD_VERSION)-win64.zip
+    name: nightly-win64
+    type: zip
+  # tagged
+  - path: dieharder-$(APPVEYOR_REPO_TAG_NAME)-win32.zip
+    name: tagged-win32
+    type: zip
+  - path: dieharder-$(APPVEYOR_REPO_TAG_NAME)-win64.zip
+    name: tagged-win64
+    type: zip
+
+deploy:
+- provider: GitHub
+  tag: $(APPVEYOR_BUILD_VERSION)
+  description: 'dieharder windows nightly'
+  auth_token:
+    secure: AsIAOIgCJX0QhrUKal2V00aaB5nRWtmtFTFeDVsGnbJLeEQpv9avUp0HT1cA8bNs
+  artifact: nightly-win32,nightly-win64
+  #draft: true
+  prerelease: true
+  force_update: true
+  on:
+    branch: /(master|relprep|deploy-test)/
+- provider: GitHub
+  tag: $(APPVEYOR_REPO_TAG_NAME)
+  description: 'dieharder windows tagged'
+  auth_token:
+    secure: AsIAOIgCJX0QhrUKal2V00aaB5nRWtmtFTFeDVsGnbJLeEQpv9avUp0HT1cA8bNs
+  artifact: tagged-win32,tagged-win64
+  #draft: true
+  #force_update: true
+  on:
+    appveyor_repo_tag: true
+
+# 80GB quota
+after_deploy:
+  - del dieharder-*.zip
