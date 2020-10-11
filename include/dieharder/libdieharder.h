@@ -250,9 +250,11 @@ extern unsigned int file_input_get_rewind_cnt(gsl_rng *rng);
 extern off_t file_input_get_rtot(gsl_rng *rng);
 extern void file_input_set_rtot(gsl_rng *rng,unsigned int value);
 
+#ifndef RNG_FILE_INPUT_C
 extern char filename[K];      /* Input file name */
 extern int fromfile;		/* set true if file is used for rands */
 extern int filenumbits;	/* number of bits per integer */
+
  /*
   * If we have large files, we can have a lot of rands.  off_t is
   * automagically u_int64_t if FILE_OFFSET_BITS is 64, according to
@@ -260,6 +262,8 @@ extern int filenumbits;	/* number of bits per integer */
   */
 extern off_t filecount;	/* number of rands in file */
 extern char filetype;         /* file type */
+#endif
+
 /*
  * This struct contains the data maintained on the operation of
  * the file_input rng, and can be accessed via rng->state->whatever

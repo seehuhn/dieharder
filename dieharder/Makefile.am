@@ -24,7 +24,7 @@ EXTRA_DIST=dieharder.1
 # SRCINCLUDES = $(shell ls *.h  2>&1 | sed -e "/\/bin\/ls:/d")
 bin_PROGRAMS = dieharder
 man1_MANS = dieharder.1
-dieharder_LDADD = ../libdieharder/libdieharder.la -lgsl -lgslcblas -lm
+dieharder_LDADD = ../libdieharder/libdieharder.la -lm
 dieharder_SOURCES = \
 	add_ui_rngs.c \
 	add_ui_tests.c \
@@ -37,7 +37,6 @@ dieharder_SOURCES = \
 	output.c output.h \
 	output_rnds.c \
 	parsecl.c \
-	rdieharder.c \
 	run_all_tests.c \
 	run_test.c \
 	set_globals.c \

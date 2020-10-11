@@ -31,7 +31,9 @@ AC_DEFINE([RELEASED], [], [Description])
 #==================================================================
 # This command "should" keep libtool up to date.
 AC_CONFIG_MACRO_DIR([m4])
-AM_PROG_AR
+AC_CHECK_TOOLS([AR], [gcc-ar ar])
+AC_CHECK_TOOLS([RANLIB], [gcc-ranlib ranlib])
+AC_CHECK_TOOLS([NM], [gcc-nm nm])
 LT_INIT
 AC_SUBST([LIBTOOL_DEPS])
 DIEHARDER_LT_VERSION="3:31:2"

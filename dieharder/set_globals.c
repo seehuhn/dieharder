@@ -1,7 +1,7 @@
 /*
  * See copyright in copyright.h and the accompanying file COPYING
  */
-
+#define SET_GLOBALS_C
 #include "dieharder.h"
 
 char gnames[GVECMAX][128];
@@ -38,8 +38,8 @@ unsigned int bits;
 unsigned int diehard;
 unsigned int generator;
 
-char filename[K];
-int fromfile;
+//char filename[K];
+//int fromfile;
 
 unsigned long int seed;
 unsigned int random_max;

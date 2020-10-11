@@ -3,9 +3,8 @@
  * See copyright in copyright.h and the accompanying file COPYING
  *========================================================================
  */
-
+#define _MAIN_C
 #include "dieharder.h"
-
 
 /*
  * For Command Line Interface (CLI) dieharder, main() is just a shell for

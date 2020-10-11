@@ -13,6 +13,12 @@
 
 #include <dieharder/libdieharder.h>
 
+#ifdef _MAIN_C
+#define EXTERN
+#else
+#define EXTERN extern
+#endif
+
 /*
  * Flags and variables to control all output formatting etc.  tflag_default
  * is set in set_globals to a default to be used if -T 0 is selected.
@@ -24,8 +30,8 @@
  * blank the default because it is hard to specify a blank on the CL but
  * easy to specify the others?
  */
-unsigned int tflag,tflag_default;
-char table_separator;
+EXTERN unsigned int tflag,tflag_default;
+EXTERN char table_separator;
 #include "output.h"
 
 /*
@@ -33,21 +39,21 @@ char table_separator;
  * test number OR a test name; we have to sort that out when we
  * choose a test.
  */
-int dtest_num;
-char dtest_name[128];
-char generator_name[128];
+EXTERN int dtest_num;
+EXTERN char dtest_name[128];
+EXTERN char generator_name[128];
 
 /*
  * user_template sources are here, not in library
  */
 #include "user_template.h"
 
-double rng_avg_time_nsec,rng_rands_per_second;
-double strategy;
+EXTERN double rng_avg_time_nsec,rng_rands_per_second;
+EXTERN double strategy;
 
 #ifdef RDIEHARDER
- Test **rdh_testptr;		/* kludge: need a global to report back to R */
- Dtest *rdh_dtestptr;		/* kludge: need a global to report back to R */
+ EXTERN Test **rdh_testptr;		/* kludge: need a global to report back to R */
+ EXTERN Dtest *rdh_dtestptr;		/* kludge: need a global to report back to R */
 #endif
 
  void list_rngs();

@@ -13,6 +13,7 @@
  *========================================================================
  */
 
+#define RNG_FILE_INPUT_C
 #include <dieharder/libdieharder.h>
 
 char filename[K];

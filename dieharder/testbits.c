@@ -21,7 +21,7 @@ void testbits()
 
  unsigned int input[4],output[4];
  unsigned int tuple,off;
- int pattern[10];
+ //int pattern[10];
 
  off = get_uint_rand(rng);
  printf("\n");
@@ -32,16 +32,16 @@ void testbits()
  printf(" Result = ");
  dumpuintbits(&tuple,1);
  printf("\n");
- exit(0);
+ //exit(0);
  /*
   * Let's test some patterns
   */
- pattern[0] = 4;  /* grab 4 bits */
- pattern[1] = -8; /* skip 8 bits */
- pattern[2] = 4;  /* grab 4 more */
- pattern[3] = -12;/* skip 12 */
- pattern[4] = 3;  /* grab 3 more */
- pattern[5] = 0;
+ //pattern[0] = 4;  /* grab 4 bits */
+ //pattern[1] = -8; /* skip 8 bits */
+ //pattern[2] = 4;  /* grab 4 more */
+ //pattern[3] = -12;/* skip 12 */
+ //pattern[4] = 3;  /* grab 3 more */
+ //pattern[5] = 0;
  
 
 
