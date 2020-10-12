@@ -10,8 +10,7 @@ AC_PREREQ(2.59)
 # you change this:
 #==================================================================
 AC_INIT([dieharder], [3.31.2])
-
-AM_INIT_AUTOMAKE([-Wall])
+AM_INIT_AUTOMAKE([1.14 foreign dist-xz no-installinfo subdir-objects -Wall -Wextra])
 AC_CONFIG_SRCDIR([dieharder.abs])
 RELEASE=1
 AC_SUBST(RELEASE)

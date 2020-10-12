@@ -72,3 +72,13 @@ AM_CFLAGS = -g -O3 -Wall -Wextra
 # To build a completely static dieharder, uncomment the following line.
 # AM_LDFLAGS = -all-static
 AM_LDFLAGS =
+
+# ./dieharder$(EXEEXT) -l|grep ' -d '|grep Good|cut -c5-9
+# skip longer tests. TODO grep PASSED
+check: $(PROGRAMS)
+	for d in 0 1 2 3 4 8 9 10 11 12 13 14 15 16 \
+	         100 101 102 202 203 204 205 206 207 208 209; \
+        do \
+	  echo dieharder -d $$d ; \
+	  ./dieharder$(EXEEXT) -d $$d ; \
+	done
