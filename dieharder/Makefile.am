@@ -13,8 +13,6 @@
 # hand.
 VERSION=@VERSION@
 
-EXTRA_DIST=dieharder.1
-
 #========================================================================
 # Define all sources.  Note that this little trick will get ALL
 # the source files in the working directory, which must not be empty
@@ -24,6 +22,7 @@ EXTRA_DIST=dieharder.1
 # SRCINCLUDES = $(shell ls *.h  2>&1 | sed -e "/\/bin\/ls:/d")
 bin_PROGRAMS = dieharder
 man1_MANS = dieharder.1
+EXTRA_DIST = $(man1_MANS)
 dieharder_LDADD = ../libdieharder/libdieharder.la -lm
 dieharder_SOURCES = \
 	add_ui_rngs.c \
@@ -56,6 +55,9 @@ dieharder_SOURCES = \
 #	run_rgb_persist.c
 #	run_rgb_timing.c
 
+nodist_EXTRA_DIST = validate.sh validate_1000.sh validate.dat NOTES \
+		    README dump histograms
+
 DEFINES = -DVERSION=$(VERSION)
 
 #========================================================================
@@ -66,7 +68,7 @@ DEFINES = -DVERSION=$(VERSION)
 
 # Compile flags (use fairly standard -O3 as default)
 AM_CPPFLAGS = -I ${top_srcdir}/include $(DEFINES) -I ${includedir}
-AM_CFLAGS = -g -O3 -Wall -Wextra
+AM_CFLAGS = -g -O3 -Wall -Wextra -pedantic
 
 # Load flags (optional)
 # To build a completely static dieharder, uncomment the following line.

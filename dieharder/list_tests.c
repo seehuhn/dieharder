@@ -30,7 +30,7 @@ void list_tests()
      fprintf(stdout,"  -d %d  \t%40s",i,dh_test_types[i]->name);
      if( i == 5 || i == 6 || i == 7 ){
        fprintf(stdout,"\t%10s\n","Suspect");
-     } else if(i == 14){
+     } else if(i == 14 || i >= 900){
        fprintf(stdout,"\t%10s\n","Do Not Use");
      } else {
        fprintf(stdout,"\t%10s\n","Good");

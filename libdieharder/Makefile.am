@@ -20,7 +20,7 @@ man3_MANS = libdieharder.3
 lib_LTLIBRARIES = libdieharder.la
 libdieharder_la_LIBADD = -lgsl -lgslcblas -lm
 libdieharder_la_LDFLAGS = -no-undefined -version-number @DIEHARDER_LT_VERSION@
-libdieharder_la_CFLAGS = -std=gnu99 -Wall -Wextra -pedantic
+libdieharder_la_CFLAGS = -std=gnu99
 
 # Sources
 # The shell script is the easy way to do this, by far.  But it may not
@@ -66,6 +66,7 @@ libdieharder_la_SOURCES = \
 	rgb_kstest_test.c \
 	rgb_lagged_sums.c \
 	rgb_minimum_distance.c \
+	rgb_operm.c \
 	rgb_permutations.c \
 	rgb_persist.c \
 	rgb_timing.c \
@@ -98,8 +99,7 @@ libdieharder_la_SOURCES = \
 	version.c \
 	Xtest.c
 
-#	rgb_operm.c
-#	rgb_lmn.c
+#       rgb_lmn.c
 
 # The program/library may need to know what version it is, define
 # the VERSION macro.

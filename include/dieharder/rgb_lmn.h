@@ -1,8 +1,9 @@
 /*
  * Hopefully this is a valid default initialization of the template test.
+ * Not yet enabled.
  */
 
-int rgb_lmn(Dtest **dtest,Test **test);
+int rgb_lmn(DTest **dtest,Test **test);
 
 static Dtest lmn_test = {
   "RGB lmn Test",

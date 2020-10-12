@@ -153,6 +153,8 @@ libdieharder/libdieharder_la-rng_jenkins.lo
 libdieharder/libdieharder_la-rng_jenkins.o
 libdieharder/libdieharder_la-rng_kiss.lo
 libdieharder/libdieharder_la-rng_kiss.o
+libdieharder/libdieharder_la-rgb_operm.lo
+libdieharder/libdieharder_la-rgb_operm.o
 libdieharder/libdieharder_la-rng_stdin_input_raw.lo
 libdieharder/libdieharder_la-rng_stdin_input_raw.o
 libdieharder/libdieharder_la-rng_superkiss.lo

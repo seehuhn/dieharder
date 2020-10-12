@@ -178,12 +178,12 @@ void dieharder_test_types()
   */
  i = 900;
 
- /* ADD_TEST(&rgb_operm_dtest); */
- /* dh_num_other_tests++; */
+#if 1
+ ADD_TEST(&rgb_operm_dtest);
+ dh_num_other_tests++;
 
- /* ADD_TEST(&rgb_lmn_dtest); */
- /* dh_num_other_tests++; */
-
-
+ //ADD_TEST(&rgb_lmn_dtest);
+ //dh_num_other_tests++;
+#endif
 
 }

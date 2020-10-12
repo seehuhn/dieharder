@@ -8,7 +8,7 @@
 int rgb_operm(Test **test,int irun);
 
 static Dtest rgb_operm_dtest __attribute__((unused)) = {
-  "RGB Overlapping Permuations Test",
+  "RGB Overlapping Permutations Test",
   "rgb_operm",
   "\n\
 #========================================================================\n\
