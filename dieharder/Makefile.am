@@ -66,7 +66,7 @@ DEFINES = -DVERSION=$(VERSION)
 
 # Compile flags (use fairly standard -O3 as default)
 AM_CPPFLAGS = -I ${top_srcdir}/include $(DEFINES) -I ${includedir}
-AM_CFLAGS = -O3
+AM_CFLAGS = -g -O3 -Wall -Wextra
 
 # Load flags (optional)
 # To build a completely static dieharder, uncomment the following line.

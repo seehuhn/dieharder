@@ -25,7 +25,7 @@ void list_tests()
  fprintf(stdout,"Installed dieharder tests:\n");
  fprintf(stdout,"%12s\t%30s\t%30s\n","Test Number","Test Name","Test Reliability");
  fprintf(stdout,"===============================================================================\n");
- for(i=0;i<900;i++){
+ for(i=0;i<MAXTESTS;i++){
    if(dh_test_types[i]){
      fprintf(stdout,"  -d %d  \t%40s",i,dh_test_types[i]->name);
      if( i == 5 || i == 6 || i == 7 ){

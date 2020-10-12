@@ -125,6 +125,8 @@ void parsecl(int argc, char **argv)
         */
        dtest_tmp =  strtol(optarg,&endptr,10);
        /* printf("optarg = %s, dtest_tmp = %d endptr = %s\n",optarg,dtest_tmp,endptr); */
+       dtest_name[0] = '\0';
+       dtest_num = -1;
        if(strncmp(optarg,endptr,1) == 0){
          strncpy(dtest_name,optarg,127);
          dtest_name[127] = '\0';
@@ -136,6 +138,7 @@ void parsecl(int argc, char **argv)
        show_flags = 1;
        break;
      case 'f':
+       filename[0] = '\0';
        strncpy(filename,optarg,127);
        filename[127] = '\0';
        fromfile = 1;
@@ -153,6 +156,7 @@ void parsecl(int argc, char **argv)
      case 'g':
        gen_tmp =  strtol(optarg,&endptr,10);
        /* printf("optarg = %s, dtest_tmp = %d endptr = %s\n",optarg,dtest_tmp,endptr); */
+       gnames[gvcount][0] = '\0';
        if(strncmp(optarg,endptr,1) == 0){
          strncpy(gnames[gvcount],optarg,127);
          gnames[gvcount][127] = '\0';
@@ -160,6 +164,10 @@ void parsecl(int argc, char **argv)
          gnumbs[gvcount] = gen_tmp;
        }
        gvcount++;
+       if (gvcount >= GVECMAX){
+         Usage();
+         exit(1);
+       }
        break;
      case 'h':
        help_flag = YES;

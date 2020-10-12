@@ -28,10 +28,10 @@ void run_test()
      }
    }
  }
- if(dtest_num >= 0){
+ if(dtest_num >= 0 && dtest_num < MAXTESTS && dh_test_types[dtest_num]){
    execute_test(dtest_num);
  } else {
-   fprintf(stderr,"Error:  dtest_num = %d.  No test found.\n",dtest_num);
+   fprintf(stderr,"Error:  Invalid dtest_num = %d.  No test found.\n",dtest_num);
    exit(1);
  }
   
