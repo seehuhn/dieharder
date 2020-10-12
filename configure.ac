@@ -80,9 +80,10 @@ AC_TYPE_SIZE_T
 AC_C_VOLATILE
 AC_C_INLINE
 
+CFLAGS="$CFLAGS -Wall -pedantic -fcommon -fvisibility=default"
 DIEHARDER_CFLAGS="-I$includedir"
-dieharder_CFLAGS="-std=c99 -Wall -pedantic -I$includedir"
-libdieharder_lo_CFLAGS="-Wall -pedantic -I$includedir"
+dieharder_CFLAGS="-std=c99 -I$includedir"
+libdieharder_lo_CFLAGS="-I$includedir"
 DIEHARDER_LIBS="-L$libdir -ldieharder"
 ACLOCAL_AMFLAGS="-I m4"
 
