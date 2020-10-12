@@ -215,3 +215,6 @@ doc_DATA = dieharder.html
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(PACKAGE).pc
+
+DISTCLEANFILES = $(builddir)/dieharder.abs config.h.in~
+MAINTAINERCLEANFILES = config.h.in~
