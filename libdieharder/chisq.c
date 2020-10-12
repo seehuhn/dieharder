@@ -16,7 +16,7 @@
 
 
 #include <dieharder/libdieharder.h>
-
+#include <assert.h>
 
 /*
  * This routine computes chisq on a vector of nvec values drawn
@@ -41,7 +41,7 @@
  * the number of degrees of freedom of the fit.
  */
 
-double chisq_poisson(unsigned int *observed,double lambda,int kmax,unsigned int nsamp)
+double chisq_poisson(unsigned int *observed,double lambda,unsigned int kmax,unsigned int nsamp)
 {
 
  unsigned int k;
@@ -101,7 +101,7 @@ double chisq_poisson(unsigned int *observed,double lambda,int kmax,unsigned int 
  * It returns a pvalue PRESUMING kmax-1 degrees of freedom (independent
  * bin probabilities, but with a constraint that they sum to 1).
  */
-double chisq_pearson(double *observed,double *expected,int kmax)
+double chisq_pearson(double *observed,double *expected,unsigned int kmax)
 {
 
  unsigned int k;
@@ -226,7 +226,7 @@ double chisq2d(unsigned int *obs, unsigned int rows, unsigned int columns, unsig
  * Contributed by David Bauer, copied from chisq_poisson, with trivial
  * modifications to change it to use the geometric distribution.
  */
-double chisq_geometric(unsigned int *observed,double prob,int kmax,unsigned int nsamp)
+double chisq_geometric(unsigned int *observed,double prob,unsigned int kmax,unsigned int nsamp)
 {
 
  unsigned int k;
@@ -266,6 +266,7 @@ double chisq_geometric(unsigned int *observed,double prob,int kmax,unsigned int 
   * is what is the correct number of degrees of freedom.  We have
   * kmax bins, so it should be kmax-1.
   */
+ assert (kmax > 1);
  pvalue = gsl_sf_gamma_inc_Q((double)(kmax-1)/2.0,chisq/2.0);
  if(verbose == D_CHISQ || verbose == D_ALL){
    printf("pvalue = %f in chisq_geometric.\n",pvalue);

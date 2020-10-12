@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int dab_filltree2(Test **test, int irun);
+int dab_filltree2(Test **test, unsigned int irun);
 
 static Dtest dab_filltree2_dtest __attribute__((unused)) = {
   "DAB Fill Tree 2 Test",

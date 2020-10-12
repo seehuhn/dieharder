@@ -5,6 +5,7 @@
  */
 
 #include <dieharder/libdieharder.h>
+#include <assert.h>
 
 /*
  * This should be the only tool we use to access bit substrings
@@ -311,7 +312,7 @@ int get_int_bit(unsigned int i, unsigned int n)
   * limited checking to ensure that n is in the range 0-sizeof(uint)
   * Note
   */
- if(n < 0 || n > 8*sizeof(unsigned int)){
+ if(n > 8*sizeof(unsigned int)){
    fprintf(stderr,"Error: bit offset %u exceeds length %lu of uint.\n",n,(unsigned long)(8*sizeof(unsigned int)));
    exit(0);
  }
@@ -340,7 +341,7 @@ int get_int_bit(unsigned int i, unsigned int n)
 void dumpbits_left(unsigned int *data, unsigned int nbits)
 {
 
- int i;
+ unsigned int i;
  unsigned int mask;
 
  if(nbits > 8*sizeof(unsigned int)) {
@@ -363,7 +364,8 @@ void dumpbits_left(unsigned int *data, unsigned int nbits)
 unsigned int bit2uint(char *abit,unsigned int blen)
 {
 
- int i,bit;
+ unsigned int i;
+ int bit;
  unsigned int result;
 
  /* Debugging
@@ -376,6 +378,7 @@ unsigned int bit2uint(char *abit,unsigned int blen)
  for(i = 0; i < blen; i++){
    result = result << 1;
    bit = abit[i] - '0';
+   assert (abit[i] > - '0');
    result += bit;
    /* Debugging
    if(verbose == D_BITS || verbose == D_ALL){
@@ -502,7 +505,7 @@ unsigned int b_umask(unsigned int bstart,unsigned int bstop)
 
  unsigned int b,mask,blen;
 
- if(bstart < 0 || bstop > 31 || bstop < bstart){
+ if(bstop > 31 || bstop < bstart){
    printf("b_umask() error: bstart <= bstop must be in range 0-31.\n");
    exit(0);
  }
@@ -549,11 +552,11 @@ unsigned int b_window(unsigned int input,unsigned int bstart,unsigned int bstop,
  unsigned int mask,output;
  int shift;
 
- if(bstart < 0 || bstop > 31 || bstop < bstart){
+ if(bstop > 31 || bstop < bstart){
    printf("b_umask() error: bstart <= bstop must be in range 0-31.\n");
    exit(0);
  }
- if(boffset < 0 || boffset > 31){
+ if(boffset > 31){
    printf("b_window() error: boffset must be in range 0-31.\n");
    exit(0);
  }
@@ -939,7 +942,7 @@ unsigned int get_uint_rand(gsl_rng *gsl_rng)
   * We have to iterate into range because it is quite possible that
   * rmax_bits won't be enough to fill bits_rand[1].
   */
- while(bleft > rmax_bits){
+ while((unsigned)bleft > rmax_bits){
    /* Get a bits_rand's worth (rmax_bits) into bits_rand[0] */
    bits_rand[0] = gsl_rng_get(gsl_rng);
    MYDEBUG(D_BITS) {
@@ -991,7 +994,7 @@ unsigned int get_uint_rand(gsl_rng *gsl_rng)
   * exactly filled the return with ALL the bits in rand[0] then we
   * need to start over on the next one.
   */
- if(bleft == rmax_bits){
+ if((unsigned)bleft == rmax_bits){
    bleft = bu;
  } else {
    bits_rand[1] = b_window(bits_rand[0],bu-rmax_bits,bu-bleft-1,bu-rmax_bits+bleft);
@@ -1035,7 +1038,7 @@ static int bitindex = -1;
 void get_rand_bits(void *result,unsigned int rsize,unsigned int nbits,gsl_rng *gsl_rng)
 {
 
- int i,offset;
+ unsigned int i,offset;
  unsigned int bu;
  char *output,*resultp;
 
@@ -1073,7 +1076,7 @@ void get_rand_bits(void *result,unsigned int rsize,unsigned int nbits,gsl_rng *g
 	* filled by get_uint_rand(), so we have to do it this way to avoid
 	* a de-facto shuffle for generators with rmax_bits < 32.
 	*/
-   for(i=BRBUF-1;i>=0;i--) {
+   for(i=BRBUF-1;i!=0;i--) {
 	 bits_randbuf[i] = get_uint_rand(gsl_rng);
 	 /* printf("bits_randbuf[%d] = %u\n",i,bits_randbuf[i]); */
    }
@@ -1128,7 +1131,7 @@ void get_rand_bits(void *result,unsigned int rsize,unsigned int nbits,gsl_rng *g
   */
  offset = brindex*bu + bitindex;
  MYDEBUG(D_BITS) {
-   printf("   Window Call: tuple = %d  offset = %d\n",nbits,offset);
+   printf("   Window Call: tuple = %d  offset = %u\n",nbits,offset);
  }
  get_ntuple_cyclic(bits_randbuf,BRBUF,bits_output,BRBUF,nbits,offset);
  /* Handle case where we returned whole uint at brindex location */
@@ -1149,7 +1152,7 @@ void get_rand_bits(void *result,unsigned int rsize,unsigned int nbits,gsl_rng *g
   */
  MYDEBUG(D_BITS) {
    for(i=0;i<BRBUF;i++){
-	 printf("%2d: ",i);
+	 printf("%2u: ",i);
 	 dumpuintbits(&bits_randbuf[i],1);
 	 printf("\n");
    }
@@ -1172,7 +1175,7 @@ void get_rand_bits(void *result,unsigned int rsize,unsigned int nbits,gsl_rng *g
  output = (char *)&bits_output[BRBUF]-rsize;
  resultp = (char *)result;
  MYDEBUG(D_BITS) {
-   printf("rsize = %d  output address = %p result address = %p\n",rsize,
+   printf("rsize = %u  output address = %p result address = %p\n",rsize,
           (void*)output,(void*)resultp);
  }
 
@@ -1180,9 +1183,9 @@ void get_rand_bits(void *result,unsigned int rsize,unsigned int nbits,gsl_rng *g
  for(i=0;i<rsize;i++){
    resultp[i] = output[i];
    MYDEBUG(D_BITS) {
-	 printf(" Returning: result[%d} = ",i);
+	 printf(" Returning: result[%u] = ",i);
 	 dumpbits((unsigned int *)&resultp[i],8);
-	 printf(" output[%d} = ",i);
+	 printf(" output[%u] = ",i);
 	 dumpbits((unsigned int *)&output[i],8);
 	 printf("\n");
    }
@@ -1275,12 +1278,12 @@ void mybitadd(char *dst, int doffset, char *src, int soffset, int slen)
 void get_rand_pattern(void *result,unsigned int rsize,int *pattern,gsl_rng *gsl_rng)
 {
 
- int i,j,pindex,poffset;
+ unsigned int i,j,pindex,poffset;
  unsigned int bu,nbits,tmpuint;
  char *resultp;
 
  MYDEBUG(D_BITS) {
-   printf("# get_rand_pattern: Initializing with rsize = %d\n",rsize);
+   printf("# get_rand_pattern: Initializing with rsize = %u\n",rsize);
  }
 
  /*
@@ -1295,12 +1298,12 @@ void get_rand_pattern(void *result,unsigned int rsize,int *pattern,gsl_rng *gsl_
 	* So we must bitch if we try to use more and quit.
 	*/
    if(pattern[i]>32) {
-	 fprintf(stderr,"Error: pattern[%d] = %d chunks must not exceed 32 in length.\n",i,pattern[i]);
+	 fprintf(stderr,"Error: pattern[%u] = %d chunks must not exceed 32 in length.\n",i,pattern[i]);
 	 fprintf(stderr,"         Use contiguous 32 bit pieces to create a longer chunk.\n");
 	 exit(0);
    }
    MYDEBUG(D_BITS) {
-	 printf("# get_rand_pattern: pattern[%d] = %d nbits = %u\n",i,pattern[i],nbits);
+	 printf("# get_rand_pattern: pattern[%u] = %d nbits = %u\n",i,pattern[i],nbits);
    }
    i++;
  }
@@ -1319,12 +1322,12 @@ void get_rand_pattern(void *result,unsigned int rsize,int *pattern,gsl_rng *gsl_
  if(nbits == 0) return;  /* Handle a "dumb call" */
  if(nbits > (BRBUF-2)*bu){
    fprintf(stderr,"Warning:  get_rand_bits capacity exceeded!\n");
-   fprintf(stderr," nbits = %d > %d (nbits max)\n",nbits,(BRBUF-2)*bu);
+   fprintf(stderr," nbits = %u > %u (nbits max)\n",nbits,(BRBUF-2)*bu);
    return;
  }
  if(nbits > rsize*CHAR_BIT){
    fprintf(stderr,"Warning:  Cannot get more bits than result vector will hold!\n");
-   fprintf(stderr," nbits = %d > %d (rsize max bits)\n",nbits,rsize*CHAR_BIT);
+   fprintf(stderr," nbits = %u > %u (rsize max bits)\n",nbits,rsize*CHAR_BIT);
    return;   /* Unlikely, but possible */
  }
 

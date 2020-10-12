@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int diehard_rank_32x32(Test **test,int irun);
+int diehard_rank_32x32(Test **test, unsigned int irun);
 
 static Dtest diehard_rank_32x32_dtest __attribute__((unused)) = {
   "Diehard 32x32 Binary Rank Test",

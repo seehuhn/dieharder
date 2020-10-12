@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int diehard_bitstream(Test **test,int irun);
+int diehard_bitstream(Test **test, unsigned int irun);
 
 static Dtest diehard_bitstream_dtest __attribute__((unused)) = {
   "Diehard Bitstream Test",

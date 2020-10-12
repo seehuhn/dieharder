@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int sts_runs(Test **test,int irun);
+int sts_runs(Test **test, unsigned int irun);
 
 static Dtest sts_runs_dtest __attribute__((unused)) = {
   "STS Runs Test",

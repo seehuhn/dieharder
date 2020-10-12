@@ -16,7 +16,7 @@ uint nperms;
 double fpipi(int pi1,int pi2,int nkp);
 uint rgb_permutations_k;
 
-int rgb_permutations(Test **test,int irun)
+int rgb_permutations(Test **test, unsigned int irun)
 {
 
  uint i,k,permindex=0,t;

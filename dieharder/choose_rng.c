@@ -99,7 +99,7 @@ void choose_rng()
 int select_rng(int gennum,char *genname,unsigned int initial_seed)
 {
 
- int i;
+ unsigned int i;
 
  /*
   * REALLY out of bounds we can just test for and return an error.
@@ -293,7 +293,7 @@ int select_rng(int gennum,char *genname,unsigned int initial_seed)
 int select_XOR()
 {
 
- int i,j;
+ unsigned int i,j;
  int one_file;
 
  /*
@@ -370,7 +370,7 @@ int select_XOR()
  MYDEBUG(D_SEED){
  }
  for(j = 0;j < gvcount;j++){
-   fprintf(stdout,"# choose_XOR(): generator[%i] = %s\n",j,dh_rng_types[gnumbs[j]]->name);
+   fprintf(stdout,"# choose_XOR(): generator[%u] = %s\n",j,dh_rng_types[gnumbs[j]]->name);
  }
  /*
   * Change 14 to the actual number

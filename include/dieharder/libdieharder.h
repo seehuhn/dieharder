@@ -111,9 +111,9 @@ extern void dh_header();
 extern void dh_version();
 extern double binomial(unsigned int n, unsigned int k, double p);
 extern double chisq_eval(double *x,double *y,double *sigma, unsigned int n);
-extern double chisq_poisson(unsigned int *observed,double lambda,int kmax,unsigned int nsamp);
+extern double chisq_poisson(unsigned int *observed,double lambda,unsigned int kmax,unsigned int nsamp);
 extern double chisq_binomial(double *observed,double prob,unsigned int kmax,unsigned int nsamp);
-extern double chisq_pearson(double *observed,double *expected,int kmax);
+extern double chisq_pearson(double *observed,double *expected,unsigned int kmax);
 extern double sample(void *testfunc());
 extern double kstest(double *pvalue,int count);
 extern double kstest_kuiper(double *pvalue,int count);
@@ -164,7 +164,7 @@ extern unsigned int all;              /* Flag to do all tests on selected genera
 extern unsigned int binary;           /* Flag to output rands in binary (with -o -f) */
 extern unsigned int bits;             /* bitstring size (in bits) */
 extern unsigned int diehard;          /* Diehard test number */
-extern unsigned int generator;        /* GSL generator id number to be tested */
+extern int generator;                 /* GSL generator id number to be tested */
  /*
   * We will still need generator above, if only to select the XOR
   * generator.  I need to make its number something that will pretty much
@@ -183,7 +183,7 @@ extern unsigned int generator;        /* GSL generator id number to be tested */
 #define GVECMAX 100
 extern char gnames[GVECMAX][128];  /* VECTOR of names to be XOR'd into a "super" generator */
 extern unsigned int gseeds[GVECMAX];       /* VECTOR of unsigned int seeds used for the "super" generators */
-extern unsigned int gnumbs[GVECMAX];       /* VECTOR of GSL generators to be XOR'd into a "super" generator */
+extern int gnumbs[GVECMAX];       	   /* VECTOR of GSL generators to be XOR'd into a "super" generator */
 extern unsigned int gvcount;               /* Number of generators to be XOR'd into a "super" generator */
 extern unsigned int gscount;               /* Number of seeds entered on the CL in XOR mode */
 extern unsigned int help_flag;        /* Help flag */
@@ -205,7 +205,7 @@ extern unsigned int sts;              /* sts test number */
 extern unsigned int Seed;             /* user selected seed.  Surpresses reseeding per sample.*/
 extern off_t tsamples;        /* Generally should be "a lot".  off_t is u_int64_t. */
 extern unsigned int user;             /* user defined test number */
-extern unsigned int verbose;          /* Default is not to be verbose. */
+extern int verbose;           /* Default is not to be verbose. */
 extern double Xweak;          /* "Weak" generator cut-off (one sided) */
 extern double Xfail;          /* "Unambiguous Fail" generator cut-off (one sided) */
 extern unsigned int Xtrategy;         /* Strategy used in TTD mode */

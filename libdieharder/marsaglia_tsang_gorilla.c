@@ -12,7 +12,7 @@
 
 #include <dieharder/libdieharder.h>
 
-void marsaglia_tsang_gorilla(Test **test, int irun)
+void marsaglia_tsang_gorilla(Test **test, unsigned int irun)
 {
 
  uint t,i,lag;

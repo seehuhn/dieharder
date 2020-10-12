@@ -27,7 +27,7 @@ int rgb_persist(Test **test, Rgb_Persist *persist)
 {
 
  uint last_rand;
- int i,j;
+ uint i,j;
 
  /*
   * Now go through the list and dump the numbers several ways.
@@ -41,23 +41,23 @@ int rgb_persist(Test **test, Rgb_Persist *persist)
  persist->cumulative_mask = 0;
  for(j=0;j<psamples;j++){
    /*
-	* Do not reset the total count of rands or rewind file input
-	* files -- let them auto-rewind as needed.  Otherwise try
-	* different seeds for different samples.
-	*/
+    * Do not reset the total count of rands or rewind file input
+    * files -- let them auto-rewind as needed.  Otherwise try
+    * different seeds for different samples.
+    */
    if(strncmp("file_input",gsl_rng_name(rng),10)){
 	 seed = random_seed();
 	 gsl_rng_set(rng,seed);
    }
    /*
-	* Fill rgb_persist_rand_uint with a string of random numbers
-	*/
+    * Fill rgb_persist_rand_uint with a string of random numbers
+    */
    for(i=0;i<256;i++) rgb_persist_rand_uint[i] = gsl_rng_get(rng);
    last_rand = rgb_persist_rand_uint[0];  /* to start it */
    persist->and_mask = ~(last_rand ^ rgb_persist_rand_uint[0]);
    for(i=0;i<256;i++){
 	 if(verbose){
-	   printf("rgb_persist_rand_uint[%d] = %u = ",i,rgb_persist_rand_uint[i]);
+	   printf("rgb_persist_rand_uint[%u] = %u = ",i,rgb_persist_rand_uint[i]);
 	   dumpbits(&rgb_persist_rand_uint[i],persist->nbits);
 	   printf("\n");
 	 }

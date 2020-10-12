@@ -48,7 +48,7 @@
 
 #include <dieharder/libdieharder.h>
 
-int diehard_sums(Test **test, int irun)
+int diehard_sums(Test **test, unsigned int irun)
 {
 
  int m,t;

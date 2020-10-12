@@ -121,10 +121,10 @@ int kperm(uint v[],uint voffset)
 
 }
 
-int diehard_operm5(Test **test, int irun)
+int diehard_operm5(Test **test, unsigned int irun)
 {
 
- int i,j,kp,t,vind;
+ unsigned int i,j,kp,t,vind;
  uint v[5];
  double count[120];
  double av,norm,x[120],chisq,ndof;

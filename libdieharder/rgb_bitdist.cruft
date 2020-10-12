@@ -57,7 +57,7 @@
 
 #include <dieharder/libdieharder.h>
 
-void rgb_bitdist(Test **test,int irun)
+void rgb_bitdist(Test **test, unsigned int irun)
 {
 
  uint bsize;       /* number of bits in the sample buffer */

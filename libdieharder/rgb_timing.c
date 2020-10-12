@@ -19,7 +19,7 @@ int rgb_timing(Test **test, Rgb_Timing *timing)
 {
 
  double total_time,avg_time;
- int i,j;
+ unsigned int i,j;
  unsigned int *rand_uint;
 
  MYDEBUG(D_RGB_TIMING){

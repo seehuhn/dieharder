@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int marsaglia_tsang_gcd(Test **test,int irun);
+int marsaglia_tsang_gcd(Test **test, unsigned int irun);
 
 static Dtest marsaglia_tsang_gcd_dtest __attribute__((unused)) = {
   "Marsaglia and Tsang GCD Test",

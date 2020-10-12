@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int diehard_count_1s_stream(Test **test,int irun);
+int diehard_count_1s_stream(Test **test, unsigned int irun);
 
 static Dtest diehard_count_1s_stream_dtest __attribute__((unused)) = {
   "Diehard Count the 1s (stream) Test",

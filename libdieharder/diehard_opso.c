@@ -39,7 +39,7 @@
 
 #include <dieharder/libdieharder.h>
 
-int diehard_opso(Test **test, int irun)
+int diehard_opso(Test **test, unsigned int irun)
 {
 
  uint j0=0,k0=0,j,k,t;

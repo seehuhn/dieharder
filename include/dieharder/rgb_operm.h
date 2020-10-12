@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int rgb_operm(Test **test,int irun);
+int rgb_operm(Test **test, unsigned int irun);
 
 static Dtest rgb_operm_dtest __attribute__((unused)) = {
   "RGB Overlapping Permutations Test",

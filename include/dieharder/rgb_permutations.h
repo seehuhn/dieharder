@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int rgb_permutations(Test **test,int irun);
+int rgb_permutations(Test **test, unsigned int irun);
 
 static Dtest rgb_permutations_dtest __attribute__((unused)) = {
   "RGB Permutations Test",

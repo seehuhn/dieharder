@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int diehard_squeeze(Test **test,int irun);
+int diehard_squeeze(Test **test, unsigned int irun);
 
 static Dtest diehard_squeeze_dtest __attribute__((unused)) = {
   "Diehard Squeeze Test",

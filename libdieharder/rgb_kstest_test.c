@@ -35,7 +35,7 @@
 
 #include <dieharder/libdieharder.h>
 
-int rgb_kstest_test(Test **test, int irun)
+int rgb_kstest_test(Test **test, unsigned int irun)
 {
 
  uint t,tsamples;

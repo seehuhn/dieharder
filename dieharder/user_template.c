@@ -72,7 +72,7 @@
  *========================================================================
  */
 
-int user_template(Test **test,int irun)
+int user_template(Test **test, unsigned int irun)
 {
 
  unsigned int t,i,lag;

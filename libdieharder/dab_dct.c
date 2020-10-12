@@ -76,7 +76,7 @@ double evalMostExtreme(double *pvalue, unsigned int num);
  * largest too often (and about as often as each other).
  */
 
-int dab_dct(Test **test,int irun)
+int dab_dct(Test **test, unsigned int irun)
 {
  double *dct;
  unsigned int *input;
@@ -208,7 +208,7 @@ int gsl_fft_real_radix2_transform (double data[], size_t stride, size_t n);
  */
 void fDCT2_fft(const unsigned int input[], double output[], size_t len) {
  double *fft_data;
- int i;
+ unsigned int i;
 
  /*
   * David, please check this -- do you mean to call fDCT2 and then return?

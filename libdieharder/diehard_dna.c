@@ -39,7 +39,7 @@
 #include "static_get_bits.c"
 static uint mask;
 
-int diehard_dna(Test **test, int irun)
+int diehard_dna(Test **test, unsigned int irun)
 {
 
  uint i,j,k,l,m,n,o,p,q,r,t,boffset;

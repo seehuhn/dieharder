@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int rgb_bitdist(Test **test,int irun);
+int rgb_bitdist(Test **test, unsigned int irun);
 
 static Dtest rgb_bitdist_dtest __attribute__((unused)) = {
   "RGB Bit Distribution Test",

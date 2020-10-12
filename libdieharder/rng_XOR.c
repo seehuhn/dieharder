@@ -33,7 +33,7 @@ static inline unsigned long int
 XOR_get (void *vstate)
 {
  XOR_state_t *state = (XOR_state_t *) vstate;
- int i;
+ unsigned int i;
 
  /*
   * There is always this one, or we are in deep trouble.  I am going
@@ -56,7 +56,7 @@ XOR_get_double (void *vstate)
 static void XOR_set (void *vstate, unsigned long int s) {
 
  XOR_state_t *state = (XOR_state_t *) vstate;
- int i;
+ unsigned int i;
  uint seed_seed;
 
  /*

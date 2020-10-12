@@ -47,7 +47,7 @@ static double lambda;
 static unsigned int *intervals;
 static unsigned int nms,nbits,kmax;
 
-int diehard_birthdays(Test **test, int irun)
+int diehard_birthdays(Test **test, unsigned int irun)
 {
 
  uint i,k,t,m,mnext;

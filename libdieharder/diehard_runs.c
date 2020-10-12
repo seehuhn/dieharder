@@ -74,10 +74,10 @@ static double b[6] = {
  29.0/5040.0,
  1.0/840.0,};
 
-int diehard_runs(Test **test, int irun)
+int diehard_runs(Test **test, unsigned int irun)
 {
 
- int i,j,k,t;
+ unsigned int i,j,k,t;
  unsigned int ucount,dcount;
  int upruns[RUN_MAX],downruns[RUN_MAX];
  double uv,dv;
@@ -152,7 +152,7 @@ int diehard_runs(Test **test, int irun)
  }
  for(i=0;i<RUN_MAX;i++) {
    if(verbose){
-	 printf("%d:   %7d   %7d\n",i,upruns[i],downruns[i]);
+	 printf("%u:   %7d   %7d\n",i,upruns[i],downruns[i]);
    }
    for(j=0;j<RUN_MAX;j++) {
 	 uv += ((double)upruns[i]   - test[0]->tsamples*b[i])*(upruns[j]   - test[0]->tsamples*b[j])*a[i][j];

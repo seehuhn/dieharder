@@ -60,7 +60,7 @@
 
 #include "static_get_bits.c"
 
-int rgb_bitdist(Test **test,int irun)
+int rgb_bitdist(Test **test, unsigned int irun)
 {
 
  uint nb;          /* number of bits in a tested ntuple */

@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int diehard_dna(Test **test,int irun);
+int diehard_dna(Test **test, unsigned int irun);
 
 static Dtest diehard_dna_dtest __attribute__((unused)) = {
   "Diehard DNA Test",

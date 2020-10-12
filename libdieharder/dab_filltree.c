@@ -36,13 +36,13 @@ static double targetData[] = {
 
 static inline int insert(double x, double *array, unsigned int startVal);
 
-int dab_filltree(Test **test,int irun) {
- int size = (ntuple == 0) ? 32 : ntuple;
+int dab_filltree(Test **test,unsigned int irun) {
+ unsigned int size = (ntuple == 0) ? 32 : ntuple;
  unsigned int target = sizeof(targetData)/sizeof(double);
  int startVal = (size / 2) - 1;
  double *array = (double *) malloc(sizeof(double) * size);
  double *counts, *expected;
- int i, j;
+ unsigned int i, j;
  double x;
  unsigned int start = 0;
  unsigned int end = 0;

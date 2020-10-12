@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int diehard_operm5(Test **test, int irun);
+int diehard_operm5(Test **test, unsigned int irun);
 
 static Dtest diehard_operm5_dtest __attribute__((unused)) = {
   "Diehard OPERM5 Test",

@@ -53,7 +53,7 @@ int compare_points(const dTuple *a,const dTuple *b)
 
 double distance(const dTuple a,const dTuple b,uint dim)
 {
-  int i;
+  unsigned int i;
   double delta,distance = 0.0;
   for(i = 0;i < dim; i++){
     delta = a.c[i] - b.c[i];
@@ -63,10 +63,10 @@ double distance(const dTuple a,const dTuple b,uint dim)
   return(distance);
 }
 
-int rgb_minimum_distance(Test **test, int irun)
+int rgb_minimum_distance(Test **test, unsigned int irun)
 {
 
- int i,j,d,t;
+ unsigned int i,j,d,t;
  uint rgb_md_dim;
  
  /*
@@ -175,7 +175,7 @@ int rgb_minimum_distance(Test **test, int irun)
      if(points[j].c[0] - points[i].c[0] > mindist) break;
      dist = distance(points[j],points[i],rgb_md_dim);
      MYDEBUG(D_RGB_MINIMUM_DISTANCE) {
-       printf("d(%d,%d) = %16.10e\n",i,j,dist);
+       printf("d(%u,%u) = %16.10e\n",i,j,dist);
      }
      if( dist < mindist) mindist = dist;
    }

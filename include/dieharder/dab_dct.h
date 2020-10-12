@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int dab_dct(Test **test, int irun);
+int dab_dct(Test **test, unsigned int irun);
 
 static Dtest dab_dct_dtest __attribute__((unused)) = {
   "DAB DCT",

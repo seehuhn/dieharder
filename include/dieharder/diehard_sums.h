@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int diehard_sums(Test **test,int irun);
+int diehard_sums(Test **test, unsigned int irun);
 
 static Dtest diehard_sums_dtest __attribute__((unused)) = {
   "Diehard Sums Test",

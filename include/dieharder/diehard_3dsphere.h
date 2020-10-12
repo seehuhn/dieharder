@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int diehard_3dsphere(Test **test,int irun);
+int diehard_3dsphere(Test **test, unsigned int irun);
 
 static Dtest diehard_3dsphere_dtest __attribute__((unused)) = {
   "Diehard 3d Sphere (Minimum Distance) Test",

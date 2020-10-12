@@ -94,13 +94,13 @@ static double targetData[128] = {  // size=128, generated from 6e9 samples
 
 static inline int insertBit(uint x, uchar *array, uint *i, uint *d);
 
-int dab_filltree2(Test **test, int irun) {
- int size = (ntuple == 0) ? 128 : ntuple;
+int dab_filltree2(Test **test, unsigned int irun) {
+ unsigned int size = (ntuple == 0) ? 128 : ntuple;
  uint target = sizeof(targetData)/sizeof(double);
  int startVal = (size / 2) - 1;
  uchar *array = (uchar *) malloc(sizeof(*array) * size);
  double *counts, *expected;
- int i, j;
+ unsigned int i, j;
  uint x;
  uint start = 0;
  uint end = 0;

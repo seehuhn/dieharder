@@ -5,8 +5,8 @@
 #include "dieharder.h"
 
 char gnames[GVECMAX][128];
+int gnumbs[GVECMAX];
 unsigned int gseeds[GVECMAX];
-unsigned int gnumbs[GVECMAX];
 unsigned int gvcount;
 unsigned int gscount;
 unsigned int help_flag;
@@ -36,7 +36,7 @@ unsigned int all;
 unsigned int binary;
 unsigned int bits;
 unsigned int diehard;
-unsigned int generator;
+int generator;
 
 //char filename[K];
 //int fromfile;

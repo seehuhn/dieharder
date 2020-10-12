@@ -91,7 +91,7 @@ static void datainit2( u8 *data, u4 index, u4 depth, u4 terms)
 static void datainit( u8 *data, u4 terms)
 {
   u4 i;
-  for (i=0; i<(1<<(LOGBUCKETS*terms)); ++i)
+  for (i=0; i < (unsigned)(1<<(LOGBUCKETS*terms)); ++i)
     data[i] = 0;
 }
 
@@ -140,7 +140,7 @@ static void chi( u8 *data, u8 len, u4 terms)
   probinit(pc, MAXBITS);
 
   /* handle the nonnegligible buckets */
-  for (i=0; i < (1<<(LOGBUCKETS*terms)); ++i) {
+  for (i=0; i < (unsigned)(1<<(LOGBUCKETS*terms)); ++i) {
     
     /* determine the expected frequency of this bucket */
     expect = (double)len;

@@ -9,7 +9,7 @@
 void run_test()
 {
 
- int i;
+ unsigned int i;
 
  /*
   * ========================================================================
@@ -41,8 +41,7 @@ void run_test()
 int execute_test(int dtest_num)
 {
 
- int i;
- unsigned int need_more_p;
+ unsigned int i, need_more_p;
  double smallest_p;
  /*
   * Declare the results struct.
@@ -138,9 +137,3 @@ int execute_test(int dtest_num)
  return(0);
 
 }
-
-
-
-
-
-

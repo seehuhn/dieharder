@@ -51,10 +51,10 @@ typedef struct {
 int compare_points(const dTuple *a,const dTuple *b);
 double distance(const dTuple a,const dTuple b,uint dim);
 
-int diehard_2dsphere(Test **test, int irun)
+int diehard_2dsphere(Test **test, unsigned int irun)
 {
 
- int i,j,d,t;
+ unsigned int i,j,d,t;
 
  /*
   * These are the vector of points and the current point being

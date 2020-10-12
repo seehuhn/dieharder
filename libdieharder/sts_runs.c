@@ -18,10 +18,10 @@
 
 #include <dieharder/libdieharder.h>
 
-int sts_runs(Test **test, int irun)
+int sts_runs(Test **test, unsigned int irun)
 {
 
- int b,t;
+ uint b,t;
  uint value;
  uint *rand_int;
  Xtest ptest;

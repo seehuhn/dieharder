@@ -30,11 +30,11 @@
  */
 #include "static_get_bits.c"
 
-int diehard_rank_6x8(Test **test, int irun)
+int diehard_rank_6x8(Test **test, unsigned int irun)
 {
 
 
- int i,t,rank;
+ unsigned int i,t,rank;
  uint bitstring;
  uint **mtx;
  Vtest vtest;
@@ -106,7 +106,7 @@ int diehard_rank_6x8(Test **test, int irun)
    }
  }
 
- /* for(i=0;i<33;i++) printf("vtest.x[%d] =  %f\n",i,vtest.x[i]); */
+ /* for(i=0;i<33;i++) printf("vtest.x[%u] =  %f\n",i,vtest.x[i]); */
 
  Vtest_eval(&vtest);
  test[0]->pvalues[irun] = vtest.pvalue;

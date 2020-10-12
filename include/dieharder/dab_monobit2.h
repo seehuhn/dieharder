@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int dab_monobit2(Test **test,int irun);
+int dab_monobit2(Test **test, unsigned int irun);
 
 static Dtest dab_monobit2_dtest __attribute__((unused)) = {
   "DAB Monobit 2 Test",

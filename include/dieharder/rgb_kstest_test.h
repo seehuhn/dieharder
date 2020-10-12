@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int rgb_kstest_test(Test **test,int irun);
+int rgb_kstest_test(Test **test, unsigned int irun);
 
 static Dtest rgb_kstest_test_dtest __attribute__((unused)) = {
   "RGB Kolmogorov-Smirnov Test Test",

@@ -47,28 +47,30 @@ double fpipi(int pi1,int pi2,int nkp);
 uint piperm(size_t *data,int len);
 void make_cexact();
 void make_cexpt();
-int nperms,noperms;
+unsigned int nperms,noperms;
 double **cexact,**ceinv,**cexpt,**idty;
 double *cvexact,*cvein,*cvexpt,*vidty;
 
-int rgb_operm(Test **test,int irun)
+int rgb_operm(Test **test, unsigned int irun)
 {
 
- int i,j,n,nb,iv,s;
+ unsigned int i,j,iv;
+ //unsigned int n,nb,s;
  uint csamples;   /* rgb_operm_k^2 is vector size of cov matrix */
- uint *count,ctotal; /* counters */
- uint size;
- double pvalue,ntuple_prob,pbin;  /* probabilities */
+ //uint *count,ctotal; /* counters */
+ //uint size;
+ //double pvalue,ntuple_prob,pbin;  /* probabilities */
  Vtest *vtest;   /* Chisq entry vector */
 
- gsl_matrix_view CEXACT,CEINV,CEXPT,IDTY;
+ gsl_matrix_view CEXACT;
+ //gsl_matrix_view CEINV,CEXPT,IDTY;
 
  /*
   * For a given n = ntuple size in bits, there are n! bit orderings
   */
  MYDEBUG(D_RGB_OPERM){
    printf("#==================================================================\n");
-   printf("# rgb_operm: Running rgb_operm verbosely for k = %d.\n",rgb_operm_k);
+   printf("# rgb_operm: Running rgb_operm verbosely for k = %u.\n",rgb_operm_k);
    printf("# rgb_operm: Use -v = %d to focus.\n",D_RGB_OPERM);
    printf("# rgb_operm: ======================================================\n");
  }
@@ -76,15 +78,15 @@ int rgb_operm(Test **test,int irun)
  /*
   * Sanity check first
   */
- if((rgb_operm_k < 0) || (rgb_operm_k > RGB_OPERM_KMAX)){
-   printf("\nError:  rgb_operm_k must be a positive integer <= %u.  Exiting.\n",RGB_OPERM_KMAX);
+ if(rgb_operm_k < 2 || rgb_operm_k > RGB_OPERM_KMAX){
+   printf("\nError:  rgb_operm_k must be a positive integer between 2 and %u.  Exiting.\n",RGB_OPERM_KMAX);
    exit(0);
  }
 
  nperms = gsl_sf_fact(rgb_operm_k);
  noperms = gsl_sf_fact(3*rgb_operm_k-2);
  csamples = rgb_operm_k*rgb_operm_k;
- gsl_permutation * p = gsl_permutation_alloc(nperms);
+ //gsl_permutation * p = gsl_permutation_alloc(nperms);
 
  /*
   * Allocate memory for value_max vector of Vtest structs and counts,
@@ -92,7 +94,7 @@ int rgb_operm(Test **test,int irun)
   * or leak.
   */
  vtest = (Vtest *)malloc(csamples*sizeof(Vtest));
- count = (uint *)malloc(csamples*sizeof(uint));
+ //count = (uint *)malloc(csamples*sizeof(uint));
  Vtest_create(vtest,csamples+1);
 
  /*
@@ -137,9 +139,9 @@ int rgb_operm(Test **test,int irun)
  }
 
  CEXACT = gsl_matrix_view_array(cvexact, nperms, nperms);
- CEINV  = gsl_matrix_view_array(cvein  , nperms, nperms);
- CEXPT  = gsl_matrix_view_array(cvexpt , nperms, nperms);
- IDTY   = gsl_matrix_view_array(vidty  , nperms, nperms);
+ //CEINV  = gsl_matrix_view_array(cvein  , nperms, nperms);
+ //CEXPT  = gsl_matrix_view_array(cvexpt , nperms, nperms);
+ //IDTY   = gsl_matrix_view_array(vidty  , nperms, nperms);
 
  /*
   * Hmmm, looks like cexact isn't invertible.  Duh.  So it has eigenvalues.
@@ -161,7 +163,7 @@ int rgb_operm(Test **test,int irun)
  gsl_eigen_symmv_sort (eval, evec, GSL_EIGEN_SORT_ABS_ASC);
 
  {
-   int i;
+   unsigned int i;
 
    printf("#==================================================================\n");
    for (i = 0; i < nperms; i++) {
@@ -240,7 +242,8 @@ int rgb_operm(Test **test,int irun)
 void make_cexact()
 {
 
- int i,j,k,ip,t,nop;
+ unsigned int i,j,k,ip,t;
+ //unsigned int nop;
  double fi,fj;
  /*
   * This is the test vector.
@@ -402,7 +405,7 @@ void make_cexact()
 void make_cexpt()
 {
 
- int i,j,k,ip,t;
+ unsigned int i,j,k,ip,t;
  double fi,fj;
  /*
   * This is the test vector.
@@ -412,7 +415,8 @@ void make_cexpt()
   * pi[] is the permutation index of a sample.  ps[] holds the
   * actual sample.
   */
- int pi[4096],ps[4096];
+ uint pi[4096];
+ size_t ps[4096];
 
  MYDEBUG(D_RGB_OPERM){
    printf("#==================================================================\n");
@@ -601,7 +605,7 @@ uint piperm(size_t *data,int len)
 double fpipi(int pi1,int pi2,int nkp)
 {
 
- int i;
+ unsigned int i;
  double fret;
 
  /*

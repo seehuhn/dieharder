@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int sts_monobit(Test **test,int irun);
+int sts_monobit(Test **test, unsigned int irun);
 
 static Dtest sts_monobit_dtest __attribute__((unused)) = {
   "STS Monobit Test",

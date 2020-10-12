@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int diehard_oqso(Test **test, int irun);
+int diehard_oqso(Test **test, unsigned int irun);
 
 static Dtest diehard_oqso_dtest __attribute__((unused)) = {
   "Diehard OQSO Test",

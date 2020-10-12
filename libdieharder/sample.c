@@ -43,7 +43,7 @@
 double sample(void *testfunc())
 {
 
- int p;
+ unsigned int p;
  double pks;
 
  if(verbose == D_SAMPLE || verbose == D_ALL){

@@ -30,7 +30,7 @@
 #define SAMP_TOTAL (3*SAMP_PER_WORD)
 #define TABLE_SIZE (256 * SAMP_TOTAL)
 
-int dab_bytedistrib(Test **test,int irun) {
+int dab_bytedistrib(Test **test, unsigned int irun) {
  Vtest vtest;
  unsigned int t,i,j;
  unsigned int counts[TABLE_SIZE];

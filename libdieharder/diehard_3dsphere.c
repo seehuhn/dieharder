@@ -29,7 +29,7 @@ typedef struct {
   double x[DIM_3D];
 } C3_3D;
  
-int diehard_3dsphere(Test **test, int irun)
+int diehard_3dsphere(Test **test, unsigned int irun)
 {
 
  int j,k;

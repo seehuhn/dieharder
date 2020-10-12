@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int diehard_birthdays(Test **test, int irun);
+int diehard_birthdays(Test **test, unsigned int irun);
 
 static Dtest diehard_birthdays_dtest __attribute__((unused)) = {
   "Diehard Birthdays Test",

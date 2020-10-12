@@ -22,7 +22,7 @@ void run_all_tests()
  /*
   * The nt variables control ntuple loops for the -a(ll) display only.
   */
- int ntmin,ntmax,ntsave;
+ unsigned int ntmin,ntmax,ntsave;
 
  /*
   * This isn't QUITE a simple loop because -a is a dieharder-only function,
@@ -33,7 +33,7 @@ void run_all_tests()
  /*
   * No special ntuple tests in diehard
   */
- for(dtest_num=0;dtest_num<dh_num_diehard_tests;dtest_num++){
+ for(dtest_num=0; (unsigned)dtest_num < dh_num_diehard_tests; dtest_num++){
    if(dh_test_types[dtest_num]){
      execute_test(dtest_num);
    }
@@ -42,7 +42,7 @@ void run_all_tests()
  /*
   * No special ntuple tests in sts (yet)
   */
- for(dtest_num=100;dtest_num<100+dh_num_sts_tests;dtest_num++){
+ for(dtest_num=100; (unsigned)dtest_num < 100+dh_num_sts_tests; dtest_num++){
    if(dh_test_types[dtest_num]){
      execute_test(dtest_num);
    }
@@ -55,7 +55,7 @@ void run_all_tests()
   * we take the trouble to count the three categories of test, might as
   * well use them.
   */
- for(dtest_num=200;dtest_num<200+dh_num_other_tests;dtest_num++){
+ for(dtest_num=200; (unsigned)dtest_num < 200+dh_num_other_tests; dtest_num++){
 
    switch(dtest_num){
 

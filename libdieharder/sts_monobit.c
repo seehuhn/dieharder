@@ -31,10 +31,10 @@
 
 #define NOBITS 0
 
-int sts_monobit(Test **test, int irun)
+int sts_monobit(Test **test, unsigned int irun)
 {
 
- int i;
+ uint i;
  uint blens,nbits;
  Xtest ptest;
 

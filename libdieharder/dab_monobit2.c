@@ -23,7 +23,7 @@
 /* The evalMostExtreme function is in dab_dct.c */
 extern double evalMostExtreme(double *pvalue, uint num);
 
-int dab_monobit2(Test **test, int irun)
+int dab_monobit2(Test **test, unsigned int irun)
 {
  uint i, j;
  uint blens = rmax_bits;

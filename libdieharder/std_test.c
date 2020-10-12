@@ -138,7 +138,7 @@ Test **create_test(Dtest *dtest, uint tsamples,uint psamples)
 void destroy_test(Dtest *dtest, Test **test)
 {
 
- int i;
+ unsigned int i;
 
  /*
   * To destroy a test one has to first free its allocated contents
@@ -174,7 +174,7 @@ void destroy_test(Dtest *dtest, Test **test)
 void clear_test(Dtest *dtest, Test **test)
 {
 
- int i;
+ unsigned int i;
 
  /*
   * reset psamples and clear the ks_pvalues
@@ -266,7 +266,7 @@ void add_2_test(Dtest *dtest, Test **test, int count)
 void std_test(Dtest *dtest, Test **test)
 {
 
- int j,count;
+ unsigned int j,count;
  double pmax = 0.0;
 
  /*

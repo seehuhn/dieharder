@@ -9,7 +9,7 @@
  * creation/destruction/execution routines, the prototype should have
  * precisely this form.
  */
-int user_template(Test **test,int irun);
+int user_template(Test **test, unsigned int irun);
 
 /*
  * This is default data for the test at hand.  The first field is

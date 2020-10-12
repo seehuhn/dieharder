@@ -51,10 +51,10 @@ static double sdata[]={
 0.00001803, 0.00000982, 0.00001121
 };
 
-int diehard_squeeze(Test **test, int irun)
+int diehard_squeeze(Test **test, unsigned int irun)
 {
 
- int i,j,k;
+ unsigned int i,j,k;
  Vtest vtest;
 
  /*
@@ -89,7 +89,7 @@ int diehard_squeeze(Test **test, int irun)
   */
  MYDEBUG(D_DIEHARD_SQUEEZE) {
    for(i=0;i<43;i++){
-     printf("%d:   %f    %f\n",i+6,vtest.x[i],vtest.y[i]);
+     printf("%u:   %f    %f\n",i+6,vtest.x[i],vtest.y[i]);
    }
  }
 
@@ -100,11 +100,11 @@ int diehard_squeeze(Test **test, int irun)
    k = 2147483647;
    j = 0;
 
-   /* printf("%d:   %d\n",j,k); */
+   /* printf("%u:   %d\n",j,k); */
    while((k != 1) && (j < 48)){
      k = ceil(k*gsl_rng_uniform(rng));
      j++;
-     /* printf("%d:   %d\n",j,k); */
+     /* printf("%u:   %u\n",j,k); */
    }
 
    /*
@@ -117,7 +117,7 @@ int diehard_squeeze(Test **test, int irun)
 
  MYDEBUG(D_DIEHARD_SQUEEZE) {
    for(i=0;i<43;i++){
-     printf("%d:   %f    %f\n",i+6,vtest.x[i],vtest.y[i]);
+     printf("%u:   %f    %f\n",i+6,vtest.x[i],vtest.y[i]);
    }
  }
 

@@ -29,10 +29,10 @@
  */
 #include "static_get_bits.c"
 
-int diehard_rank_32x32(Test **test, int irun)
+int diehard_rank_32x32(Test **test, unsigned int irun)
 {
 
- int i,t,rank;
+ unsigned int i,t,rank;
  uint bitstring;
  /* uint mtx[32][1]; */
  uint **mtx;
@@ -105,7 +105,7 @@ int diehard_rank_32x32(Test **test, int irun)
     */
    rank = binary_rank(mtx,32,32);
    MYDEBUG(D_DIEHARD_RANK_32x32){
-     fprintf(stdout,"# binary rank = %d\n",rank);
+     fprintf(stdout,"# binary rank = %u\n",rank);
    }
 
    if(rank <= 29){
@@ -115,7 +115,7 @@ int diehard_rank_32x32(Test **test, int irun)
    }
  }
 
- /* for(i=0;i<33;i++) printf("vtest.x[%d] =  %f\n",i,vtest.x[i]); */
+ /* for(i=0;i<33;i++) printf("vtest.x[%u] =  %f\n",i,vtest.x[i]); */
 
  Vtest_eval(&vtest);
  test[0]->pvalues[irun] = vtest.pvalue;

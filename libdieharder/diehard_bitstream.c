@@ -41,7 +41,7 @@
  */
 #include "static_get_bits.c"
 
-int diehard_bitstream(Test **test, int irun)
+int diehard_bitstream(Test **test, unsigned int irun)
 {
 
  uint i,j,t,boffset,coffset;

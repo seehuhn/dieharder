@@ -145,7 +145,7 @@ const double ps[]={
 
 #define LSHIFT5(old,new) (old*5 + new)
 
-int diehard_count_1s_stream(Test **test, int irun)
+int diehard_count_1s_stream(Test **test, unsigned int irun)
 {
 
  uint i,j,k,index5=0,index4,letter,t;

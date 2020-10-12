@@ -22,7 +22,7 @@
 void Vtest_create(Vtest *vtest, unsigned int nvec)
 {
 
- int i;
+ uint i;
  MYDEBUG(D_VTEST){
    printf("#==================================================================\n");
    printf("# Vtest_create(): Creating test struct for %u nvec.\n",nvec);
@@ -57,7 +57,8 @@ void Vtest_destroy(Vtest *vtest)
 void Vtest_eval(Vtest *vtest)
 {
 
- uint i,ndof,itail;
+ uint i,ndof;
+ int itail;
  double delchisq,chisq;
  double x_tot,y_tot;
 

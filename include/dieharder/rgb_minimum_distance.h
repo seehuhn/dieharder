@@ -5,7 +5,7 @@
 /*
  * function prototype
  */
-int rgb_minimum_distance(Test **test,int irun);
+int rgb_minimum_distance(Test **test, unsigned int irun);
 
 static Dtest rgb_minimum_distance_dtest __attribute__((unused)) = {
   "RGB Generalized Minimum Distance Test",

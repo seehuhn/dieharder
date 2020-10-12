@@ -76,7 +76,7 @@ static double b[6] = {
 
 uint *runs_rand;
 
-int diehard_runs(Test **test, int irun)
+int diehard_runs(Test **test, unsigned int irun)
 {
 
  int i,j,k,t,ns;

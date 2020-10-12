@@ -9,7 +9,7 @@
  * creation/destruction/execution routines, the prototype should have
  * precisely this form.
  */
-int rgb_lagged_sums(Test **test,int irun);
+int rgb_lagged_sums(Test **test, unsigned int irun);
 
 /*
  * This is default data for the test at hand.  The first field is
