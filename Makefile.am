@@ -1,8 +1,10 @@
 ## Process this file with automake to produce Makefile.in
 
 # These are made, in order presented, from the toplevel make
-SUBDIRS = libdieharder dieharder include manual
-
+SUBDIRS = libdieharder dieharder include
+if HAVE_LATEX
+SUBDIRS += manual
+endif
 EXTRA_DIST = autogen.sh Copyright dieharder.abs
 
 ACLOCAL_AMFLAGS = -I m4 

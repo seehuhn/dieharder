@@ -31,6 +31,7 @@ AC_DEFINE([RELEASED], [], [Description])
 # This command "should" keep libtool up to date.
 AC_CONFIG_MACRO_DIR([m4])
 AC_CHECK_TOOLS([AR], [gcc-ar ar])
+AM_PROG_AR
 AC_CHECK_TOOLS([RANLIB], [gcc-ranlib ranlib])
 AC_CHECK_TOOLS([NM], [gcc-nm nm])
 LT_INIT
@@ -63,6 +64,9 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
+
+AC_CHECK_PROGS([LATEX], [latex])
+AM_CONDITIONAL([HAVE_LATEX], [test -n "$LATEX"])
 
 #==================================================================
 # Disable unnecessary libtool tests for c++,fortran,java
