@@ -62,23 +62,7 @@ SPEC = $(PROJECT).spec
 # presume the simplest of dependencies and remake if includes change
 # for example.
 #========================================================================
-all: $(LIBTIME) $(PROGTIME) $(INCTIME)
-
-# This is not, actually, a particularly useful toplevel target.  To
-# work correctly it also would require a full parsing of all
-# lower level dependencies.  I'm leaving it in for the moment just
-# to have a default target at the toplevel that CAN be used to test.
-$(LIBTIME):
-	+(cd $(LIBRARY); \
-	make)
-
-$(INCTIME):
-	+(cd include; \
-	make)
-
-$(PROGTIME):
-	+(cd $(PROGRAM); \
-	make)
+all: dieharder
 
 $(ABS): Makefile
 	cat $(ABS) | \
