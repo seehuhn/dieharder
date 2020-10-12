@@ -63,8 +63,12 @@ int dab_filltree(Test **test,unsigned int irun) {
  for (i = 0; i < target; i++) {
    expected[i] = targetData[i] * test[0]->tsamples;
    if (expected[i] < 4) {
-     if (end == 0) start = i;
-   } else if (expected[i] > 4) end = i;
+     if (end == 0)
+       start = i;
+   } else {
+     if (expected[i] > 4)
+       end = i;
+   }
  }
  start++;
 
@@ -76,11 +80,11 @@ int dab_filltree(Test **test,unsigned int irun) {
    do {
      unsigned int v = gsl_rng_get(rng);
 
-     x = ((double) RotL(v, rotAmount)) / rmax_mask;
+     x = (double) (rotAmount ? RotL(v, rotAmount) / rmax_mask : (v / rmax_mask));
      i++;
      if (i > size * 2) {
        test[0]->pvalues[irun] = 0;
-       return(0);
+       goto return0;
      }
      ret = insert(x, array, startVal);
    } while (ret == -1);
@@ -95,7 +99,7 @@ int dab_filltree(Test **test,unsigned int irun) {
  for (i = 0; i < size/2; i++) expected[i] = test[0]->tsamples/(size/2);
  test[1]->pvalues[irun] = chisq_pearson(positionCounts, expected, size/2);
 
-
+ return0:
  nullfree(positionCounts);
  nullfree(expected);
  nullfree(counts);

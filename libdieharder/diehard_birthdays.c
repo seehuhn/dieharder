@@ -89,7 +89,7 @@ int diehard_birthdays(Test **test, unsigned int irun)
  /*
   * Allocate memory for intervals
   */
- intervals = (unsigned int *)malloc(nms*sizeof(unsigned int));
+ intervals = (unsigned int *)malloc((nms+1)*sizeof(unsigned int));
 
  /*
   * This should be more than twice as many slots as we really
@@ -183,7 +183,7 @@ int diehard_birthdays(Test **test, unsigned int irun)
     * k is the interval count (Marsaglia calls it j).
     */
    k = 0;
-   for(m=0;m<nms-1;m++){
+   for(m=0; m<nms-1; m++){
      mnext = m+1;
      while(intervals[m] == intervals[mnext]){
        /* There is at least one repeat of this interval */

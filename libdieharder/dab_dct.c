@@ -84,7 +84,8 @@ int dab_dct(Test **test, unsigned int irun)
  unsigned int i, j;
  unsigned int len = (ntuple == 0) ? 256 : ntuple;
  int rotAmount = 0;
- unsigned int v = 1<<(rmax_bits-1);
+ const unsigned bits = rmax_bits - 1;
+ unsigned int v = 1U << bits;
  double mean = (double) len * (v - 0.5);
 
  /* positionCounts is only used by the primary test, and not by the
@@ -125,13 +126,14 @@ int dab_dct(Test **test, unsigned int irun)
   * of length ntuple will be read from the generator, so a total of
   * (tsamples * ntuple) words will be read from the RNG.
   */
+ //fprintf (stderr, "rmax_bits: %u, rotl: %u\n", rmax_bits, rotAmount);
  for (j=0; j<test[0]->tsamples; j++) {
    unsigned int pos = 0;
    double max = 0;
 
    /* Change the rotation amount after each quarter of the samples
-	* have been used.
-	*/
+    * have been used.
+    */
    if (j != 0 && (j % (test[0]->tsamples / 4) == 0)) {
 	 rotAmount += rmax_bits/4;
    }
@@ -139,7 +141,8 @@ int dab_dct(Test **test, unsigned int irun)
    /* Read (and rotate) the actual rng words. */
    for (i=0; i<len; i++) {
 	 input[i] = gsl_rng_get(rng);
-	 input[i] = RotL(input[i], rotAmount);
+         if (rotAmount)
+           input[i] = RotL(input[i], rotAmount);
    }
 
    /* Perform the DCT */
