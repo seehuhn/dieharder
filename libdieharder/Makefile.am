@@ -87,6 +87,8 @@ libdieharder_la_SOURCES = \
 	rng_threefish.c \
 	rng_uvag.c \
 	rng_wyrand.c \
+	rng_xoshiro32bit.c \
+	rng_xoroshiro64bit.c \
 	rng_XOR.c \
 	sample.c \
 	skein_block64.c \

@@ -113,7 +113,32 @@ void dieharder_rng_types()
  dh_num_dieharder_rngs++;
  ADD(gsl_rng_superkiss);
  dh_num_dieharder_rngs++;
+
  ADD(gsl_rng_wyrand);
+ dh_num_dieharder_rngs++;
+ // 32bit
+ ADD(gsl_rng_xoshiro128_pp);
+ dh_num_dieharder_rngs++;
+ ADD(gsl_rng_xoshiro128_ss);
+ dh_num_dieharder_rngs++;
+ ADD(gsl_rng_xoshiro128_p);
+ dh_num_dieharder_rngs++;
+ ADD(gsl_rng_xoroshiro64_ss);
+ dh_num_dieharder_rngs++;
+ ADD(gsl_rng_xoroshiro64_s);
+ dh_num_dieharder_rngs++;
+ // 64bit
+ ADD(gsl_rng_xoshiro256_pp);
+ dh_num_dieharder_rngs++;
+ ADD(gsl_rng_xoshiro256_ss);
+ dh_num_dieharder_rngs++;
+ ADD(gsl_rng_xoshiro256_p);
+ dh_num_dieharder_rngs++;
+ ADD(gsl_rng_xoroshiro128_pp);
+ dh_num_dieharder_rngs++;
+ ADD(gsl_rng_xoroshiro128_ss);
+ dh_num_dieharder_rngs++;
+ ADD(gsl_rng_xoroshiro128_p);
  dh_num_dieharder_rngs++;
  MYDEBUG(D_TYPES){
    printf("# startup:  Found %u dieharder rngs.\n",dh_num_dieharder_rngs);
