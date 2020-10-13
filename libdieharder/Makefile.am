@@ -11,10 +11,10 @@ LITTLE_ENDIAN=@LITTLE_ENDIAN@
 # VERSION_MAJOR = $(shell expr $(VERSION) : '\(.*\)\..*\..*' \| $(VERSION))
 # RELEASE=0
 
-EXTRA_DIST = static_get_bits.c libdieharder.3
-
 # Man page
 man3_MANS = libdieharder.3
+
+EXTRA_DIST = static_get_bits.c wyhash.h $(man3_MANS)
 
 # Library definitions
 lib_LTLIBRARIES = libdieharder.la
@@ -86,6 +86,7 @@ libdieharder_la_SOURCES = \
 	rng_stdin_input_raw.c \
 	rng_threefish.c \
 	rng_uvag.c \
+	rng_wyrand.c \
 	rng_XOR.c \
 	sample.c \
 	skein_block64.c \
@@ -112,5 +113,5 @@ DEFINES = -DVERSION=$(VERSION) -DLITTLE_ENDIAN=$(LITTLE_ENDIAN)
 # CC = gcc
 
 # Compile flags (use fairly standard -O3 as default)
-AM_CPPFLAGS = $(DEFINES) -I ${top_srcdir}/include -I ${includedir}
+AM_CPPFLAGS = $(DEFINES) -I ${top_srcdir}/include -I ${includedir} -I.
 AM_CFLAGS = -O3 -Wall -pedantic -Wno-unused-variable

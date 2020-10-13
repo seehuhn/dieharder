@@ -53,6 +53,7 @@
  GSL_VAR const gsl_rng_type *gsl_rng_kiss;			/* rgb Jan 2011 */
  GSL_VAR const gsl_rng_type *gsl_rng_superkiss;			/* rgb Jan 2011 */
  GSL_VAR const gsl_rng_type *gsl_rng_XOR;			/* rgb Jan 2011 */
+ GSL_VAR const gsl_rng_type *gsl_rng_wyrand;			/* rurban Oct 2020 */
 
  /*
   * rng global vectors and variables for setup and tests.
