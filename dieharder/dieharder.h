@@ -48,7 +48,8 @@ EXTERN char generator_name[128];
  */
 #include "user_template.h"
 
-EXTERN double rng_avg_time_nsec,rng_rands_per_second;
+EXTERN double rng_avg_time_nsec, rng_rands_per_second;
+EXTERN int rng_double_rands_per_second;
 EXTERN double strategy;
 
 #ifdef RDIEHARDER

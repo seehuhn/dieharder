@@ -10,6 +10,7 @@
 typedef struct {
  double avg_time_nsec;
  double rands_per_sec;
+ double double_rands_per_sec;
 } Rgb_Timing;
 int rgb_timing(Test **test, Rgb_Timing *timing);
 

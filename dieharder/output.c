@@ -3,7 +3,7 @@
  * See copyright in copyright.h and the accompanying file COPYING
  *========================================================================
  */
-
+#define _OUTPUT_C
 #include "dieharder.h"
 
 #if defined(RDIEHARDER)
@@ -171,6 +171,10 @@ void output_rng_info()
        fprintf(stdout,"%10s%c","Seed   ",table_separator);
      }
    }
+   if(tflag & TINTRATE){
+     fprintf(stdout,"%12s%c","k ints/sec",table_separator);
+     fprintf(stdout,"%12s%c","k doubles/sec",table_separator);
+   }
    fprintf(stdout,"\n");
  }
 
@@ -208,6 +212,17 @@ void output_rng_info()
      fprintf(stdout,"%lu%c",seed,table_separator);
    } else {
      fprintf(stdout,"%10lu%c",seed,table_separator);
+   }
+ }
+ if(tflag & TINTRATE){
+   int int_rands_per_second = (int)(rng_rands_per_second / 1000.0);
+   int double_rands_per_second = (int)(rng_double_rands_per_second / 1000.0);
+   if(tflag & TNO_WHITE){
+     fprintf(stdout,"%d%c",int_rands_per_second,table_separator);
+     fprintf(stdout,"%d%c",double_rands_per_second,table_separator);
+   } else {
+     fprintf(stdout,"%10d  %c",int_rands_per_second,table_separator);
+     fprintf(stdout,"%11d  %c",double_rands_per_second,table_separator);
    }
  }
  fprintf(stdout,"\n");

@@ -42,6 +42,7 @@ void time_rng()
   */
  rng_avg_time_nsec = timing.avg_time_nsec;
  rng_rands_per_second = timing.rands_per_sec;
+ rng_double_rands_per_second = timing.double_rands_per_sec;
 
  destroy_test(&rgb_timing_dtest,rgb_timing_test);
 

@@ -89,7 +89,10 @@ void parsecl(int argc, char **argv)
 	     if(i == 0){
 	       tflag = tflag_default;
 	     } else {
-               tflag_tmp = (int) pow(2,i-1);
+               if (strncmp(optarg,"all",TLENGTH) == 0)
+                 tflag_tmp = TALL;
+               else
+                 tflag_tmp = (int) pow(2,i-1);
 	     }
 	     break;
 	   }
@@ -318,7 +321,7 @@ void parsecl(int argc, char **argv)
      fprintf(stdout," Flag\t    Flag Name\n");
      fprintf(stdout,"=======================\n");
      fprintf(stdout,"%5d\t%15s\n",0,table_fields[0]);
-     for(i=0;i<TCNT;i++){
+     for(i=0;i<TCNT-1;i++){
        fprintf(stdout,"%5d\t%15s\n",(int)pow(2,i),table_fields[i+1]);
      }
      Exit(0);

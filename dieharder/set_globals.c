@@ -83,11 +83,10 @@ void set_globals()
  /*
   * Table flags to turn on all of these outputs are defined in output.h,
   * and can also be added by name or number on the command line as in:
-  *    -T seed -T pvalues
+  *    -D seed -D pvalues
   */
  tflag_default = THEADER + TSHOW_RNG + TLINE_HEADER + TTEST_NAME + TNTUPLE +
-				 TPSAMPLES + TTSAMPLES + TPVALUES + TASSESSMENT + TRATE +
-		 TSEED;
+   TPSAMPLES + TTSAMPLES + TPVALUES + TASSESSMENT + TRATE + TSEED + TINTRATE;
  tflag = 0;             /* We START with this zero so we can accumulate */
  verbose = 0;		/* Default is not to be verbose. */
  /*

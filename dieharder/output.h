@@ -4,7 +4,7 @@
   * below it can be used to match up names to the power of two of each
   * entry.  Be sure to keep the two precisely in sync!
   */
- typedef enum {
+typedef enum {
    TDEFAULT = 0,
    THEADER = 1,
    TSHOW_RNG = 2,
@@ -21,10 +21,12 @@
    TSEED = 4096,
    TRATE = 8192,
    TNUM = 16384,
-   TNO_WHITE = 32768
- } Table;
+   TNO_WHITE = 32768,
+   TINTRATE = 65536,
+   TALL = (TINTRATE * 2) - 1
+} Table;
 
-#define TCNT 16
+#define TCNT 19
 
  /*
   * These should have a maximum length one can use in strncmp().
@@ -32,7 +34,8 @@
   * bet (and still safe from a buffer overwrite point of view)
   */
 #define TLENGTH 16
- static char *table_fields[] __attribute__((unused)) = {
+#ifdef _OUTPUT_C
+const char *const table_fields[] = {
  "default",
  "header",
  "show_rng",
@@ -49,5 +52,10 @@
  "seed",
  "rate",
  "show_num",
- "no_whitespace"
- };
+ "no_whitespace",
+ "int_rate",
+ "all"
+};
+#else
+extern const char *const table_fields[];
+#endif
