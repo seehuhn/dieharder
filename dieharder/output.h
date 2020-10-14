@@ -22,8 +22,8 @@ typedef enum {
    TRATE = 8192,
    TNUM = 16384,
    TNO_WHITE = 32768,
-   TINTRATE = 65536,
-   TALL = (TINTRATE * 2) - 1
+   TDBLRATE = 65536,
+   TALL = (TDBLRATE * 2) - 1
 } Table;
 
 #define TCNT 19
@@ -53,7 +53,7 @@ const char *const table_fields[] = {
  "rate",
  "show_num",
  "no_whitespace",
- "int_rate",
+ "dbl_rate",
  "all"
 };
 #else

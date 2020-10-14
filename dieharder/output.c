@@ -171,7 +171,7 @@ void output_rng_info()
        fprintf(stdout,"%10s%c","Seed   ",table_separator);
      }
    }
-   if(tflag & TINTRATE){
+   if(tflag & TDBLRATE){
      fprintf(stdout,"%12s%c","k ints/sec",table_separator);
      fprintf(stdout,"%12s%c","k doubles/sec",table_separator);
    }
@@ -214,7 +214,7 @@ void output_rng_info()
      fprintf(stdout,"%10lu%c",seed,table_separator);
    }
  }
- if(tflag & TINTRATE){
+ if(tflag & TDBLRATE){
    int int_rands_per_second = (int)(rng_rands_per_second / 1000.0);
    int double_rands_per_second = (int)(rng_double_rands_per_second / 1000.0);
    if(tflag & TNO_WHITE){

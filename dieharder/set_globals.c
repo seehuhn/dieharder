@@ -86,7 +86,7 @@ void set_globals()
   *    -D seed -D pvalues
   */
  tflag_default = THEADER + TSHOW_RNG + TLINE_HEADER + TTEST_NAME + TNTUPLE +
-   TPSAMPLES + TTSAMPLES + TPVALUES + TASSESSMENT + TRATE + TSEED + TINTRATE;
+   TPSAMPLES + TTSAMPLES + TPVALUES + TASSESSMENT + TRATE + TSEED + TDBLRATE;
  tflag = 0;             /* We START with this zero so we can accumulate */
  verbose = 0;		/* Default is not to be verbose. */
  /*
