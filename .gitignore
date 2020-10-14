@@ -163,6 +163,12 @@ libdieharder/libdieharder_la-rng_threefish.lo
 libdieharder/libdieharder_la-rng_threefish.o
 libdieharder/libdieharder_la-rng_uvag.lo
 libdieharder/libdieharder_la-rng_uvag.o
+libdieharder/libdieharder_la-rng_wyrand.lo
+libdieharder/libdieharder_la-rng_wyrand.o
+libdieharder/libdieharder_la-rng_xoroshiro64bit.lo
+libdieharder/libdieharder_la-rng_xoroshiro64bit.o
+libdieharder/libdieharder_la-rng_xoshiro32bit.lo
+libdieharder/libdieharder_la-rng_xoshiro32bit.o
 libdieharder/libdieharder_la-rngav.lo
 libdieharder/libdieharder_la-rngav.o
 libdieharder/libdieharder_la-rngs_gnu_r.lo
@@ -193,6 +199,8 @@ manual/dieharder.out
 manual/dieharder.pdf
 manual/dieharder.ps
 manual/dieharder.toc
+manual/dieharder_a4.pdf
+manual/dieharder_a4.ps
 manual/macros.tex
 stamp-h1
 /.build

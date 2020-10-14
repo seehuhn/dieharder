@@ -19,11 +19,12 @@ ERR = $(SOURCE:.tex=.err)
 DVI = $(SOURCE:.tex=.dvi)
 PS = $(SOURCE:.tex=.ps)
 PDF = $(SOURCE:.tex=.pdf)
-A4PS = $(SOURCE:.tex=.a4.ps)
-A4PDF = $(SOURCE:.tex=.a4.pdf)
+A4PS = dieharder_a4.ps
+A4PDF = dieharder_a4.pdf
 HTMLDIR = $(SOURCE:.tex=)
 
 # Build targets (from rules)
+# FIXME out-of-src
 if HAVE_INSRCDIR
 all:	$(PDF)
 ps-local:  $(DVI) $(PS)
@@ -43,26 +44,26 @@ clean-local:
 #
 # Rule for making dvi out of tex.  Do it twice to build table of contents
 # and resolve forward references.
-%.dvi:%.tex $(SOURCES)
+.tex.dvi: $(SOURCES)
 	latex $< $@
 	latex $< $@
 
 # Rule for making postscript image
-%.ps:%.dvi
+.dvi.ps:
 	dvips -Pamz -Pcmz -o $@ $<
 
 # Rule for making pdf image
-%.pdf:%.ps
-	ps2pdf $<
-
-# Rule for making postscript image
-%.a4.ps:%.dvi
-	dvips -Pamz -Pcmz -t A4 -o $@ $<
-
-# Rule for making pdf image
-%.a4.pdf:%.a4.ps
+.ps.pdf:
 	ps2pdf $<
 
 # Rule for making .fig->.eps
-%.eps:%.fig
+.fig.eps:
 	fig2dev -L eps $< > $@
+
+# Rule for making postscript image
+dieharder_a4.ps: dieharder.dvi
+	dvips -Pamz -Pcmz -t A4 -o $@ $<
+
+# Rule for making pdf image
+dieharder_a4.pdf: dieharder_a4.ps
+	ps2pdf $<
